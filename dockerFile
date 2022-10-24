@@ -1,0 +1,11 @@
+FROM debian:latest as linux
+
+RUN sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list && \
+    apt-get update && \
+    apt-get install curl -y && \
+    curl --proto '=https' --tlsv1.2 -sSf https://tiup-mirrors.pingcap.com/install.sh | sh && \
+    /bin/bash -c "source /root/.profile" && \
+    /root/.tiup/bin/tiup install grafana  pd  playground  prometheus  tidb  tiflash  tikv
+
+
+ENTRYPOINT ["/root/.tiup/bin/tiup", "playground", "--host", "0.0.0.0"]
