@@ -7,5 +7,6 @@ RUN sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list && \
     /bin/bash -c "source /root/.profile" && \
     /root/.tiup/bin/tiup install grafana  pd  playground  prometheus  tidb  tiflash  tikv
 
+EXPOSE 2379/TCP 3000/TCP 4000/TCP 9090/TCP
 
 ENTRYPOINT ["/root/.tiup/bin/tiup", "playground", "--host", "0.0.0.0"]
