@@ -1,6 +1,7 @@
 version: "3.9"
 services:
-  redis:
+  # 网络下节点的名称组成为镜像名字 + service + num
+  cache:
     image: redis:latest
     deploy:
       resources:
@@ -17,3 +18,12 @@ services:
         delay: 5s
         max_attempts: 3
         window: '120s'
+    networks:
+      - redis-network
+
+networks:
+  redis-network:
+    external: false
+    name: redis-net
+    labels:
+      - "sdf=2"

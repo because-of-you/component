@@ -1,19 +1,30 @@
 version: "3.9"
 services:
-  redis:
-    image: redis:latest
+  zookeeper:
+    image: wfybelief/component:zookeeper
+    env_file:
+      - .env
+    environment:
+      - sys_t1=${REPLICAS:-1}
+    build:
+      dockerfile: ./DockerFile
+    networks:
+      - component-network
     deploy:
       resources:
         limits:
-          cpus: '0.50'
-          memory: 50M
+          cpus: "0.5"
+          memory: 200M
         reservations:
-          cpus: '0.10'
-          memory: 20M
-      replicas: 2
+          cpus: "0.1"
+          memory: 100M
       mode: replicated
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 3
-        window: '120s'
+      replicas: ${REPLICAS:-1}
+
+
+networks:
+  component-network:
+    external: false
+    name: component-network
+    labels:
+      - "key=value"
