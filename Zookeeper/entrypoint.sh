@@ -1,3 +1,3 @@
 #!/bin/bash
 ./builder
-tail -f component.log
+zkServer.sh start-foreground

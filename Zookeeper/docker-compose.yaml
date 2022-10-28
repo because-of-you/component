@@ -1,13 +1,16 @@
 version: "3.9"
 services:
   zookeeper:
+    build:
+      dockerfile: ./DockerFile
     image: wfybelief/component:zookeeper
+
     env_file:
       - .env
     environment:
       - sys_t1=${REPLICAS:-1}
-    build:
-      dockerfile: ./DockerFile
+      - COMPOSE_SERVICE_NAME=zookeeper
+
     networks:
       - component-network
     deploy:
