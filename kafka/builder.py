@@ -15,6 +15,9 @@ if __name__ == '__main__':
     sys.stdout = open(
         f"{get_or_default('KAFKA_CONF_DIR', default_value='/opt/component/kafka_2.12-3.1.2/config')}/server.properties",
         "a")
+    KAFKA_HOME = 'export KAFKA_HOME=/opt/component/kafka_2.12-3.1.2/'
+    os.system(f"echo '{KAFKA_HOME}' >>  /etc/profile")
+    os.system(f"echo 'export PATH=$PATH:$KAFKA_HOME/bin' >>  /etc/profile")
 
     print("listeners = PLAINTEXT://0.0.0.0:9092")
     print("advertised.listeners=PLAINTEXT://localhost:9092")
@@ -35,6 +38,6 @@ if __name__ == '__main__':
         current_ip = socket.gethostbyname(socket.gethostname())
 
         if target_ip == current_ip:
-            os.system(f"broker.id={i}")
+            print(f"broker.id={i}")
 
     sys.stdout.close()

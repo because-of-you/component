@@ -4,17 +4,11 @@ services:
     build:
       dockerfile: ./DockerFile
     image: wfybelief/component:zookeeper
-    configs:
-      - source: test_dir
-        target: /opt/test
-        mode: 0440
-
     env_file:
       - .env
     environment:
       - sys_t1=${ZOOKEEPER_REPLICAS:-1}
       - COMPOSE_SERVICE_NAME=zookeeper
-
     networks:
       - component-network
     deploy:
@@ -32,38 +26,64 @@ services:
         delay: 30s
         max_attempts: 5
 
-  mysql:
-    labels:
-      - "com.example.description=Financial transaction network"
-      - "com.example.department=Finance"
-      - "com.example.label-with-empty-value"
-    image: mysql
-    networks:
-      - component-network
-    environment:
-      - MYSQL_ROOT_PASSWORD=root
-      - COMPOSE_SERVICE_NAME=mysql
+  kafka:
+    build:
+      dockerfile: ./DockerFile
+    image: wfybelief/component:kafka
     env_file:
       - .env
-    depends_on:
-      - zookeeper
+    environment:
+      - sys_t1=${KAFKA_REPLICAS:-1}
+      - COMPOSE_SERVICE_NAME=kafka
+
+    networks:
+      - component-network
     deploy:
       resources:
         limits:
-          cpus: "1.0"
+          cpus: "0.5"
           memory: 400M
         reservations:
           cpus: "0.1"
-          memory: 200M
+          memory: 50M
       mode: replicated
-      replicas: 1
+      replicas: ${KAFKA_REPLICAS:-1}
       restart_policy:
         condition: on-failure
         delay: 30s
         max_attempts: 5
+    depends_on:
+      - zookeeper
 
-
-
+#  mysql:
+#    labels:
+#      - "com.example.description=Financial transaction network"
+#      - "com.example.department=Finance"
+#      - "com.example.label-with-empty-value"
+#    image: mysql
+#    networks:
+#      - component-network
+#    environment:
+#      - MYSQL_ROOT_PASSWORD=root
+#      - COMPOSE_SERVICE_NAME=mysql
+#    env_file:
+#      - .env
+#    depends_on:
+#      - zookeeper
+#    deploy:
+#      resources:
+#        limits:
+#          cpus: "1.0"
+#          memory: 400M
+#        reservations:
+#          cpus: "0.1"
+#          memory: 200M
+#      mode: replicated
+#      replicas: 1
+#      restart_policy:
+#        condition: on-failure
+#        delay: 30s
+#        max_attempts: 5
 
 
 networks:
