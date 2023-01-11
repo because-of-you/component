@@ -23,6 +23,9 @@ RUN pyinstaller -F $PYTHON_BUILD_PATH/$PYTHON_BUILD_NAME.py
 # 第二阶段运行
 FROM zookeeper:latest as zookeeper
 
+# 时区
+ENV TZ=Asia/Shanghai
+
 # 工作目录
 WORKDIR /opt/component/
 
