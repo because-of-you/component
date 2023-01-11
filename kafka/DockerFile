@@ -28,6 +28,8 @@ ARG fileName=kafka_2.12-3.1.2.tgz
 
 # 时区
 ENV TZ=Asia/Shanghai
+ENV KAFKA_HOME=/opt/component/kafka_2.12-3.1.2
+ENV PATH=$PATH:$KAFKA_HOME/bin
 
 # 工作目录
 WORKDIR /opt/component/
@@ -45,8 +47,6 @@ RUN sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list && \
     wget $URL && \
     tar -zxvf $fileName && \
     rm $fileName && \
-    echo 'export KAFKA_HOME=/opt/component/kafka_2.12-3.1.2/' /etc/profile && \
-    echo 'export PATH=$PATH:$KAFKA_HOME/bin' /etc/profile && \
     chmod +x ./entrypoint.sh
 
 # 运行
