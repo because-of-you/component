@@ -20,7 +20,7 @@ if __name__ == '__main__':
     os.system(f"echo 'export PATH=$PATH:$KAFKA_HOME/bin' >>  /etc/profile")
 
     print("listeners = PLAINTEXT://0.0.0.0:9092")
-    print("advertised.listeners=PLAINTEXT://localhost:9092")
+
     ZOOKEEPER_REPLICAS = int(get_or_default("ZOOKEEPER_REPLICAS", default_value="3"))
     zkCluster = [f"component-zookeeper-{i}" for i in range(1, ZOOKEEPER_REPLICAS + 1)]
     print(f"zookeeper.connect={','.join(zkCluster)}")
@@ -39,5 +39,6 @@ if __name__ == '__main__':
 
         if target_ip == current_ip:
             print(f"broker.id={i}")
+            print(f"advertised.listeners=PLAINTEXT://{node_name}:9092")
 
     sys.stdout.close()

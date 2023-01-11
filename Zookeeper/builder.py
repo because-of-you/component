@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     # 副本数
     # fixme 存在一定bug 容器编号不是从1开始
-    REPLICAS = int(get_or_default("REPLICAS"))
+    REPLICAS = int(get_or_default("ZOOKEEPER_REPLICAS"))
     COMPOSE_PROJECT_NAME = get_or_default("COMPOSE_PROJECT_NAME")
     COMPOSE_SERVICE_NAME = get_or_default("COMPOSE_SERVICE_NAME")
     for i in range(1, 1 + REPLICAS):
