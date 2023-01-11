@@ -2,7 +2,7 @@ version: "3.9"
 services:
   # 网络下节点的名称组成为镜像名字 + service + num
   cache:
-    image: redis:latest
+    image: nginx:latest
     deploy:
       resources:
         limits:
@@ -20,6 +20,8 @@ services:
         window: '120s'
     networks:
       - redis-network
+#    ports:
+#      - "7000-7001:80"
 
 networks:
   redis-network:
