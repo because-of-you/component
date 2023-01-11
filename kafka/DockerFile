@@ -45,6 +45,8 @@ RUN sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list && \
     wget $URL && \
     tar -zxvf $fileName && \
     rm $fileName && \
+    echo 'export KAFKA_HOME=/opt/component/kafka_2.12-3.1.2/' /etc/profile && \
+    echo 'export PATH=$PATH:$KAFKA_HOME/bin' /etc/profile && \
     chmod +x ./entrypoint.sh
 
 # 运行
