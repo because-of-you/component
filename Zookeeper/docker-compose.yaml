@@ -4,6 +4,10 @@ services:
     build:
       dockerfile: ./DockerFile
     image: wfybelief/component:zookeeper
+    configs:
+      - source: test_dir
+        target: /opt/test
+        mode: 0440
 
     env_file:
       - .env
@@ -17,12 +21,17 @@ services:
       resources:
         limits:
           cpus: "0.5"
-          memory: 200M
+          memory: 70M
         reservations:
           cpus: "0.1"
-          memory: 100M
+          memory: 50M
       mode: replicated
       replicas: ${REPLICAS:-1}
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 5
+
 
 
 networks:
@@ -31,3 +40,8 @@ networks:
     name: component-network
     labels:
       - "key=value"
+
+configs:
+  test_dir:
+    name: "test"
+    file: ./
