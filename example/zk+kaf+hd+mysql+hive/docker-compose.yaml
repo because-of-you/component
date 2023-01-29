@@ -13,13 +13,13 @@ services:
     networks:
       - component-network
     deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 110M
-        reservations:
-          cpus: "0.1"
-          memory: 50M
+#      resources:
+#        limits:
+#          cpus: "0.5"
+#          memory: 110M
+#        reservations:
+#          cpus: "0.1"
+#          memory: 50M
       mode: replicated
       replicas: ${ZOOKEEPER_REPLICAS:-1}
       restart_policy:
@@ -40,13 +40,13 @@ services:
     networks:
       - component-network
     deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 512M
-        reservations:
-          cpus: "0.1"
-          memory: 50M
+#      resources:
+#        limits:
+#          cpus: "0.5"
+#          memory: 512M
+#        reservations:
+#          cpus: "0.1"
+#          memory: 50M
       mode: replicated
       replicas: ${KAFKA_REPLICAS:-1}
       restart_policy:
@@ -85,13 +85,13 @@ services:
       - component-network
 
     deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 1800M
-        reservations:
-          cpus: "0.1"
-          memory: 50M
+#      resources:
+#        limits:
+#          cpus: "0.5"
+#          memory: 1800M
+#        reservations:
+#          cpus: "0.1"
+#          memory: 50M
       mode: replicated
       replicas: 3
       restart_policy:
@@ -108,13 +108,13 @@ services:
     networks:
       - component-network
     deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 800M
-        reservations:
-          cpus: "0.1"
-          memory: 50M
+#      resources:
+#        limits:
+#          cpus: "0.5"
+#          memory: 800M
+#        reservations:
+#          cpus: "0.1"
+#          memory: 50M
       mode: replicated
       replicas: 1
       restart_policy:
@@ -152,13 +152,13 @@ services:
     networks:
       - component-network
     deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 1000M
-        reservations:
-          cpus: "0.1"
-          memory: 50M
+#      resources:
+#        limits:
+#          cpus: "0.5"
+#          memory: 1000M
+#        reservations:
+#          cpus: "0.1"
+#          memory: 50M
       mode: replicated
       replicas: 1
       restart_policy:
