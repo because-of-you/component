@@ -25,7 +25,7 @@ FROM  apache/hadoop:2 as hadoop
 
 
 # 第三阶段jdk
-FROM  openjdk:11 as java
+FROM  openjdk:8 as java
 
 USER root
 
