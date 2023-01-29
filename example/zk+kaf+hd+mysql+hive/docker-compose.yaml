@@ -1,0 +1,197 @@
+version: "3.9"
+services:
+
+  zookeeper:
+    build:
+      dockerfile: ./DockerFile
+    image: wfybelief/component:zookeeper
+    env_file:
+      - .env
+    environment:
+      - sys_t1=${ZOOKEEPER_REPLICAS:-1}
+      - COMPOSE_SERVICE_NAME=zookeeper
+    networks:
+      - component-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 110M
+        reservations:
+          cpus: "0.1"
+          memory: 50M
+      mode: replicated
+      replicas: ${ZOOKEEPER_REPLICAS:-1}
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 5
+
+  kafka:
+    build:
+      dockerfile: ./DockerFile
+    image: wfybelief/component:kafka
+    env_file:
+      - .env
+    environment:
+      - sys_t1=${KAFKA_REPLICAS:-1}
+      - COMPOSE_SERVICE_NAME=kafka
+
+    networks:
+      - component-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 50M
+      mode: replicated
+      replicas: ${KAFKA_REPLICAS:-1}
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 5
+    depends_on:
+      - zookeeper
+
+  hadoop:
+    build:
+      dockerfile: ./DockerFile
+    configs:
+      - source: core-site
+        target: /opt/hadoop/etc/hadoop/core-site.xml
+        mode: 0440
+      - source: hdfs-site
+        target: /opt/hadoop/etc/hadoop/hdfs-site.xml
+        mode: 0440
+      - source: mapred-site
+        target: /opt/hadoop/etc/hadoop/mapred-site.xml
+        mode: 0440
+      - source: yarn-site
+        target: /opt/hadoop/etc/hadoop/yarn-site.xml
+        mode: 0440
+      - source: master
+        target: /opt/hadoop/etc/hadoop/master
+        mode: 0440
+    image: wfybelief/component:hadoop
+    env_file:
+      - .env
+    environment:
+      - sys_t1=${ZOOKEEPER_REPLICAS:-1}
+      - COMPOSE_SERVICE_NAME=hadoop
+    networks:
+      - component-network
+
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 1800M
+        reservations:
+          cpus: "0.1"
+          memory: 50M
+      mode: replicated
+      replicas: 3
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 5
+
+  mysql:
+    image: mysql
+    env_file:
+      - .env
+    environment:
+      - COMPOSE_SERVICE_NAME=mysql
+    networks:
+      - component-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 800M
+        reservations:
+          cpus: "0.1"
+          memory: 50M
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 5
+
+  hive:
+    image: wfybelief/component:hive
+    build:
+      dockerfile: DockerFile
+    configs:
+      - source: hive-site
+        target: /opt/hive/conf/hive-site.xml
+        mode: 0440
+      - source: core-site
+        target: /opt/hadoop/etc/hadoop/core-site.xml
+        mode: 0440
+      - source: hdfs-site
+        target: /opt/hadoop/etc/hadoop/hdfs-site.xml
+        mode: 0440
+      - source: mapred-site
+        target: /opt/hadoop/etc/hadoop/mapred-site.xml
+        mode: 0440
+      - source: yarn-site
+        target: /opt/hadoop/etc/hadoop/yarn-site.xml
+        mode: 0440
+      - source: master
+        target: /opt/hadoop/etc/hadoop/master
+        mode: 0440
+    env_file:
+      - .env
+    environment:
+      - COMPOSE_SERVICE_NAME=hive
+    networks:
+      - component-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 1000M
+        reservations:
+          cpus: "0.1"
+          memory: 50M
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 30s
+    depends_on:
+      - mysql
+
+
+networks:
+  component-network:
+    external: false
+    name: component-network
+    labels:
+      - "key=value"
+
+configs:
+  core-site:
+    name: "core-site.xml"
+    file: ./config/core-site.xml
+  hdfs-site:
+    name: "hdfs-site.xml"
+    file: ./config/hdfs-site.xml
+  mapred-site:
+    name: "mapred-site.xml"
+    file: ./config/mapred-site.xml
+  yarn-site:
+    name: "yarn-site.xml"
+    file: ./config/yarn-site.xml
+  master:
+    name: "master"
+    file: ./config/master
+  hive-site:
+    name: "hive-site.xml"
+    file: ./hive-config/hive-site.xml
+

@@ -1,0 +1,45 @@
+<configuration>
+    <!-- Hive产生的元数据存放位置-->
+    <property>
+        <name>hive.metastore.warehouse.dir</name>
+        <value>hdfs://component-hadoop-1:9000/user/hive_remote/warehouse</value>
+    </property>
+    <!-- 数据库连接JDBC的URL地址-->
+    <property>
+        <name>javax.jdo.option.ConnectionURL</name>
+        <value>jdbc:mysql://component-mysql-1:3306/hive?createDatabaseIfNotExist=true&amp;useSSL=false&amp;allowPublicKeyRetrieval=true</value>
+    </property>
+    <!-- 数据库连接driver，即MySQL驱动-->
+    <property>
+        <name>javax.jdo.option.ConnectionDriverName</name>
+        <value>com.mysql.jdbc.Driver</value>
+    </property>
+    <!-- MySQL数据库用户名-->
+    <property>
+        <name>javax.jdo.option.ConnectionUserName</name>
+        <value>root</value>
+    </property>
+    <!-- MySQL数据库密码-->
+    <property>
+        <name>javax.jdo.option.ConnectionPassword</name>
+        <value>root</value>
+    </property>
+    <property>
+        <name>hive.metastore.schema.verification</name>
+        <value>false</value>
+    </property>
+    <property>
+        <name>datanucleus.schema.autoCreateAll</name>
+        <value>true</value>
+    </property>
+    <!--- 使用本地服务连接Hive,默认为true-->
+    <property>
+        <name>hive.metastore.local</name>
+        <value>false</value>
+    </property>
+    <!-- 连接服务器-->
+    <property>
+        <name>hive.metastore.uris</name>
+        <value>thrift://localhost:9083</value>
+    </property>
+</configuration>
