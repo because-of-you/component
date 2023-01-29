@@ -14,7 +14,8 @@ WORKDIR /opt/hive/docker
 
 RUN wget https://mirrors.ustc.edu.cn/apache/hive/hive-3.1.2/apache-hive-3.1.2-bin.tar.gz -P /opt && \
     tar -zxvf /opt/apache-hive-3.1.2-bin.tar.gz --strip-components 1 -C /opt/hive && \
-    wget https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.16/mysql-connector-java-8.0.16.jar -P /opt/hive/lib/
+    wget https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.16/mysql-connector-java-8.0.16.jar -P /opt/hive/lib/ && \
+    rm -rf /opt/apache-hive-3.1.2-bin.tar.gz
 
 
 # 权限

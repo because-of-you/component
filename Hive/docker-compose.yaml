@@ -33,7 +33,7 @@ services:
       resources:
         limits:
           cpus: "0.5"
-          memory: 800M
+          memory: 1800M
         reservations:
           cpus: "0.1"
           memory: 50M
@@ -66,8 +66,6 @@ services:
         condition: on-failure
         delay: 30s
         max_attempts: 5
-    depends_on:
-      - hadoop
 
   hive:
     image: wfybelief/component:hive
@@ -76,6 +74,21 @@ services:
     configs:
       - source: hive-site
         target: /opt/hive/conf/hive-site.xml
+        mode: 0440
+      - source: core-site
+        target: /opt/hadoop/etc/hadoop/core-site.xml
+        mode: 0440
+      - source: hdfs-site
+        target: /opt/hadoop/etc/hadoop/hdfs-site.xml
+        mode: 0440
+      - source: mapred-site
+        target: /opt/hadoop/etc/hadoop/mapred-site.xml
+        mode: 0440
+      - source: yarn-site
+        target: /opt/hadoop/etc/hadoop/yarn-site.xml
+        mode: 0440
+      - source: master
+        target: /opt/hadoop/etc/hadoop/master
         mode: 0440
     env_file:
       - .env
@@ -87,7 +100,7 @@ services:
       resources:
         limits:
           cpus: "0.5"
-          memory: 800M
+          memory: 1000M
         reservations:
           cpus: "0.1"
           memory: 50M

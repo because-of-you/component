@@ -17,23 +17,23 @@
     <!-- Site specific YARN configuration properties -->
     <property>
         <name>yarn.resourcemanager.address</name>
-        <value>master:18040</value>
+        <value>component-hadoop-2:18040</value>
     </property>
     <property>
         <name>yarn.resourcemanager.scheduler.address</name>
-        <value>master:18030</value>
+        <value>component-hadoop-2:18030</value>
     </property>
     <property>
         <name>yarn.resourcemanager.webapp.address</name>
-        <value>master:18088</value>
+        <value>component-hadoop-2:18088</value>
     </property>
     <property>
         <name>yarn.resourcemanager.resource-tracker.address</name>
-        <value>master:18025</value>
+        <value>component-hadoop-2:18025</value>
     </property>
     <property>
         <name>yarn.resourcemanager.admin.address</name>
-        <value>master:18141</value>
+        <value>component-hadoop-2:18141</value>
     </property>
     <!-- 指定reducer获取数据的方式-->
     <property>

@@ -37,5 +37,11 @@ if __name__ == '__main__':
         # 如果是 data node
         if get_or_default("DATA_NODE") and node_name in get_or_default("DATA_NODE"):
             os.system("nohup hdfs datanode >>/opt/hadoop/logs/node.log &")
+            os.system(
+                "nohup yarn nodemanager >>/opt/hadoop/logs/node.log &")
 
         # todo 如果是yarn node
+        # yarn resourcemanager
+        if get_or_default("YARN_NODE") and node_name in get_or_default("YARN_NODE"):
+            os.system("nohup hdfs datanode >>/opt/hadoop/logs/node.log &")
+            os.system("nohup yarn resourcemanager >>/opt/hadoop/logs/node.log &")
