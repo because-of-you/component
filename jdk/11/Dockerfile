@@ -22,4 +22,4 @@ RUN apt-get update && \
     if [ -f /usr/lib/aarch64-linux-gnu/libjemalloc.so ]; then ln -s /usr/lib/aarch64-linux-gnu/libjemalloc.so /usr/local/lib/libjemalloc.so; fi
 
 
-ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so MALLOC_ARENA_MAX=2 TZ=Asia/Shanghai
+ENV LD_PRELOAD=/usr/local/lib/libjemalloc.so MALLOC_ARENA_MAX=2 TZ=Asia/Shanghai
