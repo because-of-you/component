@@ -19,7 +19,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 
-ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so
+ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so MALLOC_ARENA_MAX=2 TZ=Asia/Shanghai
 
 
 
