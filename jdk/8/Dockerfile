@@ -17,10 +17,12 @@ COPY --from=busybox /opt/tools/arthas.jar /opt/tools/
 RUN apt-get update && \
     apt-get -y install libjemalloc-dev && \
     apt-get autoclean && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    platform=$(uname -m)
 
-
-ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so MALLOC_ARENA_MAX=2 TZ=Asia/Shanghai
+# LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so
+# LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libjemalloc.so
+ENV MALLOC_ARENA_MAX=2 TZ=Asia/Shanghai LD_PRELOAD=/usr/lib/$(uname\ -m)-linux-gnu/libjemalloc.so
 
 
 
