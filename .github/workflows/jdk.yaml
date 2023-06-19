@@ -20,6 +20,13 @@ on:
     #    schedule:
     #      - cron: '0 1 * * *'
 
+env:
+  REGISTRY: docker.io
+  JDK-8-Dockerfile: jdk/8/Dockerfile
+  JDK-11-Dockerfile: jdk/11/Dockerfile
+  JDK-17-Dockerfile: jdk/17/Dockerfile
+
+
 jobs:
 
   jdk-8-image-build-job:
@@ -41,7 +48,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: wfybelief/jdk-8
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/jdk-8
 
       # docker 镜像管理模块 ------> 加载docker登陆服务
       - name: docker login service
@@ -50,7 +57,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          registry: docker.io
+          registry: ${{ env.REGISTRY }}
 
       # docker 镜像管理模块 ------> 加载docker 多平台镜像构建服务
       - name: docker build x service
@@ -62,7 +69,7 @@ jobs:
         with:
           context: .
           platforms: linux/amd64,linux/arm64
-          file: jdk/8/Dockerfile
+          file: ${{ env.JDK-8-Dockerfile }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -88,7 +95,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: wfybelief/jdk-11
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/jdk-11
 
       # docker 镜像管理模块 ------> 加载docker登陆服务
       - name: docker login service
@@ -97,7 +104,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          registry: docker.io
+          registry: ${{ env.REGISTRY }}
 
       # docker 镜像管理模块 ------> 加载docker 多平台镜像构建服务
       - name: docker build x service
@@ -109,7 +116,7 @@ jobs:
         with:
           context: .
           platforms: linux/amd64,linux/arm64
-          file: jdk/11/Dockerfile
+          file: ${{ env.JDK-11-Dockerfile }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -135,7 +142,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: wfybelief/jdk-17
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/jdk-17
 
       # docker 镜像管理模块 ------> 加载docker登陆服务
       - name: docker login service
@@ -144,7 +151,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          registry: docker.io
+          registry: ${{ env.REGISTRY }}
 
       # docker 镜像管理模块 ------> 加载docker 多平台镜像构建服务
       - name: docker build x service
@@ -156,7 +163,7 @@ jobs:
         with:
           context: .
           platforms: linux/amd64,linux/arm64
-          file: jdk/17/Dockerfile
+          file: ${{ env.JDK-17-Dockerfile }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
