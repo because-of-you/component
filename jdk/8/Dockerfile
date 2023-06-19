@@ -1,6 +1,6 @@
 FROM busybox:latest as busybox
 RUN busybox mkdir -p "/opt/tools" && \
-    busybox wget https://arthas.aliyun.com/arthas-boot.jar -O /opt/tools/arthas.jar && \
+    busybox wget http://arthas.aliyun.com/arthas-boot.jar -O /opt/tools/arthas.jar && \
     echo "#!/bin/bash" > /usr/bin/arthas && \
     echo "java -jar /opt/tools/arthas.jar" >> /usr/bin/arthas && \
     busybox chmod +x /usr/bin/arthas
