@@ -2,9 +2,9 @@
 
 git filter-branch --env-filter '
 
-OLD_EMAIL="原邮箱地址"
-CORRECT_NAME="wfy"
-CORRECT_EMAIL="1335680234@qq.com"
+OLD_EMAIL="1335680234@qq.com"
+CORRECT_NAME="wfy-belief"
+CORRECT_EMAIL="mail@acitrus.cn"
 
 if [ "$GIT_COMMITTER_EMAIL" = "$OLD_EMAIL" ]
 then
