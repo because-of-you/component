@@ -7,7 +7,7 @@ RUN busybox mkdir -p "/opt/tools" && \
     busybox chmod +x /usr/bin/arthas
 
 
-FROM ibm-semeru-runtimes:open-8-jdk-jammy as jdk
+FROM ibm-semeru-runtimes:open-17-jdk-jammy as jdk
 
 COPY --from=busybox /bin/busybox /usr/bin/
 COPY --from=busybox /usr/bin/arthas /usr/bin/
@@ -21,7 +21,3 @@ RUN apt-get update && \
 
 
 ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so MALLOC_ARENA_MAX=2 TZ=Asia/Shanghai
-
-
-
-
