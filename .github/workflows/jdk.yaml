@@ -109,7 +109,7 @@ jobs:
         with:
           context: .
           platforms: linux/amd64,linux/arm64
-          file: jdk/8/Dockerfile
+          file: jdk/11/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
