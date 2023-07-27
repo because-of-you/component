@@ -1,24 +1,24 @@
-# 第一阶段编译脚本文件
-FROM python:3.10.8-slim-bullseye as python
-
-# 元数据
-LABEL MAINTAINER="wfy"
-
-# 变量定义区域
-ARG  PYTHON_BUILD_PATH=/opt/python/builder/
-ARG  PYTHON_BUILD_NAME=builder
-
-# 前置环境准备
-RUN sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list && \
-    apt-get update && \
-    apt-get install -y binutils && \
-    pip install pyinstaller ujson
-
-# 拉取文件
-ADD ./$PYTHON_BUILD_NAME.py $PYTHON_BUILD_PATH
-
-# 编译二进制
-RUN pyinstaller -F $PYTHON_BUILD_PATH/$PYTHON_BUILD_NAME.py
+## 第一阶段编译脚本文件
+#FROM python:3.10 as python
+#
+## 元数据
+#LABEL MAINTAINER="wfy"
+#
+## 变量定义区域
+#ARG  PYTHON_BUILD_PATH=/opt/python/builder/
+#ARG  PYTHON_BUILD_NAME=builder
+#
+## 前置环境准备
+#RUN sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list && \
+#    apt-get update && \
+#    apt-get install -y binutils && \
+#    pip install pyinstaller ujson
+#
+## 拉取文件
+#ADD ./$PYTHON_BUILD_NAME.py $PYTHON_BUILD_PATH
+#
+## 编译二进制
+#RUN pyinstaller -F $PYTHON_BUILD_PATH/$PYTHON_BUILD_NAME.py
 
 # 第二阶段运行
 FROM zookeeper:latest as zookeeper
@@ -30,10 +30,11 @@ ENV TZ=Asia/Shanghai
 WORKDIR /opt/component/
 
 # 复制二进制
-COPY --from=python $PYTHON_BUILD_PATH/dist/$PYTHON_BUILD_NAME ./
+#COPY --from=python $PYTHON_BUILD_PATH/dist/$PYTHON_BUILD_NAME ./
 
 # 复制其他文件
-ADD ./* ./
+#ADD ./* ./
+COPY entrypoint.sh .
 
 # 权限
 RUN chmod +x ./entrypoint.sh

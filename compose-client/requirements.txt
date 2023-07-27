@@ -1,0 +1,5 @@
+ujson
+sanic
+pyinstaller
+patchelf
+nuitka
