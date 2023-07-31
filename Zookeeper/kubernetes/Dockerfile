@@ -1,28 +1,14 @@
-FROM ubuntu:latest
-LABEL authors="wangfeiyu"
+FROM zookeeper as zookeeper
 
-ENTRYPOINT ["top", "-b"]
 
-# openj9
+FROM wfybelief/jdk-8:dev as jdk
 
-# myid
+COPY --from=zookeeper /apache-zookeeper-3.8.1-bin /zookeeper
+COPY --from=zookeeper /conf /zookeeper/conf
 
-# server.1
 
-#0
-#1
-#2
-#
-#0-n
-#
-#statefuleset
-#zookeeper-0 -> 0 0          standalone off
-#zookeeper-1 -> 1 0,1
-#zookeeper-2 -> 2 0,1,2
-#
-#kafka <- zookeeper
-#
-#kafka <- | service network zookeeper-headless-network | {zk0,zk1,zk2}
-#
-#0 -> final var ｜ share 内存  scc shared classes cache
-#1 ->
+WORKDIR /zookeeper/bin
+COPY entrypoint.sh .
+
+ENTRYPOINT ["busybox", "sh", "./entrypoint.sh"]
+CMD ["/zookeeper/bin/zkServer.sh", "start-foreground"]
