@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 cd /zookeeper/conf
 mv zoo_sample.cfg zoo.cfg
 

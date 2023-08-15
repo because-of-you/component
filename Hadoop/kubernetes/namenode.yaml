@@ -6,15 +6,15 @@ kind: StatefulSet
 
 # 元数据
 metadata:
-  name: nginx
+  name: namenode
   labels:
-    app: nginx
+    app: namenode
 
 spec:
 
 
   # ----------------- 1.多副本策略 -----------------
-  replicas: 3
+  replicas: 1
   # 滚动更新
   updateStrategy:
     type: RollingUpdate
@@ -22,13 +22,13 @@ spec:
   minReadySeconds: 10
   # ----------------- 1.多副本策略 -----------------
 
-  serviceName: nginx-service
+  serviceName: ss
 
   # 选择器
   selector:
     matchLabels:
       # 必须匹配 .spec.template.metadata.labels
-      app: nginx
+      app: namenode
 
 
 
@@ -36,26 +36,25 @@ spec:
   # 模版信息
   template:
     metadata:
-      name: nginx
+      name: namenode
       # 必须匹配 .spec.selector.matchLabels
       labels:
-        app: nginx
-
+        app: namenode
     spec:
       containers:
-        - name: nginx
-          image: nginx
+        - name: Title
+          image: Image
           imagePullPolicy: IfNotPresent
 
           # 资源限制
           resources:
             limits:
-              memory: 200Mi
+              memory: 500MI
             requests:
               memory: 10Mi
 
           ports:
-            - containerPort: 80
+            - containerPort: 9870
               protocol: TCP
 
           # 存活监测
@@ -67,18 +66,18 @@ spec:
 
           volumeMounts:
             - mountPath: /opt/data/
-              name: www
+              name: testDir
       restartPolicy: Always
 
 
   # 持久卷
   volumeClaimTemplates:
     - metadata:
-        name: www
+        name: testDir
       spec:
         accessModes:
           - ReadWriteOnce
-        storageClassName: hostpath
+        storageClassName: standard
         resources:
           requests:
             storage: 1Gi
@@ -90,16 +89,20 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: nginx-service
+  name: namenode
   labels:
-    app: nginx-service
+    app: namenode
+    service: namenode
 spec:
+
   ports:
-    - port: 80
-      name: web
-      targetPort: 80
+    - port: 9870
+      name: http
+      targetPort: 9870
       protocol: TCP
 
   clusterIP: None
   selector:
-    app: nginx
+    app: namenode
+    service: namenode
+
