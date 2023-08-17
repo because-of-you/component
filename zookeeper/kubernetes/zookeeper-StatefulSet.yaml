@@ -1,0 +1,105 @@
+# 版本信息
+apiVersion: apps/v1
+
+# 类型
+kind: StatefulSet
+
+# 元数据
+metadata:
+  name: zookeeper
+  labels:
+    app: zookeeper
+
+spec:
+
+
+  # ----------------- 1.多副本策略 -----------------
+  replicas: 3
+  # 滚动更新
+  updateStrategy:
+    type: RollingUpdate
+  # 最短就绪时间
+  minReadySeconds: 10
+  # ----------------- 1.多副本策略 -----------------
+
+  serviceName: zookeeper-service
+
+  # 选择器
+  selector:
+    matchLabels:
+      # 必须匹配 .spec.template.metadata.labels
+      app: zookeeper
+
+
+
+
+  # 模版信息
+  template:
+    metadata:
+      name: zookeeper
+      # 必须匹配 .spec.selector.matchLabels
+      labels:
+        app: zookeeper
+
+    spec:
+      containers:
+        - name: zookeeper
+          image: wfybelief/zookeeper:dev
+          imagePullPolicy: IfNotPresent
+
+          # 资源限制
+          resources:
+            limits:
+              memory: 200Mi
+            requests:
+              memory: 10Mi
+
+          ports:
+            - containerPort: 2181
+              protocol: TCP
+
+          # 存活监测
+          #          livenessProbe:
+          #            tcpSocket:
+          #              port: 2180
+          #            initialDelaySeconds: 30
+          #            periodSeconds: 10
+
+          volumeMounts:
+            - mountPath: /opt/data/
+              name: www
+      restartPolicy: Always
+
+
+  # 持久卷
+  volumeClaimTemplates:
+    - metadata:
+        name: www
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        # storageClassName: hostpath
+        resources:
+          requests:
+            storage: 1Gi
+          limits:
+            storage: 1Gi
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zookeeper-service
+  labels:
+    app: zookeeper-service
+spec:
+  ports:
+    - port: 2181
+      name: client
+      targetPort: 80
+      protocol: TCP
+
+  clusterIP: None
+  selector:
+    app: zookeeper

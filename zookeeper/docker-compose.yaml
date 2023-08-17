@@ -1,13 +1,15 @@
 version: "3.9"
 services:
   zookeeper:
-    build:
-      dockerfile: ./DockerFile
-    image: wfybelief/component:zookeeper
+    #    build:
+    #      dockerfile: ./DockerFile
+    image: local:dev
     configs:
       - source: test_dir
         target: /opt/test
         mode: 0440
+      - source: zoo_cfg
+        target: /conf/zoo.cfg
 
     env_file:
       - .env
@@ -25,8 +27,12 @@ services:
         reservations:
           cpus: "0.1"
           memory: 50M
-      mode: replicated
-      replicas: ${ZOOKEEPER_REPLICAS:-1}
+      #      mode: replicated
+      replicas: 4
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
       restart_policy:
         condition: on-failure
         delay: 30s
@@ -45,3 +51,7 @@ configs:
   test_dir:
     name: "test"
     file: ./
+
+  zoo_cfg:
+    name: "zoo.cfg"
+    file: ./config/zoo.cfg

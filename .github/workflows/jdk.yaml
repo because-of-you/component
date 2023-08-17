@@ -1,0 +1,169 @@
+# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+# uni项目一体式构建方案
+name: jdk
+
+on:
+  push:
+    branches: [ "dev", "main" ]
+    tags:
+      - "v*.*.*"
+    # pull_request:
+    # branches: [ "dev" ]
+    # 每天 的 一点 凌晨 调度运行
+    #    schedule:
+    #      - cron: '0 1 * * *'
+
+env:
+  REGISTRY: docker.io
+  JDK-8-Dockerfile: jdk/8/Dockerfile
+  JDK-11-Dockerfile: jdk/11/Dockerfile
+  JDK-17-Dockerfile: jdk/17/Dockerfile
+
+
+jobs:
+
+  jdk-8-image-build-job:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 拉取dev分支最新的项目代码
+      - name: git check out dev branches
+        uses: actions/checkout@v3
+
+      # -------------------------------------------docker 镜像管理模块----------------------------------------------------
+      # 该模块GitHub参考文档是https://github.com/docker/metadata-action#basic
+      # 该模块docker官方参考文档是https://docs.docker.com/build/ci/github-actions/examples/#manage-tags-and-labels
+
+      # docker 镜像管理模块 ------> 加载docker镜像元数据管理服务
+      - name: docker meta manager service
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/jdk-8
+
+      # docker 镜像管理模块 ------> 加载docker登陆服务
+      - name: docker login service
+        uses: docker/login-action@v2
+        if: github.event_name != 'pull_request'
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ${{ env.REGISTRY }}
+
+      # docker 镜像管理模块 ------> 加载docker 多平台镜像构建服务
+      - name: docker build x service
+        uses: docker/setup-buildx-action@v2
+
+      # docker 镜像管理模块 ------> 构建和推送最新的镜像 ,linux/arm64
+      - name: docker build and push service
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          file: ${{ env.JDK-8-Dockerfile }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      # -------------------------------------------docker 镜像管理模块----------------------------------------------------
+
+  jdk-11-image-build-job:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 拉取dev分支最新的项目代码
+      - name: git check out dev branches
+        uses: actions/checkout@v3
+        with:
+          ref: dev
+
+      # -------------------------------------------docker 镜像管理模块----------------------------------------------------
+      # 该模块GitHub参考文档是https://github.com/docker/metadata-action#basic
+      # 该模块docker官方参考文档是https://docs.docker.com/build/ci/github-actions/examples/#manage-tags-and-labels
+
+      # docker 镜像管理模块 ------> 加载docker镜像元数据管理服务
+      - name: docker meta manager service
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/jdk-11
+
+      # docker 镜像管理模块 ------> 加载docker登陆服务
+      - name: docker login service
+        uses: docker/login-action@v2
+        if: github.event_name != 'pull_request'
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ${{ env.REGISTRY }}
+
+      # docker 镜像管理模块 ------> 加载docker 多平台镜像构建服务
+      - name: docker build x service
+        uses: docker/setup-buildx-action@v2
+
+      # docker 镜像管理模块 ------> 构建和推送最新的镜像 ,linux/arm64
+      - name: docker build and push service
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          file: ${{ env.JDK-11-Dockerfile }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      # -------------------------------------------docker 镜像管理模块----------------------------------------------------
+
+  jdk-17-image-build-job:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 拉取dev分支最新的项目代码
+      - name: git check out dev branches
+        uses: actions/checkout@v3
+        with:
+          ref: dev
+
+      # -------------------------------------------docker 镜像管理模块----------------------------------------------------
+      # 该模块GitHub参考文档是https://github.com/docker/metadata-action#basic
+      # 该模块docker官方参考文档是https://docs.docker.com/build/ci/github-actions/examples/#manage-tags-and-labels
+
+      # docker 镜像管理模块 ------> 加载docker镜像元数据管理服务
+      - name: docker meta manager service
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/jdk-17
+
+      # docker 镜像管理模块 ------> 加载docker登陆服务
+      - name: docker login service
+        uses: docker/login-action@v2
+        if: github.event_name != 'pull_request'
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ${{ env.REGISTRY }}
+
+      # docker 镜像管理模块 ------> 加载docker 多平台镜像构建服务
+      - name: docker build x service
+        uses: docker/setup-buildx-action@v2
+
+      # docker 镜像管理模块 ------> 构建和推送最新的镜像 ,linux/arm64
+      - name: docker build and push service
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          file: ${{ env.JDK-17-Dockerfile }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      # -------------------------------------------docker 镜像管理模块----------------------------------------------------
