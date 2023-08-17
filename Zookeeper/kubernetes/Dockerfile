@@ -4,7 +4,7 @@ ARG version=3.9.0
 # 第一阶段测试
 FROM python:3.11 as python
 
-ADD builder.py .
+ADD Zookeeper/kubernetes/builder.py .
 
 RUN pip install pyinstaller && \
     pyinstaller -F builder.py
@@ -32,7 +32,7 @@ COPY --from=busybox $ZOOKEEPER_HOME $ZOOKEEPER_HOME
 
 WORKDIR $ZOOKEEPER_HOME
 COPY --from=python /dist/builder .
-ADD entrypoint.sh .
+ADD Zookeeper/kubernetes/entrypoint.sh .
 
 ENV PATH=$ZOOKEEPER_HOME/bin:$PATH ZOOKEEPER_HOME=$ZOOKEEPER_HOME
 
