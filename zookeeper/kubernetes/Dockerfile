@@ -20,7 +20,8 @@ ADD https://dlcdn.apache.org/zookeeper/zookeeper-$version/apache-zookeeper-$vers
 #ADD https://mirrors.ustc.edu.cn/apache/zookeeper/zookeeper-3.9.0/apache-zookeeper-3.9.0-bin.tar.gz apache-zookeeper-$version-bin.tar.gz
 
 RUN busybox mkdir -p $ZOOKEEPER_HOME && \
-    busybox tar -zxvf apache-zookeeper-$version-bin.tar.gz -C $ZOOKEEPER_HOME --strip-components 1
+    busybox tar -zxvf apache-zookeeper-$version-bin.tar.gz -C $ZOOKEEPER_HOME --strip-components 1 && \
+    busybox cp $ZOOKEEPER_HOME/conf/zoo_sample.cfg $ZOOKEEPER_HOME/conf/zoo.cfg
 
 # 运行环境
 FROM wfybelief/jdk-11:dev as jdk
