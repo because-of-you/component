@@ -44,7 +44,7 @@ spec:
     spec:
       containers:
         - name: zookeeper
-          image: wfybelief/zookeeper:dev
+          image: wfybelief/zookeeper:latest
           imagePullPolicy: IfNotPresent
 
           # 资源限制

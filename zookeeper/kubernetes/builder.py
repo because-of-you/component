@@ -9,7 +9,6 @@ BASE_DIR = "/opt/component"
 SERVICE_NAME = "zookeeper"
 CONF_DIR = "conf"
 
-
 path = os.path.join(BASE_DIR, SERVICE_NAME, CONF_DIR)
 
 
@@ -36,6 +35,7 @@ def my_id_file(identity: str):
 def zoo_conf_config(identity: str, node_name: str):
     with open(os.path.join(path, "zoo.cfg"), "a+") as file:
         for i in range((int(identity) + 1)):
+            node_name = node_name.split("-")[0]
             file.write(f"server.{i}={node_name}:2888:3888;2181" + os.linesep)
         file.close()
 
