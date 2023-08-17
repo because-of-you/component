@@ -29,7 +29,6 @@ spec:
     matchLabels:
       # 必须匹配 .spec.template.metadata.labels
       app: zookeeper
-      id: 2
 
 
 
@@ -41,11 +40,11 @@ spec:
       # 必须匹配 .spec.selector.matchLabels
       labels:
         app: zookeeper
-        id: 2
+
     spec:
       containers:
-        - name: Title
-          image: Image
+        - name: zookeeper
+          image: wfybelief/zookeeper:dev
           imagePullPolicy: IfNotPresent
 
           # 资源限制
@@ -68,18 +67,18 @@ spec:
 
           volumeMounts:
             - mountPath: /opt/data/
-              name: testDir
+              name: dir-test
       restartPolicy: Always
 
 
   # 持久卷
   volumeClaimTemplates:
     - metadata:
-        name: testDir
+        name: dir-test
       spec:
         accessModes:
           - ReadWriteOnce
-        storageClassName: standard
+        # storageClassName: standard
         resources:
           requests:
             storage: 1Gi
