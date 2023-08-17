@@ -7,15 +7,15 @@
 # documentation.
 
 # uni项目一体式构建方案
-name: component project build
+name: jdk
 
 on:
   push:
     branches: [ "dev", "main" ]
     tags:
       - "v*.*.*"
-  pull_request:
-    branches: [ "dev" ]
+    # pull_request:
+    # branches: [ "dev" ]
     # 每天 的 一点 凌晨 调度运行
     #    schedule:
     #      - cron: '0 1 * * *'
@@ -36,8 +36,6 @@ jobs:
       # 拉取dev分支最新的项目代码
       - name: git check out dev branches
         uses: actions/checkout@v3
-        with:
-          ref: dev
 
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
       # 该模块GitHub参考文档是https://github.com/docker/metadata-action#basic
