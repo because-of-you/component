@@ -14,7 +14,7 @@ spec:
 
 
   # ----------------- 1.多副本策略 -----------------
-  replicas: 1
+  replicas: 3
   # 滚动更新
   updateStrategy:
     type: RollingUpdate
@@ -22,7 +22,7 @@ spec:
   minReadySeconds: 10
   # ----------------- 1.多副本策略 -----------------
 
-  serviceName: ss
+  serviceName: zookeeper-service
 
   # 选择器
   selector:
@@ -55,7 +55,7 @@ spec:
               memory: 10Mi
 
           ports:
-            - containerPort: 2180
+            - containerPort: 2181
               protocol: TCP
 
           # 存活监测
@@ -67,18 +67,18 @@ spec:
 
           volumeMounts:
             - mountPath: /opt/data/
-              name: dir-test
+              name: www
       restartPolicy: Always
 
 
   # 持久卷
   volumeClaimTemplates:
     - metadata:
-        name: dir-test
+        name: www
       spec:
         accessModes:
           - ReadWriteOnce
-        # storageClassName: standard
+        # storageClassName: hostpath
         resources:
           requests:
             storage: 1Gi
@@ -90,18 +90,16 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: zookeeper
+  name: zookeeper-service
   labels:
-    app: zookeeper
+    app: zookeeper-service
 spec:
-
   ports:
-    - port: 80
-      name: web
+    - port: 2181
+      name: client
       targetPort: 80
       protocol: TCP
 
   clusterIP: None
   selector:
     app: zookeeper
-

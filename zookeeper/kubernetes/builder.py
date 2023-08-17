@@ -21,7 +21,7 @@ def my_id_file(identity: str):
             if len(words) != 2:
                 continue
             if words[0] == "dataDir":
-                DATA_DIR = words[-1]
+                DATA_DIR = words[-1].strip()
 
         file.close()
 
