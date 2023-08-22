@@ -65,25 +65,25 @@ spec:
           #            initialDelaySeconds: 30
           #            periodSeconds: 10
 
-          volumeMounts:
-            - mountPath: /opt/data/
-              name: www
+#          volumeMounts:
+#            - mountPath: /opt/data/akjagsg
+#              name: www
       restartPolicy: Always
 
 
   # 持久卷
-  volumeClaimTemplates:
-    - metadata:
-        name: www
-      spec:
-        accessModes:
-          - ReadWriteOnce
-        # storageClassName: hostpath
-        resources:
-          requests:
-            storage: 1Gi
-          limits:
-            storage: 1Gi
+#  volumeClaimTemplates:
+#    - metadata:
+#        name: www
+#      spec:
+#        accessModes:
+#          - ReadWriteOnce
+#        # storageClassName: hostpath
+#        resources:
+#          requests:
+#            storage: 1Gi
+#          limits:
+#            storage: 1Gi
 
 
 ---
@@ -97,7 +97,7 @@ spec:
   ports:
     - port: 2181
       name: client
-      targetPort: 80
+      targetPort: 2181
       protocol: TCP
 
   clusterIP: None
