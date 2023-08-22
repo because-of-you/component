@@ -21,6 +21,10 @@ def my_id_file(identity: str):
                 continue
             if words[0] == "dataDir":
                 DATA_DIR = words[-1].strip()
+            if words[0] == "dataLogDir":
+                data_log_dir = words[-1].strip()
+                if not os.path.exists(data_log_dir):
+                    os.makedirs(data_log_dir)
 
         file.close()
 
