@@ -44,7 +44,7 @@ spec:
     spec:
       containers:
         - name: zookeeper
-          image: wfybelief/zookeeper:dev
+          image: wfybelief/zookeeper:latest
           imagePullPolicy: IfNotPresent
 
           # 资源限制
@@ -66,15 +66,29 @@ spec:
           #            periodSeconds: 10
 
           volumeMounts:
-            - mountPath: /opt/data/
-              name: www
+            - mountPath: /opt/component/storage/
+              name: zookeeper-data-storage
+              readOnly: false
+            - mountPath: /opt/component/zookeeper/conf/zoo_sample.cfg
+              subPath: zoo_sample.cfg
+              name: zookeeper-conf
+              readOnly: false
+
+      volumes:
+        - name: zookeeper-conf
+          configMap:
+            name: zookeeper-configmap
+            items:
+              - key: zoo_sample.cfg
+                path: zoo_sample.cfg
+
       restartPolicy: Always
 
 
   # 持久卷
   volumeClaimTemplates:
     - metadata:
-        name: www
+        name: zookeeper-data-storage
       spec:
         accessModes:
           - ReadWriteOnce
@@ -97,9 +111,54 @@ spec:
   ports:
     - port: 2181
       name: client
-      targetPort: 80
+      targetPort: 2181
       protocol: TCP
 
   clusterIP: None
   selector:
     app: zookeeper
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: zookeeper-configmap
+data:
+  zoo_sample.cfg: |
+    # The number of milliseconds of each tick
+    tickTime=2000
+    # The number of ticks that the initial
+    # synchronization phase can take
+    initLimit=10
+    # The number of ticks that can pass between
+    # sending a request and getting an acknowledgement
+    syncLimit=5
+    # the directory where the snapshot is stored.
+    # do not use /tmp for storage, /tmp here is just
+    # example sakes.
+    dataDir=/opt/component/storage/data
+    dataLogDir=/opt/component/storage/log
+    # the port at which the clients will connect
+    clientPort=2181
+    # the maximum number of client connections.
+    # increase this if you need to handle more clients
+    #maxClientCnxns=60
+    #
+    # Be sure to read the maintenance section of the
+    # administrator guide before turning on autopurge.
+    #
+    # https://zookeeper.apache.org/doc/current/zookeeperAdmin.html#sc_maintenance
+    #
+    # The number of snapshots to retain in dataDir
+    #autopurge.snapRetainCount=3
+    # Purge task interval in hours
+    # Set to "0" to disable auto purge feature
+    #autopurge.purgeInterval=1
+    
+    ## Metrics Providers
+    #
+    # https://prometheus.io Metrics Exporter
+    #metricsProvider.className=org.apache.zookeeper.metrics.prometheus.PrometheusMetricsProvider
+    #metricsProvider.httpHost=0.0.0.0
+    #metricsProvider.httpPort=7000
+    #metricsProvider.exportJvmInfo=true    
