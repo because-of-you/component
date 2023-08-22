@@ -1,5 +1,6 @@
 import logging
 import os.path
+import shutil
 from os import uname_result
 
 from typing import Sequence
@@ -57,6 +58,7 @@ def main():
     identity = splits[-1]
     logging.info(f"解析的id是 {identity}")
 
+    shutil.copy2(os.path.join(path, "zoo_sample.cfg"), os.path.join(path, "zoo.cfg"))
     # zoo.cfg
     zoo_conf_config(identity, uname.nodename)
 
