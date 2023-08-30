@@ -142,7 +142,7 @@
     </storages>
     <users>
         <user name="orientdb"
-              password="{PBKDF2WithHmacSHA256}a0c46468a335c94f771e95a0cc6595b7a3bfd017c55ec58af396f723d136c9b8"
+              password="{PBKDF2WithHmacSHA256}WVQ0a19xdm42g7nIacPqdrI4mPTNw5Gzwwp.7BnGFv4:i1HqPUeoNQYAAKBUSkmp1RqDcM4553xvzXmPUSrF.H8:100000"
               resources="*"/>
     </users>
     <properties>
