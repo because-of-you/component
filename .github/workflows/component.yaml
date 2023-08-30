@@ -72,6 +72,23 @@ jobs:
       - name: git check out dev branches
         uses: actions/checkout@v3
 
+      - name: set jdk 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'zulu'
+          cache: maven
+
+      # maven build agent jar
+      - name: maven build
+        run: |
+          git clone https://github.com/SAP/orientdb-enterprise-agent.git
+          cd orientdb-enterprise-agent 
+          git checkout -f 3.2.22 
+          mvn clean -U
+          mvn -T 1C -DskipTests=true install 
+          ls -al /agent/target
+
       - name: docker meta manager service
         id: meta
         uses: docker/metadata-action@v4
