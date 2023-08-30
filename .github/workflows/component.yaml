@@ -90,6 +90,8 @@ jobs:
       # maven build agent jar
       - name: maven build
         run: |
+          cd orientdb-enterprise-agent 
+          git checkout -f 3.2.22 
           mvn clean -U -T 1C -DskipTests=true install 
           ls -al agent/target
 
