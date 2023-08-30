@@ -25,6 +25,7 @@ VOLUME ["/orientdb/backup", "/orientdb/databases", "/orientdb/config"]
 # https://jar-download.com/?search_box=com.orientechnologies.agent
 
 ADD orientdb-enterprise-agent/agent/target/agent-3.2.22.jar /orientdb/plugins/
+ADD orientdb/orientdb-server-config.xml /orientdb/config
 
 ENTRYPOINT ["server.sh"]
 CMD []
