@@ -5,10 +5,9 @@ FROM wfybelief/jdk-8:dev as java
 
 # https://orientdb.com/docs/3.2.x/programs/server.html
 ENV ORIENTDB_HOME=/orientdb \
-    ORIENTDB_ROOT_PASSWORD=bigdata@2023! \
     ORIENTDB_OPTS_MEMORY="\
-        -XX:InitialRAMPercentage=65.0 \
-        -XX:MaxRAMPercentage=65.0 \
+        -XX:InitialRAMPercentage=35.0 \
+        -XX:MaxRAMPercentage=35.0 \
         -Xshareclasses \
         -Xtune:virtualized \
         -Xquickstart \
