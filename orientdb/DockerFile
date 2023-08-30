@@ -1,0 +1,31 @@
+FROM orientdb:3.2.22 as db
+
+FROM wfybelief/jdk-8:dev as java
+
+
+# https://orientdb.com/docs/3.2.x/programs/server.html
+ENV ORIENTDB_HOME=/orientdb \
+    ORIENTDB_ROOT_PASSWORD=bigdata@2023! \
+    ORIENTDB_OPTS_MEMORY="\
+        -XX:InitialRAMPercentage=65.0 \
+        -XX:MaxRAMPercentage=65.0 \
+        -Xshareclasses \
+        -Xtune:virtualized \
+        -Xquickstart \
+        -XX:+UseContainerSupport" \
+    PATH=/orientdb/bin:$PATH
+
+COPY --from=db /orientdb /orientdb
+
+WORKDIR /orientdb
+
+# <!-- TODO: Use K8s hazelcast plugin: https://github.com/orientechnologies/orientdb-docker  -->
+VOLUME ["/orientdb/backup", "/orientdb/databases", "/orientdb/config"]
+
+# http://orientdb.org/enterprise-agent-open-source
+# https://jar-download.com/?search_box=com.orientechnologies.agent
+
+ADD https://download.jar-download.com/cache_jars/com.orientechnologies/agent/3.2.22/jar_files.zip /orientdb/plugins/
+
+ENTRYPOINT ["server.sh"]
+CMD []
