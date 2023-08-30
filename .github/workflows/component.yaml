@@ -72,12 +72,12 @@ jobs:
       - name: git check out dev branches
         uses: actions/checkout@v3
 
-      - name: set jdk 17
+      - name: set jdk 8
         uses: actions/setup-java@v3
         with:
           java-version: '8'
           distribution: 'zulu'
-          cache: maven
+          #          cache: maven
 
       # maven build agent jar
       - name: maven build
