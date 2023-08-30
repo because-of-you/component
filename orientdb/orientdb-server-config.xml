@@ -142,7 +142,7 @@
     </storages>
     <users>
         <user name="root"
-              password="bigdata@2023!"
+              password="orientdb@2023!"
               resources="*"/>
     </users>
     <properties>
