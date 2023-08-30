@@ -1,9 +1,0 @@
-FROM orientdb:latest as db
-
-# 元数据
-LABEL MAINTAINER="wfy"
-
-
-
-ENTRYPOINT ["tail"]
-CMD ["-f", "/dev/null"]
