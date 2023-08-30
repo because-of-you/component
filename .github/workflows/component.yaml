@@ -85,9 +85,8 @@ jobs:
           git clone https://github.com/SAP/orientdb-enterprise-agent.git
           cd orientdb-enterprise-agent 
           git checkout -f 3.2.22 
-          mvn clean -U
-          mvn -T 1C -DskipTests=true install 
-          ls -al /agent/target
+          mvn clean -U -T 1C -DskipTests=true install 
+          ls -al agent/target
 
       - name: docker meta manager service
         id: meta
