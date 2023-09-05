@@ -30,7 +30,13 @@ ADD https://dlcdn.apache.org/zookeeper/zookeeper-$version/apache-zookeeper-$vers
 RUN busybox mkdir -p $ZOOKEEPER_HOME && \
     busybox tar -zxvf apache-zookeeper-$version-bin.tar.gz -C $ZOOKEEPER_HOME --strip-components 1 && \
     busybox cp $ZOOKEEPER_HOME/conf/zoo_sample.cfg $ZOOKEEPER_HOME/conf/zoo.cfg && \
-    busybox echo 'export SERVER_JVMFLAGS="$ZOOKEEPER_HEAP_OPTS"' >> $ZOOKEEPER_HOME/bin/zkEnv.sh
+    busybox echo 'export SERVER_JVMFLAGS="\
+        -XX:InitialRAMPercentage=35.0 \
+        -XX:MaxRAMPercentage=35.0 \
+        -Xshareclasses \
+        -Xtune:virtualized \
+        -Xquickstart \
+        -XX:+UseContainerSupport"' >> $ZOOKEEPER_HOME/bin/zkEnv.sh
 
 
 COPY --from=python /dist/builder $ZOOKEEPER_HOME/
