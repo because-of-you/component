@@ -21,6 +21,7 @@ RUN busybox mkdir -p $KAFKA_HOME && \
 
 COPY kafka/extra/server.properties $KAFKA_HOME/config/server_sample.properties
 ADD zookeeper/kubernetes/entrypoint.sh $KAFKA_HOME/
+COPY --from=python /dist/builder $KAFKA_HOME/
 
 
 
@@ -30,7 +31,6 @@ FROM wfybelief/jdk-17:dev as jdk
 ARG KAFKA_HOME
 
 COPY --from=busybox $KAFKA_HOME $KAFKA_HOME
-COPY --from=python /dist/builder .
 
 WORKDIR $KAFKA_HOME
 
