@@ -4,8 +4,7 @@ ARG scala_version=2.13
 
 FROM python:3.11 as python
 
-#ADD kafka/kubernetes/builder.py .
-ADD builder.py .
+ADD kafka/kubernetes/builder.py .
 
 RUN pip install pyinstaller && \
     pyinstaller -F builder.py
