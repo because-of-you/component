@@ -1,5 +1,12 @@
 ARG ZOOKEEPER_HOME="/opt/component/zookeeper"
 ARG version=3.9.0
+ARG ZOOKEEPER_HEAP_OPTS="\
+        -XX:InitialRAMPercentage=35.0 \
+        -XX:MaxRAMPercentage=35.0 \
+        -Xshareclasses \
+        -Xtune:virtualized \
+        -Xquickstart \
+        -XX:+UseContainerSupport"
 
 # 第一阶段测试
 FROM python:3.11 as python
@@ -14,6 +21,7 @@ FROM busybox:latest as busybox
 
 ARG ZOOKEEPER_HOME
 ARG version
+ARG ZOOKEEPER_HEAP_OPTS
 
 
 ADD https://dlcdn.apache.org/zookeeper/zookeeper-$version/apache-zookeeper-$version-bin.tar.gz apache-zookeeper-$version-bin.tar.gz
@@ -21,7 +29,12 @@ ADD https://dlcdn.apache.org/zookeeper/zookeeper-$version/apache-zookeeper-$vers
 
 RUN busybox mkdir -p $ZOOKEEPER_HOME && \
     busybox tar -zxvf apache-zookeeper-$version-bin.tar.gz -C $ZOOKEEPER_HOME --strip-components 1 && \
-    busybox cp $ZOOKEEPER_HOME/conf/zoo_sample.cfg $ZOOKEEPER_HOME/conf/zoo.cfg
+    busybox cp $ZOOKEEPER_HOME/conf/zoo_sample.cfg $ZOOKEEPER_HOME/conf/zoo.cfg && \
+    busybox echo 'export SERVER_JVMFLAGS="$ZOOKEEPER_HEAP_OPTS"' >> $ZOOKEEPER_HOME/bin/zkEnv.sh
+
+
+COPY --from=python /dist/builder $ZOOKEEPER_HOME/
+ADD zookeeper/kubernetes/entrypoint.sh $ZOOKEEPER_HOME
 
 # 运行环境
 FROM wfybelief/jdk-11:dev as jdk
@@ -32,9 +45,6 @@ ARG version
 COPY --from=busybox $ZOOKEEPER_HOME $ZOOKEEPER_HOME
 
 WORKDIR $ZOOKEEPER_HOME
-COPY --from=python /dist/builder .
-ADD zookeeper/kubernetes/entrypoint.sh .
-
 ENV PATH=$ZOOKEEPER_HOME/bin:$PATH ZOOKEEPER_HOME=$ZOOKEEPER_HOME
 
 # todo 读取zoo.cfg中内容 zkDataDir, 然后写入到指定路径myid
