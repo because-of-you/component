@@ -1,6 +1,13 @@
 ARG KAFKA_HOME="/opt/component/kafka"
 ARG version=3.5.1
 ARG scala_version=2.13
+ARG KAFKA_HEAP_OPTS="\
+        -XX:InitialRAMPercentage=35.0 \
+        -XX:MaxRAMPercentage=35.0 \
+        -Xshareclasses \
+        -Xtune:virtualized \
+        -Xquickstart \
+        -XX:+UseContainerSupport"
 
 FROM python:3.11 as python
 
@@ -29,14 +36,15 @@ COPY --from=python /dist/builder $KAFKA_HOME/
 FROM wfybelief/jdk-17:dev as jdk
 
 ARG KAFKA_HOME
+ARG KAFKA_HEAP_OPTS
 
 COPY --from=busybox $KAFKA_HOME $KAFKA_HOME
 
 WORKDIR $KAFKA_HOME
 
-ENV PATH=$KAFKA_HOME/bin:$PATH KAFKA_HOME=$KAFKA_HOME
+ENV PATH=$KAFKA_HOME/bin:$PATH KAFKA_HOME=$KAFKA_HOME KAFKA_HEAP_OPTS=$KAFKA_HEAP_OPTS
 
 ENTRYPOINT ["busybox", "sh", "entrypoint.sh"]
 #CMD ["zkServer.sh", "start-foreground"]
-CMD ["top", "-b"]
+CMD ["kafka-server-start.sh", "config/server.properties"]
 
