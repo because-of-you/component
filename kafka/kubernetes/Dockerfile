@@ -17,8 +17,7 @@ ARG scala_version
 
 ADD  https://downloads.apache.org/kafka/$version/kafka_$scala_version-$version.tgz .
 RUN busybox mkdir -p $KAFKA_HOME && \
-    busybox tar -zxvf kafka_$scala_version-$version.tgz -C $KAFKA_HOME --strip-components 1 \
-
+    busybox tar -zxvf kafka_$scala_version-$version.tgz -C $KAFKA_HOME --strip-components 1
 
 COPY kafka/extra/server.properties $KAFKA_HOME/config/server_sample.properties
 ADD zookeeper/kubernetes/entrypoint.sh $KAFKA_HOME/
@@ -26,7 +25,7 @@ ADD zookeeper/kubernetes/entrypoint.sh $KAFKA_HOME/
 
 
 # 运行环境
-FROM wfybelief/jdk-11:dev as jdk
+FROM wfybelief/jdk-17:dev as jdk
 
 ARG KAFKA_HOME
 
