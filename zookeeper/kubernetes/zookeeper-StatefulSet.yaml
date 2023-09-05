@@ -50,7 +50,8 @@ spec:
           # 资源限制
           resources:
             limits:
-              memory: 200Mi
+              # 1024 / 3
+              memory: 341Mi
             requests:
               memory: 10Mi
 
