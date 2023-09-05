@@ -1,20 +1,44 @@
-# 第一阶段拷贝kafka的release
-FROM bitnami/kafka:3.5.1 as kafka
+ARG KAFKA_HOME="/opt/component/kafka"
+ARG version=3.5.1
+ARG scala_version=2.13
 
-# 第二阶段 openj9 | 降低内存 |
-FROM wfybelief/jdk-17:dev as jdk
+FROM python:3.11 as python
 
-COPY --from=kafka /opt/bitnami/kafka/ /opt/component/kafka/
+#ADD kafka/kubernetes/builder.py .
+ADD builder.py .
 
-# 设置普通变量|环境变量相关
-ARG KAFKA_HOME=/opt/component/kafka
+RUN pip install pyinstaller && \
+    pyinstaller -F builder.py
 
-ENV KAFKA_HOME=$KAFKA_HOME \
-    PATH=$KAFKA_HOME/bin:$PATH \
-#    KAFKA_HEAP_OPTS=
 
-COPY entrypoint.sh .
+FROM busybox:latest as busybox
+ARG KAFKA_HOME
+ARG version
+ARG scala_version
 
-ENTRYPOINT ["busybox", "sh"]
-CMD ["entrypoint.sh"]
+ADD  https://downloads.apache.org/kafka/$version/kafka_$scala_version-$version.tgz .
+RUN busybox mkdir -p $KAFKA_HOME && \
+    busybox tar -zxvf kafka_$scala_version-$version.tgz -C $KAFKA_HOME --strip-components 1 \
+
+
+COPY kafka/extra/server.properties $KAFKA_HOME/config/server_sample.properties
+ADD zookeeper/kubernetes/entrypoint.sh $KAFKA_HOME/
+
+
+
+# 运行环境
+FROM wfybelief/jdk-11:dev as jdk
+
+ARG KAFKA_HOME
+
+COPY --from=busybox $KAFKA_HOME $KAFKA_HOME
+COPY --from=python /dist/builder .
+
+WORKDIR $KAFKA_HOME
+
+ENV PATH=$KAFKA_HOME/bin:$PATH KAFKA_HOME=$KAFKA_HOME
+
+ENTRYPOINT ["busybox", "sh", "entrypoint.sh"]
+#CMD ["zkServer.sh", "start-foreground"]
+CMD ["top", "-b"]
 

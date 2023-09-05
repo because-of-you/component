@@ -50,7 +50,7 @@ networks:
 configs:
   test_dir:
     name: "test"
-    file: ./
+    file: ..
 
   zoo_cfg:
     name: "zoo.cfg"
