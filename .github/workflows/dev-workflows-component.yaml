@@ -28,7 +28,7 @@ env:
 jobs:
 
   zookeeper:
-    if: contains( $build-job , 'zookeeper')
+    if: contains( github.event.inputs.build-job ,  'zookeeper')
     runs-on: ubuntu-latest
 
     steps:
@@ -66,7 +66,7 @@ jobs:
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
   orientdb:
-    if: contains( $build-job , 'orientdb')
+    if: contains( github.event.inputs.build-job ,  'orientdb')
     runs-on: ubuntu-latest
 
     steps:
@@ -127,7 +127,7 @@ jobs:
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
   kafka:
-    if: contains( $build-job , 'kafka')
+    if: contains( github.event.inputs.build-job ,  'kafka')
     runs-on: ubuntu-latest
 
     steps:
