@@ -30,7 +30,7 @@ env:
 jobs:
 
   jdk-8-image-build-job:
-    if: contains( env.build-job , 'jdk-8-image-build-job')
+    if: contains( $build-job , 'jdk-8-image-build-job')
     runs-on: ubuntu-latest
 
     steps:
@@ -76,7 +76,7 @@ jobs:
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
   jdk-11-image-build-job:
-    if: contains( env.build-job , 'jdk-11-image-build-job')
+    if: contains( $build-job , 'jdk-11-image-build-job')
     runs-on: ubuntu-latest
 
     steps:
@@ -124,7 +124,7 @@ jobs:
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
   jdk-17-image-build-job:
-    if: contains( env.build-job , 'jdk-17-image-build-job')
+    if: contains( $build-job , 'jdk-17-image-build-job')
     runs-on: ubuntu-latest
 
     steps:
