@@ -26,7 +26,7 @@ ADD  https://downloads.apache.org/kafka/$version/kafka_$scala_version-$version.t
 RUN busybox mkdir -p $KAFKA_HOME && \
     busybox tar -zxvf kafka_$scala_version-$version.tgz -C $KAFKA_HOME --strip-components 1
 
-COPY kafka/extra/server.properties $KAFKA_HOME/config/server_sample.properties
+COPY kafka/extra/server_sample.properties $KAFKA_HOME/config/
 ADD zookeeper/kubernetes/entrypoint.sh $KAFKA_HOME/
 COPY --from=python /dist/builder $KAFKA_HOME/
 
