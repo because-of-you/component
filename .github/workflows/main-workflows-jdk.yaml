@@ -25,12 +25,12 @@ env:
   JDK-8-Dockerfile: jdk/8/Dockerfile
   JDK-11-Dockerfile: jdk/11/Dockerfile
   JDK-17-Dockerfile: jdk/17/Dockerfile
-  build-job: jdk-8-image-build-job,jdk-11-image-build-job,jdk-17-image-build-job
+
 
 jobs:
 
   jdk-8-image-build-job:
-    if: contains( github.event.inputs.build-job ,  'jdk-8-image-build-job')
+    if: contains( 'jdk-8-image-build-job,jdk-11-image-build-job,jdk-17-image-build-job' ,  'jdk-8-image-build-job')
     runs-on: ubuntu-latest
 
     steps:
@@ -76,7 +76,7 @@ jobs:
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
   jdk-11-image-build-job:
-    if: contains( github.event.inputs.build-job ,  'jdk-11-image-build-job')
+    if: contains( 'jdk-8-image-build-job,jdk-11-image-build-job,jdk-17-image-build-job' ,  'jdk-11-image-build-job')
     runs-on: ubuntu-latest
 
     steps:
@@ -124,7 +124,7 @@ jobs:
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
   jdk-17-image-build-job:
-    if: contains( github.event.inputs.build-job ,  'jdk-17-image-build-job')
+    if: contains( 'jdk-8-image-build-job,jdk-11-image-build-job,jdk-17-image-build-job' ,  'jdk-17-image-build-job')
     runs-on: ubuntu-latest
 
     steps:

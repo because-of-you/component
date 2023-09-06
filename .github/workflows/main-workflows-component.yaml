@@ -25,12 +25,11 @@ env:
   zookeeper-Dockerfile: zookeeper/kubernetes/Dockerfile
   kafka-Dockerfile: kafka/kubernetes/Dockerfile
   orientdb-Dockerfile: orientdb/DockerFile
-  build-job: "zookeeper,orientdb,kafka"
 
 jobs:
 
   zookeeper:
-    if: contains( github.event.inputs.build-job ,  'zookeeper')
+    if: contains( 'zookeeper,orientdb,kafka' ,  'zookeeper')
     runs-on: ubuntu-latest
 
     steps:
@@ -68,7 +67,7 @@ jobs:
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
   orientdb:
-    if: contains( github.event.inputs.build-job ,  'orientdb')
+    if: contains( 'zookeeper,orientdb,kafka' ,  'orientdb')
     runs-on: ubuntu-latest
 
     steps:
@@ -129,7 +128,7 @@ jobs:
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
   kafka:
-    if: contains( github.event.inputs.build-job ,  'kafka')
+    if: contains( 'zookeeper,orientdb,kafka' ,  'kafka')
     runs-on: ubuntu-latest
 
     steps:
