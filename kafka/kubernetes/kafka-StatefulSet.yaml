@@ -93,7 +93,7 @@ spec:
       spec:
         accessModes:
           - ReadWriteOnce
-        storageClassName: csi-disk-ssd
+        # storageClassName: csi-disk-ssd | hostpath
         resources:
           requests:
             storage: 1Gi
