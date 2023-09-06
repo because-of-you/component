@@ -14,7 +14,7 @@ path = os.path.join(BASE_DIR, SERVICE_NAME, CONF_DIR)
 
 
 def server_properties(identity: str):
-    DATA_DIR = "/opt/component/kafka/data"
+    DATA_DIR = "/opt/component/storage/log"
     with open(os.path.join(path, "server.properties"), "r") as file:
         for line in file.readlines():
             words = line.split("=")
@@ -28,7 +28,7 @@ def server_properties(identity: str):
     if not os.path.exists(DATA_DIR):
         os.makedirs(DATA_DIR)
 
-    with open(os.path.join(DATA_DIR, "server.properties"), "a+") as file:
+    with open(os.path.join(path, "server.properties"), "a+") as file:
         file.write("broker.id=" + identity + os.linesep)
         file.close()
 
