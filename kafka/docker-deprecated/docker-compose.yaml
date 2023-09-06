@@ -2,7 +2,7 @@ version: "3.9"
 services:
   zookeeper:
     build:
-      dockerfile: ./DockerFile
+      dockerfile: DockerFile
     image: wfybelief/component:zookeeper
     env_file:
       - .env
@@ -28,7 +28,7 @@ services:
 
   kafka:
     build:
-      dockerfile: ./DockerFile
+      dockerfile: DockerFile
     image: wfybelief/component:kafka
     env_file:
       - .env
@@ -96,4 +96,4 @@ networks:
 configs:
   test_dir:
     name: "test"
-    file: ./
+    file: ..
