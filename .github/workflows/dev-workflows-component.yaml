@@ -7,48 +7,41 @@
 # documentation.
 
 # uni项目一体式构建方案
-name: jdk
+name: component
 
 on:
   push:
-    branches: [ "dev", "main" ]
-    tags:
-      - "v*.*.*"
-    # pull_request:
-    # branches: [ "dev" ]
+    branches: [ "dev" ]
+    #  pull_request:
+    #    branches: [ "dev" ]
     # 每天 的 一点 凌晨 调度运行
     #    schedule:
     #      - cron: '0 1 * * *'
 
 env:
   REGISTRY: docker.io
-  JDK-8-Dockerfile: jdk/8/Dockerfile
-  JDK-11-Dockerfile: jdk/11/Dockerfile
-  JDK-17-Dockerfile: jdk/17/Dockerfile
-
+  zookeeper-Dockerfile: zookeeper/kubernetes/Dockerfile
+  kafka-Dockerfile: kafka/kubernetes/Dockerfile
+  orientdb-Dockerfile: orientdb/DockerFile
+  build-job: ""
 
 jobs:
 
-  jdk-8-image-build-job:
+  zookeeper:
+    if: contains(${{ env.build-job }}, 'zookeeper')
     runs-on: ubuntu-latest
 
     steps:
-      # 拉取dev分支最新的项目代码
+
       - name: git check out dev branches
         uses: actions/checkout@v3
 
-      # -------------------------------------------docker 镜像管理模块----------------------------------------------------
-      # 该模块GitHub参考文档是https://github.com/docker/metadata-action#basic
-      # 该模块docker官方参考文档是https://docs.docker.com/build/ci/github-actions/examples/#manage-tags-and-labels
-
-      # docker 镜像管理模块 ------> 加载docker镜像元数据管理服务
       - name: docker meta manager service
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/jdk-8
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/zookeeper
 
-      # docker 镜像管理模块 ------> 加载docker登陆服务
       - name: docker login service
         uses: docker/login-action@v2
         if: github.event_name != 'pull_request'
@@ -57,45 +50,59 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           registry: ${{ env.REGISTRY }}
 
-      # docker 镜像管理模块 ------> 加载docker 多平台镜像构建服务
       - name: docker build x service
         uses: docker/setup-buildx-action@v2
 
-      # docker 镜像管理模块 ------> 构建和推送最新的镜像 ,linux/arm64
       - name: docker build and push service
         uses: docker/build-push-action@v4
         with:
           context: .
           platforms: linux/amd64,linux/arm64
-          file: ${{ env.JDK-8-Dockerfile }}
+          file: ${{ env.zookeeper-Dockerfile }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
-  jdk-11-image-build-job:
+  orientdb:
+    if: contains(${{ env.build-job }}, 'orientdb')
     runs-on: ubuntu-latest
 
     steps:
-      # 拉取dev分支最新的项目代码
+
       - name: git check out dev branches
         uses: actions/checkout@v3
+
+
+      # maven build agent jar
+      - name: agent project clone
+        run: |
+          git clone https://github.com/SAP/orientdb-enterprise-agent.git
+          cd orientdb-enterprise-agent 
+          git checkout -f 3.2.22 
+
+      - name: set jdk 8
+        uses: actions/setup-java@v3
         with:
-          ref: dev
+          java-version: '8'
+          distribution: 'zulu'
+          cache: maven
 
-      # -------------------------------------------docker 镜像管理模块----------------------------------------------------
-      # 该模块GitHub参考文档是https://github.com/docker/metadata-action#basic
-      # 该模块docker官方参考文档是https://docs.docker.com/build/ci/github-actions/examples/#manage-tags-and-labels
+      # maven build agent jar
+      - name: maven build
+        run: |
+          cd orientdb-enterprise-agent 
+          git checkout -f 3.2.22 
+          mvn clean -U -T 1C -DskipTests=true install 
+          ls -al agent/target
 
-      # docker 镜像管理模块 ------> 加载docker镜像元数据管理服务
       - name: docker meta manager service
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/jdk-11
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/orientdb
 
-      # docker 镜像管理模块 ------> 加载docker登陆服务
       - name: docker login service
         uses: docker/login-action@v2
         if: github.event_name != 'pull_request'
@@ -104,45 +111,36 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           registry: ${{ env.REGISTRY }}
 
-      # docker 镜像管理模块 ------> 加载docker 多平台镜像构建服务
       - name: docker build x service
         uses: docker/setup-buildx-action@v2
 
-      # docker 镜像管理模块 ------> 构建和推送最新的镜像 ,linux/arm64
       - name: docker build and push service
         uses: docker/build-push-action@v4
         with:
           context: .
           platforms: linux/amd64,linux/arm64
-          file: ${{ env.JDK-11-Dockerfile }}
+          file: ${{ env.orientdb-Dockerfile }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
-  jdk-17-image-build-job:
+  kafka:
+    if: contains(${{ env.build-job }}, 'kafka')
     runs-on: ubuntu-latest
 
     steps:
-      # 拉取dev分支最新的项目代码
+
       - name: git check out dev branches
         uses: actions/checkout@v3
-        with:
-          ref: dev
 
-      # -------------------------------------------docker 镜像管理模块----------------------------------------------------
-      # 该模块GitHub参考文档是https://github.com/docker/metadata-action#basic
-      # 该模块docker官方参考文档是https://docs.docker.com/build/ci/github-actions/examples/#manage-tags-and-labels
-
-      # docker 镜像管理模块 ------> 加载docker镜像元数据管理服务
       - name: docker meta manager service
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/jdk-17
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/kafka
 
-      # docker 镜像管理模块 ------> 加载docker登陆服务
       - name: docker login service
         uses: docker/login-action@v2
         if: github.event_name != 'pull_request'
@@ -151,17 +149,15 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           registry: ${{ env.REGISTRY }}
 
-      # docker 镜像管理模块 ------> 加载docker 多平台镜像构建服务
       - name: docker build x service
         uses: docker/setup-buildx-action@v2
 
-      # docker 镜像管理模块 ------> 构建和推送最新的镜像 ,linux/arm64
       - name: docker build and push service
         uses: docker/build-push-action@v4
         with:
           context: .
           platforms: linux/amd64,linux/arm64
-          file: ${{ env.JDK-17-Dockerfile }}
+          file: ${{ env.kafka-Dockerfile }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
