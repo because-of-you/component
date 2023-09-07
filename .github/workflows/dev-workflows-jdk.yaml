@@ -12,6 +12,9 @@ name: jdk
 on:
   push:
     branches: [ "dev" ]
+    paths-ignore:
+      - README.md
+      - .github/workflows/*
     # pull_request:
     # branches: [ "dev" ]
     # 每天 的 一点 凌晨 调度运行

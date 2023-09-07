@@ -12,6 +12,9 @@ name: component
 on:
   push:
     branches: [ "main" ]
+    paths-ignore:
+      - README.md
+      - .github/workflows/*
     tags:
       - "v*.*.*"
     #  pull_request:
