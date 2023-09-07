@@ -91,7 +91,7 @@ jobs:
     steps:
       # 拉取dev分支最新的项目代码
       - name: git check out dev branches
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: dev
 

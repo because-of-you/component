@@ -39,7 +39,7 @@ jobs:
     steps:
 
       - name: git check out dev branches
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: docker meta manager service
         id: meta
@@ -82,7 +82,7 @@ jobs:
     steps:
 
       - name: git check out dev branches
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
 
       # maven build agent jar
@@ -148,7 +148,7 @@ jobs:
     steps:
 
       - name: git check out dev branches
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: docker meta manager service
         id: meta
