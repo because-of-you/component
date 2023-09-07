@@ -15,6 +15,7 @@ on:
     paths-ignore:
       - README.md
       - .github/workflows/*
+      - docs/*
     tags:
       - "v*.*.*"
     #  pull_request:
