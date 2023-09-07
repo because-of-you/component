@@ -45,6 +45,11 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/zookeeper
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+          # type=semver,pattern={{major}}.{{minor}}
 
       - name: docker login service
         uses: docker/login-action@v2
@@ -106,6 +111,11 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/orientdb
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+          # type=semver,pattern={{major}}.{{minor}}
 
       - name: docker login service
         uses: docker/login-action@v2
@@ -144,6 +154,11 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/kafka
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+          # type=semver,pattern={{major}}.{{minor}}
 
       - name: docker login service
         uses: docker/login-action@v2
