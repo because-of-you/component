@@ -77,6 +77,7 @@ def yarn_site():
                .replace("\n", "")
                .replace("\r", "")
                .replace(" ", ""))
+    add_property_on_root(root, name="yarn.resourcemanager.hostname", value=f"{HOSTNAME}")
     with open(f"{PATH}/yarn-site.xml", "w", encoding="UTF-8") as file:
         file.write(minidom.parseString(xml_str).toprettyxml(indent="   ", newl=os.linesep))
         file.close()

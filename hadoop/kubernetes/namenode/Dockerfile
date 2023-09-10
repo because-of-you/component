@@ -10,7 +10,7 @@ ARG HADOOP_HOME=/opt/component/hadoop
 
 FROM python:3.11 as python
 
-COPY builder.py .
+COPY hadoop/kubernetes/builder.py .
 
 RUN pip install pyinstaller && \
     pyinstaller -F builder.py
@@ -18,7 +18,7 @@ RUN pip install pyinstaller && \
 
 FROM apache/hadoop:3.3.6 as hadoop
 
-COPY entrypoint.sh /opt/hadoop/
+COPY hadoop/kubernetes/namenode/entrypoint.sh /opt/hadoop/
 RUN mkdir "/opt/hadoop/etc/hadoop/samples" &&  \
     cp /opt/hadoop/etc/hadoop/*.xml /opt/hadoop/etc/hadoop/samples/
 
