@@ -45,7 +45,7 @@ spec:
       containers:
         - name: datanode
           image: wfybelief/datanode:dev
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
 
           # 资源限制
           resources:
@@ -81,7 +81,12 @@ spec:
             items:
               - key: core-site.xml
                 path: core-site.xml
-              -
+              - key: hdfs-site.xml
+                path: hdfs-site.xml
+              - key: mapred-site.xml
+                path: mapred-site.xml
+              - key: yarn-site.xml
+                path: yarn-site.xml
 
       restartPolicy: Always
 
