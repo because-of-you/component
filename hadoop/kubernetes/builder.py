@@ -10,14 +10,13 @@ SERVICE_NAME = "hadoop"
 CONF_DIR = "etc/hadoop"
 HOSTNAME = os.uname().nodename
 HDFS_META_HOME = os.getenv("HDFS_META_HOME")
-
-if not os.path.exists(HDFS_META_HOME):
-    os.makedirs(HDFS_META_HOME)
-
 PATH = os.path.join(BASE_DIR, SERVICE_NAME, CONF_DIR)
 
 
 def add_property_on_root(root, name, value):
+    content = ET.tostring(root).decode()
+    if name in content:
+        return
     property = root.makeelement("property", {})
     root.append(property)
 
@@ -99,6 +98,8 @@ def main():
     # shutil.copy2(os.path.join(path, "server_sample.properties"), os.path.join(path, "server.properties"))
 
     # core-site.xml
+    if not os.path.exists(HDFS_META_HOME):
+        os.makedirs(HDFS_META_HOME)
     core_site_xml()
     hdfs_site_xml()
     mapred_site()
