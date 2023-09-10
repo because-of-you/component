@@ -19,8 +19,8 @@ RUN pip install pyinstaller && \
 FROM apache/hadoop:3.3.6 as hadoop
 
 COPY hadoop/kubernetes/namenode/entrypoint.sh /opt/hadoop/
-RUN mkdir "/opt/hadoop/etc/hadoop/samples" &&  \
-    cp /opt/hadoop/etc/hadoop/*.xml /opt/hadoop/etc/hadoop/samples/
+#RUN mkdir "/opt/hadoop/etc/hadoop/samples" &&  \
+#    cp /opt/hadoop/etc/hadoop/*.xml /opt/hadoop/etc/hadoop/samples/
 
 #ENTRYPOINT ["top", "-b"]
 
