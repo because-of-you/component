@@ -228,7 +228,7 @@ jobs:
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
       - name: docker meta manager service
-        id: meta
+        id: datanode
         uses: docker/metadata-action@v4
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/datanode
@@ -256,5 +256,5 @@ jobs:
           platforms: linux/amd64,linux/arm64
           file: ${{ env.datanode-Dockerfile }}
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.datanode.outputs.tags }}
+          labels: ${{ steps.datanode.outputs.labels }}
