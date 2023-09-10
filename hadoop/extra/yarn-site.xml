@@ -18,7 +18,7 @@
         <name>yarn.resourcemanager.hostname</name>
         <value>${HOSTNAME}</value>
     </property>
-    <!-- 分别指定MapReduce的方式 -->
+    <!-- 分别指定Map Reduce的方式 -->
     <property>
         <name>yarn.nodemanager.aux-services</name>
         <value>mapreduce_shuffle</value>
