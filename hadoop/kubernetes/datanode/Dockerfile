@@ -7,7 +7,7 @@ ARG HDFS_DATANODE_OPTS="\
         -Xtune:virtualized \
         -Xquickstart \
         -XX:+UseContainerSupport"
-ENV HDFS_DATANODE_OPTS=$HADOOP_HOME
+ENV HDFS_DATANODE_OPTS=$HDFS_DATANODE_OPTS
 WORKDIR $HADOOP_HOME
 COPY hadoop/kubernetes/datanode/entrypoint.sh .
 
