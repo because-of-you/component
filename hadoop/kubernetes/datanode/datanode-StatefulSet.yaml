@@ -130,14 +130,22 @@ kind: ConfigMap
 metadata:
   name: datanode-configmap
 data:
-  core-site.xml: |  
+  core-site.xml: |
     <configuration>
+        <property>
+            <name>fs.defaultFS</name>
+            <value>hdfs://namenode-service</value>
+        </property>
     </configuration>
   hdfs-site.xml: |
     <configuration>
         <property>
             <name>dfs.replication</name>
             <value>2</value>
+        </property>
+        <property>
+            <name>dfs.namenode.http-address</name>
+            <value>namenode-service</value>
         </property>
     </configuration>
   mapred-site.xml: |
