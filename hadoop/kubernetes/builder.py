@@ -30,6 +30,7 @@ def add_property_on_root(root, name, value):
 
 
 def core_site_xml():
+    logging.info("脚本初始化core-site.xml中")
     tree: ET.ElementTree = ET.parse(f"{PATH}/samples/core-site.xml")
     root = tree.getroot()
     add_property_on_root(root, name="fs.defaultFS", value=f"hdfs://{HOSTNAME}")
@@ -41,9 +42,11 @@ def core_site_xml():
     with open(f"{PATH}/core-site.xml", "w", encoding="UTF-8") as file:
         file.write(minidom.parseString(xml_str).toprettyxml(indent="   ", newl=os.linesep))
         file.close()
+    logging.info("脚本初始化core-site.xml成功")
 
 
 def hdfs_site_xml():
+    logging.info("脚本初始化hdfs-site.xml中")
     tree: ET.ElementTree = ET.parse(f"{PATH}/samples/hdfs-site.xml")
     root = tree.getroot()
     add_property_on_root(root, name="dfs.namenode.name.dir", value=f"file:{HDFS_META_HOME}/namenode")
@@ -55,9 +58,11 @@ def hdfs_site_xml():
     with open(f"{PATH}/hdfs-site.xml", "w", encoding="UTF-8") as file:
         file.write(minidom.parseString(xml_str).toprettyxml(indent="   ", newl=os.linesep))
         file.close()
+    logging.info("脚本初始化hdfs-site.xml成功")
 
 
 def mapred_site():
+    logging.info("脚本初始化mapred-site.xml中")
     tree: ET.ElementTree = ET.parse(f"{PATH}/samples/mapred-site.xml")
     root = tree.getroot()
     xml_str = (ET.tostring(root).decode()
@@ -67,9 +72,11 @@ def mapred_site():
     with open(f"{PATH}/mapred-site.xml", "w", encoding="UTF-8") as file:
         file.write(minidom.parseString(xml_str).toprettyxml(indent="   ", newl=os.linesep))
         file.close()
+    logging.info("脚本初始化mapred-site.xml成功")
 
 
 def yarn_site():
+    logging.info("脚本初始化yarn-site.xml中")
     tree: ET.ElementTree = ET.parse(f"{PATH}/samples/yarn-site.xml")
     root = tree.getroot()
     xml_str = (ET.tostring(root).decode()
@@ -80,6 +87,7 @@ def yarn_site():
     with open(f"{PATH}/yarn-site.xml", "w", encoding="UTF-8") as file:
         file.write(minidom.parseString(xml_str).toprettyxml(indent="   ", newl=os.linesep))
         file.close()
+    logging.info("脚本初始化yarn-site.xml成功")
 
 
 def main():
