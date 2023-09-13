@@ -55,9 +55,9 @@ spec:
             requests:
               memory: 10Mi
 
-#          ports:
-#            - containerPort: 9870
-#              protocol: TCP
+          #          ports:
+          #            - containerPort: 9870
+          #              protocol: TCP
 
           # 存活监测
           #          livenessProbe:
@@ -114,11 +114,11 @@ metadata:
   labels:
     app: datanode-service
 spec:
-#  ports:
-#    - port: 9870
-#      name: datanode-web
-#      targetPort: 9870
-#      protocol: TCP
+  #  ports:
+  #    - port: 9870
+  #      name: datanode-web
+  #      targetPort: 9870
+  #      protocol: TCP
 
   clusterIP: None
   selector:
@@ -157,7 +157,9 @@ data:
         </property>
     </configuration>
   yarn-site.xml: |
-    <property>
-        <name>yarn.nodemanager.aux-services</name>
-        <value>mapreduce_shuffle</value>
-    </property>
+    <configuration>
+        <property>
+            <name>yarn.nodemanager.aux-services</name>
+            <value>mapreduce_shuffle</value>
+        </property>
+    </configuration>
