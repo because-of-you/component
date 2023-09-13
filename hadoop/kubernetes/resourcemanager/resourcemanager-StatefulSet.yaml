@@ -6,15 +6,15 @@ kind: StatefulSet
 
 # 元数据
 metadata:
-  name: nodemanager
+  name: resourcemanager
   labels:
-    app: nodemanager
+    app: resourcemanager
 
 spec:
 
 
   # ----------------- 1.多副本策略 -----------------
-  replicas: 2
+  replicas: 1
   # 滚动更新
   updateStrategy:
     type: RollingUpdate
@@ -22,13 +22,13 @@ spec:
   minReadySeconds: 10
   # ----------------- 1.多副本策略 -----------------
 
-  serviceName: nodemanager-service
+  serviceName: resourcemanager-service
 
   # 选择器
   selector:
     matchLabels:
       # 必须匹配 .spec.template.metadata.labels
-      app: nodemanager
+      app: resourcemanager
 
 
 
@@ -36,28 +36,30 @@ spec:
   # 模版信息
   template:
     metadata:
-      name: nodemanager
+      name: resourcemanager
       # 必须匹配 .spec.selector.matchLabels
       labels:
-        app: nodemanager
+        app: resourcemanager
 
     spec:
       containers:
-        - name: nodemanager
-          image: wfybelief/nodemanager:dev
+        - name: resourcemanager
+          image: wfybelief/resourcemanager:dev
           imagePullPolicy: IfNotPresent
 
           # 资源限制
           resources:
             limits:
               # 2048 / 1
-              memory: 1024Mi
+              memory: 2048Mi
             requests:
               memory: 10Mi
 
-#          ports:
-#            - containerPort: 9870
-#              protocol: TCP
+          ports:
+            - containerPort: 8088
+              protocol: TCP
+            - containerPort: 19888
+              protocol: TCP
 
           # 存活监测
           #          livenessProbe:
@@ -68,16 +70,16 @@ spec:
 
           volumeMounts:
 #            - mountPath: /opt/component/storage/
-#              name: nodemanager-data-storage
+#              name: resourcemanager-data-storage
 #              readOnly: false
             - mountPath: /opt/component/hadoop/etc/hadoop/samples
-              name: nodemanager-config
+              name: resourcemanager-config
               readOnly: false
 
       volumes:
-        - name: nodemanager-config
+        - name: resourcemanager-config
           configMap:
-            name: nodemanager-configmap
+            name: resourcemanager-configmap
             items:
               - key: core-site.xml
                 path: core-site.xml
@@ -94,7 +96,7 @@ spec:
   # 持久卷
 #  volumeClaimTemplates:
 #    - metadata:
-#        name: nodemanager-data-storage
+#        name: resourcemanager-data-storage
 #      spec:
 #        accessModes:
 #          - ReadWriteOnce
@@ -110,25 +112,29 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: nodemanager-service
+  name: resourcemanager-service
   labels:
-    app: nodemanager-service
+    app: resourcemanager-service
 spec:
-#  ports:
-#    - port: 9870
-#      name: nodemanager-web
-#      targetPort: 9870
-#      protocol: TCP
+  ports:
+    - port: 8088
+      name: resourcemanager-web
+      targetPort: 8088
+      protocol: TCP
+    - port: 19888
+      name: resourcemanager-history-web
+      targetPort: 19888
+      protocol: TCP
 
   clusterIP: None
   selector:
-    app: nodemanager
+    app: resourcemanager
 
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: nodemanager-configmap
+  name: resourcemanager-configmap
 data:
   core-site.xml: |  
     <configuration>
@@ -157,9 +163,5 @@ data:
         <property>
             <name>yarn.nodemanager.aux-services</name>
             <value>mapreduce_shuffle</value>
-        </property>
-        <property>
-            <name>yarn.resourcemanager.hostname</name>
-            <value>resourcemanager-service</value>
         </property>
     </configuration>
