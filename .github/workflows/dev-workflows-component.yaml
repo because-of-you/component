@@ -263,7 +263,7 @@ jobs:
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
       - name: docker meta manager service
-        id: datanode
+        id: nodemanager
         uses: docker/metadata-action@v4
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/nodemanager
@@ -291,13 +291,13 @@ jobs:
           platforms: linux/amd64,linux/arm64
           file: ${{ env.nodemanager-Dockerfile }}
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.datanode.outputs.tags }}
-          labels: ${{ steps.datanode.outputs.labels }}
+          tags: ${{ steps.nodemanager.outputs.tags }}
+          labels: ${{ steps.nodemanager.outputs.labels }}
 
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
       - name: docker meta manager service
-        id: datanode
+        id: resourcemanager
         uses: docker/metadata-action@v4
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/resourcemanager
@@ -325,5 +325,5 @@ jobs:
           platforms: linux/amd64,linux/arm64
           file: ${{ env.resourcemanager-Dockerfile }}
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.datanode.outputs.tags }}
-          labels: ${{ steps.datanode.outputs.labels }}
+          tags: ${{ steps.resourcemanager.outputs.tags }}
+          labels: ${{ steps.resourcemanager.outputs.labels }}
