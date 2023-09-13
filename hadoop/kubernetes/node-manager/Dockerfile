@@ -9,8 +9,7 @@ ARG YARN_NODEMANAGER_OPTS="\
         -XX:+UseContainerSupport"
 ENV YARN_NODEMANAGER_OPTS=$YARN_NODEMANAGER_OPTS
 WORKDIR $HADOOP_HOME
-#COPY hadoop/kubernetes/datanode/entrypoint.sh .
+COPY hadoop/kubernetes/node-manager/entrypoint.sh .
 
-#ENTRYPOINT ["busybox", "sh", "entrypoint.sh"]
-#CMD ["hdfs", "datanode"]
-ENTRYPOINT ["top", "-b"]
+ENTRYPOINT ["busybox", "sh", "entrypoint.sh"]
+CMD ["yarn", "nodemanager"]
