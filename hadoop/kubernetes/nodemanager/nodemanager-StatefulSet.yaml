@@ -6,15 +6,15 @@ kind: StatefulSet
 
 # 元数据
 metadata:
-  name: namenode
+  name: nodemanager
   labels:
-    app: namenode
+    app: nodemanager
 
 spec:
 
 
   # ----------------- 1.多副本策略 -----------------
-  replicas: 1
+  replicas: 2
   # 滚动更新
   updateStrategy:
     type: RollingUpdate
@@ -22,13 +22,13 @@ spec:
   minReadySeconds: 10
   # ----------------- 1.多副本策略 -----------------
 
-  serviceName: namenode-service
+  serviceName: nodemanager-service
 
   # 选择器
   selector:
     matchLabels:
       # 必须匹配 .spec.template.metadata.labels
-      app: namenode
+      app: nodemanager
 
 
 
@@ -36,28 +36,28 @@ spec:
   # 模版信息
   template:
     metadata:
-      name: namenode
+      name: nodemanager
       # 必须匹配 .spec.selector.matchLabels
       labels:
-        app: namenode
+        app: nodemanager
 
     spec:
       containers:
-        - name: namenode
-          image: wfybelief/namenode:dev
+        - name: nodemanager
+          image: wfybelief/nodemanager:dev
           imagePullPolicy: IfNotPresent
 
           # 资源限制
           resources:
             limits:
               # 2048 / 1
-              memory: 2048Mi
+              memory: 1024Mi
             requests:
               memory: 10Mi
 
-          ports:
-            - containerPort: 9870
-              protocol: TCP
+#          ports:
+#            - containerPort: 9870
+#              protocol: TCP
 
           # 存活监测
           #          livenessProbe:
@@ -67,17 +67,17 @@ spec:
           #            periodSeconds: 10
 
           volumeMounts:
-            - mountPath: /opt/component/storage/
-              name: namenode-data-storage
-              readOnly: false
+#            - mountPath: /opt/component/storage/
+#              name: nodemanager-data-storage
+#              readOnly: false
             - mountPath: /opt/component/hadoop/etc/hadoop/samples
-              name: namenode-config
+              name: nodemanager-config
               readOnly: false
 
       volumes:
-        - name: namenode-config
+        - name: nodemanager-config
           configMap:
-            name: namenode-configmap
+            name: nodemanager-configmap
             items:
               - key: core-site.xml
                 path: core-site.xml
@@ -92,43 +92,43 @@ spec:
 
 
   # 持久卷
-  volumeClaimTemplates:
-    - metadata:
-        name: namenode-data-storage
-      spec:
-        accessModes:
-          - ReadWriteOnce
-        # storageClassName: csi-disk-ssd | hostpath
-        resources:
-          requests:
-            storage: 1Gi
-          limits:
-            storage: 1Gi
+#  volumeClaimTemplates:
+#    - metadata:
+#        name: nodemanager-data-storage
+#      spec:
+#        accessModes:
+#          - ReadWriteOnce
+#        # storageClassName: csi-disk-ssd | hostpath
+#        resources:
+#          requests:
+#            storage: 1Gi
+#          limits:
+#            storage: 1Gi
 
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: namenode-service
+  name: nodemanager-service
   labels:
-    app: namenode-service
+    app: nodemanager-service
 spec:
-  ports:
-    - port: 9870
-      name: namenode-web
-      targetPort: 9870
-      protocol: TCP
+#  ports:
+#    - port: 9870
+#      name: nodemanager-web
+#      targetPort: 9870
+#      protocol: TCP
 
   clusterIP: None
   selector:
-    app: namenode
+    app: nodemanager
 
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: namenode-configmap
+  name: nodemanager-configmap
 data:
   core-site.xml: |  
     <configuration>
