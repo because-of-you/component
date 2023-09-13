@@ -9,8 +9,6 @@ ARG YARN_RESOURCEMANAGER_OPTS="\
         -XX:+UseContainerSupport"
 ENV YARN_RESOURCEMANAGER_OPTS=$YARN_RESOURCEMANAGER_OPTS
 WORKDIR $HADOOP_HOME
-#COPY hadoop/kubernetes/datanode/entrypoint.sh .
 
-#ENTRYPOINT ["busybox", "sh", "entrypoint.sh"]
-#CMD ["hdfs", "datanode"]
-ENTRYPOINT ["top", "-b"]
+ENTRYPOINT ["busybox", "sh", "entrypoint.sh"]
+CMD ["yarn", "resourcemanager"]
