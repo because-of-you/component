@@ -36,7 +36,7 @@ env:
 jobs:
 
   zookeeper:
-    if: contains( 'hadoop,' ,  'zookeeper')
+    if: contains( '' ,  'zookeeper')
     runs-on: ubuntu-latest
 
     steps:
@@ -79,7 +79,7 @@ jobs:
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
   orientdb:
-    if: contains( 'hadoop,' ,  'orientdb')
+    if: contains( '' ,  'orientdb')
     runs-on: ubuntu-latest
 
     steps:
@@ -145,7 +145,7 @@ jobs:
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
   kafka:
-    if: contains( 'hadoop,' ,  'kafka')
+    if: contains( '' ,  'kafka')
     runs-on: ubuntu-latest
 
     steps:
@@ -187,7 +187,7 @@ jobs:
 
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
   hadoop:
-    if: contains( 'hadoop,' ,  'hadoop')
+    if: contains( '' ,  'hadoop')
     runs-on: ubuntu-latest
 
     steps:
