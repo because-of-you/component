@@ -227,9 +227,14 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      - name: docker image prune
+      - name: docker prune
         run: |
+          docker ps
+          docker system df
           docker image prune -f
+          docker system prune -af
+          docker volume rm $(docker volume ls -qf dangling=true)
+          docker system df
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
       - name: docker meta manager service
@@ -264,9 +269,14 @@ jobs:
           tags: ${{ steps.datanode.outputs.tags }}
           labels: ${{ steps.datanode.outputs.labels }}
 
-      - name: docker image prune
+      - name: docker prune
         run: |
+          docker ps
+          docker system df
           docker image prune -f
+          docker system prune -af
+          docker volume rm $(docker volume ls -qf dangling=true)
+          docker system df
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
       - name: docker meta manager service
@@ -301,9 +311,14 @@ jobs:
           tags: ${{ steps.nodemanager.outputs.tags }}
           labels: ${{ steps.nodemanager.outputs.labels }}
 
-      - name: docker image prune
+      - name: docker prune
         run: |
+          docker ps
+          docker system df
           docker image prune -f
+          docker system prune -af
+          docker volume rm $(docker volume ls -qf dangling=true)
+          docker system df
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
       - name: docker meta manager service
@@ -338,6 +353,11 @@ jobs:
           tags: ${{ steps.resourcemanager.outputs.tags }}
           labels: ${{ steps.resourcemanager.outputs.labels }}
 
-      - name: docker image prune
+      - name: docker prune
         run: |
+          docker ps
+          docker system df
           docker image prune -f
+          docker system prune -af
+          docker volume rm $(docker volume ls -qf dangling=true)
+          docker system df
