@@ -11,7 +11,7 @@ name: component
 
 on:
   push:
-    branches: [ "main" ]
+    # branches: [ "main" ]
     paths-ignore:
       - README.md
       - .github/workflows/*
@@ -33,7 +33,7 @@ env:
 jobs:
 
   zookeeper:
-    if: contains( 'zookeeper,orientdb,kafka' ,  'zookeeper')
+    if: contains( 'hadoop,' ,  'zookeeper')
     runs-on: ubuntu-latest
 
     steps:
@@ -76,7 +76,7 @@ jobs:
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
   orientdb:
-    if: contains( 'zookeeper,orientdb,kafka' ,  'orientdb')
+    if: contains( 'hadoop,' ,  'orientdb')
     runs-on: ubuntu-latest
 
     steps:
@@ -142,7 +142,7 @@ jobs:
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
   kafka:
-    if: contains( 'zookeeper,orientdb,kafka' ,  'kafka')
+    if: contains( 'hadoop,' ,  'kafka')
     runs-on: ubuntu-latest
 
     steps:
@@ -183,3 +183,144 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
+  hadoop:
+    if: contains( 'hadoop,' ,  'hadoop')
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: git check out dev branches
+        uses: actions/checkout@v4
+
+      - name: docker meta manager service
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/namenode
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+          # type=semver,pattern={{major}}.{{minor}}
+
+      - name: docker login service
+        uses: docker/login-action@v2
+        if: github.event_name != 'pull_request'
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ${{ env.REGISTRY }}
+
+      - name: docker build x service
+        uses: docker/setup-buildx-action@v2
+
+      - name: docker build and push service
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          file: ${{ env.namenode-Dockerfile }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      # -------------------------------------------docker 镜像管理模块----------------------------------------------------
+
+      - name: docker meta manager service
+        id: datanode
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/datanode
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+          # type=semver,pattern={{major}}.{{minor}}
+
+      - name: docker login service
+        uses: docker/login-action@v2
+        if: github.event_name != 'pull_request'
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ${{ env.REGISTRY }}
+
+      - name: docker build x service
+        uses: docker/setup-buildx-action@v2
+
+      - name: docker build and push service
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          file: ${{ env.datanode-Dockerfile }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.datanode.outputs.tags }}
+          labels: ${{ steps.datanode.outputs.labels }}
+      # -------------------------------------------docker 镜像管理模块----------------------------------------------------
+
+      - name: docker meta manager service
+        id: nodemanager
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/nodemanager
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+          # type=semver,pattern={{major}}.{{minor}}
+
+      - name: docker login service
+        uses: docker/login-action@v2
+        if: github.event_name != 'pull_request'
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ${{ env.REGISTRY }}
+
+      - name: docker build x service
+        uses: docker/setup-buildx-action@v2
+
+      - name: docker build and push service
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          file: ${{ env.nodemanager-Dockerfile }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.nodemanager.outputs.tags }}
+          labels: ${{ steps.nodemanager.outputs.labels }}
+
+      # -------------------------------------------docker 镜像管理模块----------------------------------------------------
+
+      - name: docker meta manager service
+        id: resourcemanager
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/resourcemanager
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+          # type=semver,pattern={{major}}.{{minor}}
+
+      - name: docker login service
+        uses: docker/login-action@v2
+        if: github.event_name != 'pull_request'
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ${{ env.REGISTRY }}
+
+      - name: docker build x service
+        uses: docker/setup-buildx-action@v2
+
+      - name: docker build and push service
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          file: ${{ env.resourcemanager-Dockerfile }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.resourcemanager.outputs.tags }}
+          labels: ${{ steps.resourcemanager.outputs.labels }}
