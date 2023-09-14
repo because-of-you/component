@@ -1,0 +1,157 @@
+# 版本信息
+apiVersion: apps/v1
+
+# 类型
+kind: StatefulSet
+
+# 元数据
+metadata:
+  name: namenode
+  labels:
+    app: namenode
+
+spec:
+
+
+  # ----------------- 1.多副本策略 -----------------
+  replicas: 1
+  # 滚动更新
+  updateStrategy:
+    type: RollingUpdate
+  # 最短就绪时间
+  minReadySeconds: 10
+  # ----------------- 1.多副本策略 -----------------
+
+  serviceName: namenode-service
+
+  # 选择器
+  selector:
+    matchLabels:
+      # 必须匹配 .spec.template.metadata.labels
+      app: namenode
+
+
+
+
+  # 模版信息
+  template:
+    metadata:
+      name: namenode
+      # 必须匹配 .spec.selector.matchLabels
+      labels:
+        app: namenode
+
+    spec:
+      containers:
+        - name: namenode
+          image: wfybelief/namenode:dev
+          imagePullPolicy: IfNotPresent
+
+          # 资源限制
+          resources:
+            limits:
+              # 2048 / 1
+              memory: 2048Mi
+            requests:
+              memory: 10Mi
+
+          ports:
+            - containerPort: 9870
+              protocol: TCP
+
+          # 存活监测
+          #          livenessProbe:
+          #            tcpSocket:
+          #              port: 2180
+          #            initialDelaySeconds: 30
+          #            periodSeconds: 10
+
+          volumeMounts:
+            - mountPath: /opt/component/storage/
+              name: namenode-data-storage
+              readOnly: false
+            - mountPath: /opt/component/hadoop/etc/hadoop/samples
+              name: namenode-config
+              readOnly: false
+
+      volumes:
+        - name: namenode-config
+          configMap:
+            name: namenode-configmap
+            items:
+              - key: core-site.xml
+                path: core-site.xml
+              - key: hdfs-site.xml
+                path: hdfs-site.xml
+              - key: mapred-site.xml
+                path: mapred-site.xml
+              - key: yarn-site.xml
+                path: yarn-site.xml
+
+      restartPolicy: Always
+
+
+  # 持久卷
+  volumeClaimTemplates:
+    - metadata:
+        name: namenode-data-storage
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        # storageClassName: csi-disk-ssd | hostpath
+        resources:
+          requests:
+            storage: 1Gi
+          limits:
+            storage: 1Gi
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: namenode-service
+  labels:
+    app: namenode-service
+spec:
+  ports:
+    - port: 9870
+      name: namenode-web
+      targetPort: 9870
+      protocol: TCP
+
+  clusterIP: None
+  selector:
+    app: namenode
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: namenode-configmap
+data:
+  core-site.xml: |  
+    <configuration>
+    </configuration>
+  hdfs-site.xml: |
+    <configuration>
+        <property>
+            <name>dfs.replication</name>
+            <value>2</value>
+        </property>
+    </configuration>
+  mapred-site.xml: |
+    <configuration>
+        <property>
+            <!--指定Mapreduce运行在yarn上-->
+            <name>mapreduce.framework.name</name>
+            <value>yarn</value>
+        </property>
+    </configuration>
+  yarn-site.xml: |
+    <configuration>
+        <property>
+            <name>yarn.nodemanager.aux-services</name>
+            <value>mapreduce_shuffle</value>
+        </property>
+    </configuration>
