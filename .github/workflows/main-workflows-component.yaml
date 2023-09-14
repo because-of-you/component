@@ -230,7 +230,10 @@ jobs:
 
       - name: docker image prune
         run: |
+          docker system df
           docker image prune -f
+          docker system prune -af
+          docker system df
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
       - name: docker meta manager service
@@ -267,7 +270,10 @@ jobs:
 
       - name: docker image prune
         run: |
+          docker system df
           docker image prune -f
+          docker system prune -af
+          docker system df
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
       - name: docker meta manager service
@@ -304,7 +310,10 @@ jobs:
 
       - name: docker image prune
         run: |
+          docker system df
           docker image prune -f
+          docker system prune -af
+          docker system df
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
       - name: docker meta manager service
@@ -341,4 +350,7 @@ jobs:
 
       - name: docker image prune
         run: |
+          docker system df
           docker image prune -f
+          docker system prune -af
+          docker system df
