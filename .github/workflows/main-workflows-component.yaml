@@ -29,6 +29,10 @@ env:
   zookeeper-Dockerfile: zookeeper/kubernetes/Dockerfile
   kafka-Dockerfile: kafka/kubernetes/Dockerfile
   orientdb-Dockerfile: orientdb/DockerFile
+  namenode-Dockerfile: hadoop/kubernetes/namenode/Dockerfile
+  datanode-Dockerfile: hadoop/kubernetes/datanode/Dockerfile
+  nodemanager-Dockerfile: hadoop/kubernetes/nodemanager/Dockerfile
+  resourcemanager-Dockerfile: hadoop/kubernetes/resourcemanager/Dockerfile
 
 jobs:
 
