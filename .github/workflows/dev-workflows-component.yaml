@@ -230,10 +230,11 @@ jobs:
       - name: docker prune
         run: |
           docker ps
+          docker stop $(docker ps -q)
+          docker container prune
           docker system df
           docker image prune -f
           docker system prune -af
-          docker volume rm $(docker volume ls -qf dangling=true)
           docker system df
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
@@ -272,10 +273,11 @@ jobs:
       - name: docker prune
         run: |
           docker ps
+          docker stop $(docker ps -q)
+          docker container prune
           docker system df
           docker image prune -f
           docker system prune -af
-          docker volume rm $(docker volume ls -qf dangling=true)
           docker system df
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
@@ -314,10 +316,11 @@ jobs:
       - name: docker prune
         run: |
           docker ps
+          docker stop $(docker ps -q)
+          docker container prune
           docker system df
           docker image prune -f
           docker system prune -af
-          docker volume rm $(docker volume ls -qf dangling=true)
           docker system df
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
@@ -356,8 +359,9 @@ jobs:
       - name: docker prune
         run: |
           docker ps
+          docker stop $(docker ps -q)
+          docker container prune
           docker system df
           docker image prune -f
           docker system prune -af
-          docker volume rm $(docker volume ls -qf dangling=true)
           docker system df
