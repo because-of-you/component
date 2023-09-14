@@ -227,6 +227,9 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
+      - name: docker image prune
+        run: |
+          docker image prune -f
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
       - name: docker meta manager service
@@ -260,6 +263,10 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.datanode.outputs.tags }}
           labels: ${{ steps.datanode.outputs.labels }}
+
+      - name: docker image prune
+        run: |
+          docker image prune -f
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
       - name: docker meta manager service
@@ -294,6 +301,9 @@ jobs:
           tags: ${{ steps.nodemanager.outputs.tags }}
           labels: ${{ steps.nodemanager.outputs.labels }}
 
+      - name: docker image prune
+        run: |
+          docker image prune -f
       # -------------------------------------------docker 镜像管理模块----------------------------------------------------
 
       - name: docker meta manager service
@@ -327,3 +337,7 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.resourcemanager.outputs.tags }}
           labels: ${{ steps.resourcemanager.outputs.labels }}
+
+      - name: docker image prune
+        run: |
+          docker image prune -f
