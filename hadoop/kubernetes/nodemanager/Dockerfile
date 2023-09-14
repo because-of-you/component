@@ -1,4 +1,4 @@
-FROM wfybelief/datanode:dev as datanode
+FROM wfybelief/datanode:main as datanode
 ARG HADOOP_HOME=/opt/component/hadoop
 ARG YARN_NODEMANAGER_OPTS="\
         -XX:InitialRAMPercentage=50.0 \
