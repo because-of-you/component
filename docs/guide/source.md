@@ -39,7 +39,7 @@ description: 缘起 | 基于kubernetes的本地个性化开发集群
 
 闲暇之余，总会追忆起曾经那位意气风发的少年。
 
-![1](docs/.vuepress/public/images/1.png)
+![1](/images/1.png)
 
 ---
 
