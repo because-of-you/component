@@ -75,9 +75,10 @@ export default defineUserConfig({
     // use plugins
     plugins: [
         docsearchPlugin({
-            appId: '',
-            apiKey: '',
-            indexName: '',
+            appId: 'KHBIVC2ZC1',
+            apiKey: '599c883d319f3fb35010635f04ea20c4',
+            indexName: 'component-acitrus',
+            insights: true,
             searchParameters: {
                 // facetFilters: [],
             },
