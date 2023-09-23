@@ -130,5 +130,10 @@ export default defineUserConfig({
             componentsDir: path.resolve(__dirname, './components'),
         }),
         // only enable shiki plugin in production mode
+        [
+        'sitemap', {
+            hostname: 'component.acitrus.cn'
+        },
+      ]
     ],
 })

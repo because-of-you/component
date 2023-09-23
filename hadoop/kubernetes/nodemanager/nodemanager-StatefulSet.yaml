@@ -44,7 +44,7 @@ spec:
     spec:
       containers:
         - name: nodemanager
-          image: wfybelief/nodemanager:dev
+          image: wfybelief/nodemanager:latest
           imagePullPolicy: IfNotPresent
 
           # 资源限制

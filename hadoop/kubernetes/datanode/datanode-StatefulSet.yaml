@@ -44,7 +44,7 @@ spec:
     spec:
       containers:
         - name: datanode
-          image: wfybelief/datanode:dev
+          image: wfybelief/datanode:latest
           imagePullPolicy: IfNotPresent
 
           # 资源限制
