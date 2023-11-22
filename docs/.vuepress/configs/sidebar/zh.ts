@@ -8,6 +8,7 @@ export const sidebarZh: SidebarConfig = {
                 '/guide/README.md',
                 '/guide/getting-started.md',
                 '/guide/source.md',
+                '/guide/yarn.md'
             ],
         },
     ],

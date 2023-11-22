@@ -169,11 +169,11 @@ data:
         </property>
         <property>
             <name>mapreduce.reduce.memory.mb</name>
-            <value>256</value>
+            <value>512</value>
         </property>
     </configuration>
   yarn-site.xml: |
-    <configuration>    
+    <configuration>
         <property>
             <name>yarn.nodemanager.aux-services</name>
             <value>mapreduce_shuffle</value>
@@ -191,12 +191,12 @@ data:
         
         <property>
             <name>yarn.scheduler.maximum-allocation-mb</name>
-            <value>512</value>
+            <value>768</value>
         </property>
         
         <property>
           <name>yarn.app.mapreduce.am.resource.mb</name>
-          <value>512</value>
+          <value>768</value>
         </property>    
             
         <property>
@@ -218,5 +218,5 @@ data:
           <name>yarn.resourcemanager.resource-tracker.address</name>
           <value>resourcemanager-service</value>
         </property>
-        
+    
     </configuration>
