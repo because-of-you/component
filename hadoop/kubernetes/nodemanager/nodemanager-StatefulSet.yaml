@@ -14,7 +14,7 @@ spec:
 
 
   # ----------------- 1.多副本策略 -----------------
-  replicas: 2
+  replicas: 3
   # 滚动更新
   updateStrategy:
     type: RollingUpdate
