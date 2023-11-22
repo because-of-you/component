@@ -51,7 +51,7 @@ spec:
           resources:
             limits:
               # 2048 / 1
-              memory: 1024Mi
+              memory: 2024Mi
             requests:
               memory: 10Mi
 
@@ -151,6 +151,30 @@ data:
             <name>mapreduce.framework.name</name>
             <value>yarn</value>
         </property>
+        <property>
+          <name>yarn.app.mapreduce.am.env</name>
+          <value>HADOOP_MAPRED_HOME=${HADOOP_HOME}</value>
+        </property>
+        <property>
+          <name>mapreduce.map.env</name>
+          <value>HADOOP_MAPRED_HOME=${HADOOP_HOME}</value>
+        </property>
+        <property>
+          <name>mapreduce.reduce.env</name>
+          <value>HADOOP_MAPRED_HOME=${HADOOP_HOME}</value>
+        </property>
+        <property>
+          <name>yarn.app.mapreduce.am.resource.mb</name>
+          <value>300</value>
+        </property>
+        <property>
+            <name>mapreduce.map.memory.mb</name>
+            <value>200</value>
+        </property>
+        <property>
+            <name>mapreduce.reduce.memory.mb</name>
+            <value>200</value>
+        </property>
     </configuration>
   yarn-site.xml: |
     <configuration>
@@ -161,5 +185,42 @@ data:
         <property>
             <name>yarn.resourcemanager.hostname</name>
             <value>resourcemanager-service</value>
+        </property>
+    
+        <property>
+            <name>yarn.scheduler.minimum-allocation-mb</name>
+            <value>100</value>
+        </property>
+    
+        <property>
+            <name>yarn.scheduler.maximum-allocation-mb</name>
+            <value>300</value>
+        </property>
+    
+        <property>
+            <name>mapreduce.map.memory.mb</name>
+            <value>200</value>
+        </property>
+      
+        <property>
+            <name>mapreduce.reduce.memory.mb</name>
+            <value>200</value>
+        </property>
+        <property>
+            <name>yarn.nodemanager.resource.memory-mb</name>
+            <value>500</value>
+        </property>
+    
+        <property>
+          <name>yarn.resourcemanager.address</name>
+          <value>resourcemanager-service</value>
+        </property>
+        <property>
+          <name>yarn.resourcemanager.scheduler.address</name>
+          <value>resourcemanager-service</value>
+        </property>
+        <property>
+          <name>yarn.resourcemanager.resource-tracker.address</name>
+          <value>resourcemanager-service</value>
         </property>
     </configuration>
