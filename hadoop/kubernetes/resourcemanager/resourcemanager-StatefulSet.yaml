@@ -171,11 +171,19 @@ data:
         </property>    
         <property>
             <name>mapreduce.map.memory.mb</name>
-            <value>256</value>
+            <value>512</value>
+        </property>
+        <property>
+            <name>mapreduce.map.java.opts</name>
+            <value>-Xmx409m</value>
         </property>
         <property>
             <name>mapreduce.reduce.memory.mb</name>
-            <value>512</value>
+            <value>1024</value>
+        </property>
+        <property>
+            <name>mapreduce.reduce.java.opts</name>
+            <value>-Xmx819m</value>
         </property>
     </configuration>
   yarn-site.xml: |
@@ -192,22 +200,27 @@ data:
     
         <property>
             <name>yarn.scheduler.minimum-allocation-mb</name>
-            <value>256</value>
+            <value>512</value>
         </property>
         
         <property>
             <name>yarn.scheduler.maximum-allocation-mb</name>
-            <value>768</value>
+            <value>2048</value>
         </property>
         
         <property>
           <name>yarn.app.mapreduce.am.resource.mb</name>
-          <value>768</value>
-        </property>    
+          <value>1024</value>
+        </property>  
+    
+        <property>
+          <name>arn.app.mapreduce.am.command-opts</name>
+          <value>-Xmx819m</value>
+        </property>  
             
         <property>
             <name>yarn.nodemanager.resource.memory-mb</name>
-            <value>768</value>
+            <value>2048</value>
         </property>
     
         <property>
