@@ -51,10 +51,12 @@ spec:
           resources:
             limits:
               # 2048 / 1
-              memory: 2024Mi
+              memory: 4048Mi
             requests:
               memory: 10Mi
-
+          env:
+            - name: YARN_NODEMANAGER_OPTS
+              value: "-XX:InitialRAMPercentage=20.0 -XX:MaxRAMPercentage=20.0 -Xshareclasses -Xtune:virtualized -Xquickstart -XX:+UseContainerSupport"
 #          ports:
 #            - containerPort: 9870
 #              protocol: TCP
