@@ -1,0 +1,106 @@
+# 版本信息
+apiVersion: apps/v1
+
+# 类型
+kind: StatefulSet
+
+# 元数据
+metadata:
+  name: postgres
+  labels:
+    app: postgres
+
+spec:
+
+
+  # ----------------- 1.多副本策略 -----------------
+  replicas: 1
+  # 滚动更新
+  updateStrategy:
+    type: RollingUpdate
+  # 最短就绪时间
+  minReadySeconds: 10
+  # ----------------- 1.多副本策略 -----------------
+
+  serviceName: postgres-service
+
+  # 选择器
+  selector:
+    matchLabels:
+      # 必须匹配 .spec.template.metadata.labels
+      app: postgres
+
+
+
+
+  # 模版信息
+  template:
+    metadata:
+      name: postgres
+      # 必须匹配 .spec.selector.matchLabels
+      labels:
+        app: postgres
+
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POSTGRES_USER
+              value: 'root'
+            - name: POSTGRES_PASSWORD
+              value: 'component'
+            - name: POSTGRES_DB
+              value: 'default'
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+
+          # 资源限制
+          resources:
+            limits:
+              memory: 4096Mi
+              cpu: 1000m
+            requests:
+              memory: 10Mi
+              cpu: 1m
+
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgres-data-storage
+              readOnly: false
+      restartPolicy: Always
+
+
+  # 持久卷
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data-storage
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        # storageClassName: csi-disk-ssd | hostpath
+        resources:
+          requests:
+            storage: 1Gi
+          limits:
+            storage: 10Gi
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  labels:
+    app: postgres-service
+spec:
+  ports:
+    - port: 5432
+      name: postgres-connect
+      targetPort: 5432
+      protocol: TCP
+  clusterIP: None
+  selector:
+    app: postgres

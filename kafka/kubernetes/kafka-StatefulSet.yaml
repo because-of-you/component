@@ -52,8 +52,10 @@ spec:
             limits:
               # 2048 / 3
               memory: 682Mi
+              cpu: 500m
             requests:
               memory: 10Mi
+              cpu: 1m
 
           ports:
             - containerPort: 9092
@@ -98,7 +100,7 @@ spec:
           requests:
             storage: 1Gi
           limits:
-            storage: 1Gi
+            storage: 20Gi
 
 
 ---
