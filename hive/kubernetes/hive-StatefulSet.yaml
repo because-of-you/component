@@ -44,7 +44,7 @@ spec:
     spec:
       containers:
         - name: hive-metastore
-          image: wfybelief/zookeeper:main
+          image: wfybelief/hive:dev
           imagePullPolicy: IfNotPresent
 
           # 资源限制
@@ -57,9 +57,9 @@ spec:
               cpu: 1m
               memory: 10Mi
 
-          ports:
-            - containerPort: 2181
-              protocol: TCP
+#          ports:
+#            - containerPort: 2181
+#              protocol: TCP
 
           # 存活监测
           #          livenessProbe:
@@ -69,18 +69,42 @@ spec:
           #            periodSeconds: 10
 
           volumeMounts:
-            - mountPath: /opt/component/zookeeper/conf/zoo_sample.cfg
-              subPath: zoo_sample.cfg
-              name: zookeeper-conf
-              readOnly: false
+            - mountPath: /opt/component/hive/conf/hive-site.xml
+              subPath: hive-site.xml
+              name: hive-metastore-conf
+              readOnly: true
+            - mountPath: /opt/component/hadoop/etc/hadoop/core-site.xml
+              subPath: core-site.xml
+              name: hive-metastore-conf
+              readOnly: true
+            - mountPath: /opt/component/hadoop/etc/hadoop/hdfs-site.xml
+              subPath: hdfs-site.xml
+              name: hive-metastore-conf
+              readOnly: true
+            - mountPath: /opt/component/hadoop/etc/hadoop/mapred-site.xml
+              subPath: mapred-site.xml
+              name: hive-metastore-conf
+              readOnly: true
+            - mountPath: /opt/component/hadoop/etc/hadoop/yarn-site.xml
+              subPath: yarn-site.xml
+              name: hive-metastore-conf
+              readOnly: true
 
       volumes:
         - name: hive-metastore-conf
           configMap:
             name: hive-metastore-configmap
             items:
-              - key: zoo_sample.cfg
-                path: zoo_sample.cfg
+              - key: hive-site.xml
+                path: hive-site.xml
+              - key: core-site.xml
+                path: core-site.xml
+              - key: hdfs-site.xml
+                path: hdfs-site.xml
+              - key: mapred-site.xml
+                path: mapred-site.xml
+              - key: yarn-site.xml
+                path: yarn-site.xml
 
       restartPolicy: Always
 
@@ -93,11 +117,11 @@ metadata:
   labels:
     app: hive-metastore-service
 spec:
-  ports:
-    - port: 2181
-      name: client
-      targetPort: 2181
-      protocol: TCP
+#  ports:
+#    - port: 2181
+#      name: client
+#      targetPort: 2181
+#      protocol: TCP
 
   clusterIP: None
   selector:
@@ -109,41 +133,155 @@ kind: ConfigMap
 metadata:
   name: hive-metastore-configmap
 data:
-  zoo_sample.cfg: |
-    # The number of milliseconds of each tick
-    tickTime=2000
-    # The number of ticks that the initial
-    # synchronization phase can take
-    initLimit=10
-    # The number of ticks that can pass between
-    # sending a request and getting an acknowledgement
-    syncLimit=5
-    # the directory where the snapshot is stored.
-    # do not use /tmp for storage, /tmp here is just
-    # example sakes.
-    dataDir=/opt/component/storage/data
-    dataLogDir=/opt/component/storage/log
-    # the port at which the clients will connect
-    clientPort=2181
-    # the maximum number of client connections.
-    # increase this if you need to handle more clients
-    #maxClientCnxns=60
-    #
-    # Be sure to read the maintenance section of the
-    # administrator guide before turning on autopurge.
-    #
-    # https://zookeeper.apache.org/doc/current/zookeeperAdmin.html#sc_maintenance
-    #
-    # The number of snapshots to retain in dataDir
-    #autopurge.snapRetainCount=3
-    # Purge task interval in hours
-    # Set to "0" to disable auto purge feature
-    #autopurge.purgeInterval=1
-    
-    ## Metrics Providers
-    #
-    # https://prometheus.io Metrics Exporter
-    #metricsProvider.className=org.apache.zookeeper.metrics.prometheus.PrometheusMetricsProvider
-    #metricsProvider.httpHost=0.0.0.0
-    #metricsProvider.httpPort=7000
-    #metricsProvider.exportJvmInfo=true    
+  hive-site.xml: |
+    <configuration>
+        <!-- Hive产生的元数据存放位置-->
+        <property>
+            <name>hive.metastore.warehouse.dir</name>
+            <value>hdfs://namenode-service:8020/user/hive/warehouse</value>
+        </property>
+        <!-- 数据库连接JDBC的URL地址-->
+        <property>
+            <name>javax.jdo.option.ConnectionURL</name>
+            <value>jdbc:postgresql://postgres-service:5432/hive_metastore?createDatabaseIfNotExist=true&amp;useSSL=false&amp;allowPublicKeyRetrieval=true</value>
+        </property>
+        <!-- 数据库连接driver，即MySQL驱动-->
+        <property>
+            <name>javax.jdo.option.ConnectionDriverName</name>
+            <value>org.postgresql.Driver</value>
+        </property>
+        <!-- MySQL数据库用户名-->
+        <property>
+            <name>javax.jdo.option.ConnectionUserName</name>
+            <value>root</value>
+        </property>
+        <!-- MySQL数据库密码-->
+        <property>
+            <name>javax.jdo.option.ConnectionPassword</name>
+            <value>component</value>
+        </property>
+        <!-- 暂时注释 
+        <property>
+            <name>hive.metastore.schema.verification</name>
+            <value>false</value>
+        </property>
+        <property>
+            <name>datanucleus.schema.autoCreateAll</name>
+            <value>true</value>
+        </property>
+        使用本地服务连接Hive,默认为true
+        <property>
+            <name>hive.metastore.local</name>
+            <value>false</value>
+        </property>
+        连接服务器
+        <property>
+            <name>hive.metastore.uris</name>
+            <value>thrift://localhost:9083</value>
+        </property>
+        -->
+    </configuration>
+
+  core-site.xml: |
+    <configuration>
+        <property>
+            <name>fs.defaultFS</name>
+            <value>hdfs://namenode-service</value>
+        </property>
+    </configuration>
+  hdfs-site.xml: |
+    <configuration>
+        <property>
+            <name>dfs.replication</name>
+            <value>2</value>
+        </property>
+    </configuration>
+  mapred-site.xml: |
+    <configuration>
+        <property>
+            <!--指定Mapreduce运行在yarn上-->
+            <name>mapreduce.framework.name</name>
+            <value>yarn</value>
+        </property>
+        <property>
+            <name>yarn.app.mapreduce.am.env</name>
+            <value>HADOOP_MAPRED_HOME=${HADOOP_HOME}</value>
+        </property>
+        <property>
+            <name>mapreduce.map.env</name>
+            <value>HADOOP_MAPRED_HOME=${HADOOP_HOME}</value>
+        </property>
+        <property>
+            <name>mapreduce.reduce.env</name>
+            <value>HADOOP_MAPRED_HOME=${HADOOP_HOME}</value>
+        </property>
+        <property>
+            <name>mapreduce.map.memory.mb</name>
+            <value>1024</value>
+        </property>
+        <property>
+            <name>mapreduce.map.java.opts</name>
+            <value>-Xms819m -Xmx819m</value>
+        </property>
+        <property>
+            <name>mapreduce.reduce.memory.mb</name>
+            <value>2048</value>
+        </property>
+        <property>
+            <name>mapreduce.reduce.java.opts</name>
+            <value>-Xms1638m -Xmx1638m</value>
+        </property>
+    </configuration>
+  yarn-site.xml: |
+    <configuration>
+        <property>
+            <name>yarn.nodemanager.aux-services</name>
+            <value>mapreduce_shuffle</value>
+        </property>
+
+        <property>
+            <name>yarn.resourcemanager.hostname</name>
+            <value>resourcemanager-service</value>
+        </property>
+
+        <property>
+            <name>yarn.scheduler.minimum-allocation-mb</name>
+            <value>1024</value>
+        </property>
+
+        <property>
+            <name>yarn.scheduler.maximum-allocation-mb</name>
+            <value>3072</value>
+        </property>
+
+        <property>
+            <name>yarn.app.mapreduce.am.resource.mb</name>
+            <value>2048</value>
+        </property>
+        
+        <property>
+            <name>arn.app.mapreduce.am.command-opts</name>
+            <value>-Xms1638m -Xmx1638m</value>
+        </property>
+        
+        <property>
+            <name>yarn.nodemanager.resource.memory-mb</name>
+            <value>3072</value>
+        </property>
+
+        <property>
+            <name>yarn.resourcemanager.address</name>
+            <value>resourcemanager-service</value>
+        </property>
+
+        <property>
+            <name>yarn.resourcemanager.scheduler.address</name>
+            <value>resourcemanager-service</value>
+        </property>
+
+        <property>
+            <name>yarn.resourcemanager.resource-tracker.address</name>
+            <value>resourcemanager-service</value>
+        </property>
+
+    </configuration>
