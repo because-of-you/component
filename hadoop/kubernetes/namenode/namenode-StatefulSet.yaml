@@ -50,10 +50,12 @@ spec:
           # 资源限制
           resources:
             limits:
+              cpu: 2000m
               # 2048 / 1
               memory: 2048Mi
             requests:
               memory: 10Mi
+              cpu: 1m
 
           ports:
             - containerPort: 9870
@@ -103,7 +105,7 @@ spec:
           requests:
             storage: 1Gi
           limits:
-            storage: 1Gi
+            storage: 10Gi
 
 
 ---

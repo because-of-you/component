@@ -6,15 +6,15 @@ kind: StatefulSet
 
 # 元数据
 metadata:
-  name: zookeeper
+  name: hive-metastore
   labels:
-    app: zookeeper
+    app: hive-metastore
 
 spec:
 
 
   # ----------------- 1.多副本策略 -----------------
-  replicas: 3
+  replicas: 1
   # 滚动更新
   updateStrategy:
     type: RollingUpdate
@@ -22,13 +22,13 @@ spec:
   minReadySeconds: 10
   # ----------------- 1.多副本策略 -----------------
 
-  serviceName: zookeeper-service
+  serviceName: hive-metastore-service
 
   # 选择器
   selector:
     matchLabels:
       # 必须匹配 .spec.template.metadata.labels
-      app: zookeeper
+      app: hive-metastore
 
 
 
@@ -36,14 +36,14 @@ spec:
   # 模版信息
   template:
     metadata:
-      name: zookeeper
+      name: hive-metastore
       # 必须匹配 .spec.selector.matchLabels
       labels:
-        app: zookeeper
+        app: hive-metastore
 
     spec:
       containers:
-        - name: zookeeper
+        - name: hive-metastore
           image: wfybelief/zookeeper:main
           imagePullPolicy: IfNotPresent
 
@@ -51,7 +51,7 @@ spec:
           resources:
             limits:
               # 1024 / 3
-              memory: 341Mi
+              memory: 2048Mi
               cpu: 500m
             requests:
               cpu: 1m
@@ -69,18 +69,15 @@ spec:
           #            periodSeconds: 10
 
           volumeMounts:
-            - mountPath: /opt/component/storage/
-              name: zookeeper-data-storage
-              readOnly: false
             - mountPath: /opt/component/zookeeper/conf/zoo_sample.cfg
               subPath: zoo_sample.cfg
               name: zookeeper-conf
               readOnly: false
 
       volumes:
-        - name: zookeeper-conf
+        - name: hive-metastore-conf
           configMap:
-            name: zookeeper-configmap
+            name: hive-metastore-configmap
             items:
               - key: zoo_sample.cfg
                 path: zoo_sample.cfg
@@ -88,28 +85,13 @@ spec:
       restartPolicy: Always
 
 
-  # 持久卷
-  volumeClaimTemplates:
-    - metadata:
-        name: zookeeper-data-storage
-      spec:
-        accessModes:
-          - ReadWriteOnce
-        # storageClassName: csi-disk-ssd | hostpath
-        resources:
-          requests:
-            storage: 1Gi
-          limits:
-            storage: 10Gi
-
-
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: zookeeper-service
+  name: hive-metastore-service
   labels:
-    app: zookeeper-service
+    app: hive-metastore-service
 spec:
   ports:
     - port: 2181
@@ -119,13 +101,13 @@ spec:
 
   clusterIP: None
   selector:
-    app: zookeeper
+    app: hive-metastore
 
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: zookeeper-configmap
+  name: hive-metastore-configmap
 data:
   zoo_sample.cfg: |
     # The number of milliseconds of each tick

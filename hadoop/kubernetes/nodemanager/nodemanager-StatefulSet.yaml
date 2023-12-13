@@ -50,9 +50,11 @@ spec:
           # 资源限制
           resources:
             limits:
+              cpu: 2000m
               # 2048 / 1
-              memory: 4048Mi
+              memory: 4096Mi
             requests:
+              cpu: 1m
               memory: 10Mi
           env:
             - name: YARN_NODEMANAGER_OPTS
@@ -167,19 +169,19 @@ data:
         </property>    
         <property>
             <name>mapreduce.map.memory.mb</name>
-            <value>512</value>
-        </property>
-        <property>
-            <name>mapreduce.map.java.opts</name>
-            <value>-Xmx409m</value>
-        </property>
-        <property>
-            <name>mapreduce.reduce.memory.mb</name>
             <value>1024</value>
         </property>
         <property>
+            <name>mapreduce.map.java.opts</name>
+            <value>-Xms819m -Xmx819m</value>
+        </property>
+        <property>
+            <name>mapreduce.reduce.memory.mb</name>
+            <value>2048</value>
+        </property>
+        <property>
             <name>mapreduce.reduce.java.opts</name>
-            <value>-Xmx819m</value>
+            <value>-Xms1638m -Xmx1638m</value>
         </property>
     </configuration>
   yarn-site.xml: |
@@ -196,27 +198,27 @@ data:
     
         <property>
             <name>yarn.scheduler.minimum-allocation-mb</name>
-            <value>512</value>
+            <value>1024</value>
         </property>
         
         <property>
             <name>yarn.scheduler.maximum-allocation-mb</name>
-            <value>2048</value>
+            <value>3072</value>
         </property>
         
         <property>
           <name>yarn.app.mapreduce.am.resource.mb</name>
-          <value>1024</value>
+          <value>2048</value>
         </property>  
     
         <property>
           <name>arn.app.mapreduce.am.command-opts</name>
-          <value>-Xmx819m</value>
+          <value>-Xms1638m -Xmx1638m</value>
         </property>  
             
         <property>
             <name>yarn.nodemanager.resource.memory-mb</name>
-            <value>2048</value>
+            <value>3072</value>
         </property>
     
         <property>
