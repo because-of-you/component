@@ -42,10 +42,20 @@ spec:
         app: hive-metastore
 
     spec:
+      initContainers:
+        - name: init-hadoop
+          image: apache/hadoop:3.3.6
+          command:
+            - echo
+            - success
+          volumeMounts:
+            - mountPath: /opt/hadoop
+              name: hadoop
+
       containers:
         - name: hive-metastore
           image: wfybelief/hive:dev
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
 
           # 资源限制
           resources:
@@ -57,9 +67,9 @@ spec:
               cpu: 1m
               memory: 10Mi
 
-#          ports:
-#            - containerPort: 2181
-#              protocol: TCP
+          #          ports:
+          #            - containerPort: 2181
+          #              protocol: TCP
 
           # 存活监测
           #          livenessProbe:
@@ -69,6 +79,8 @@ spec:
           #            periodSeconds: 10
 
           volumeMounts:
+            - name: hadoop
+              mountPath: /opt/component/hadoop
             - mountPath: /opt/component/hive/conf/hive-site.xml
               subPath: hive-site.xml
               name: hive-metastore-conf
@@ -105,6 +117,8 @@ spec:
                 path: mapred-site.xml
               - key: yarn-site.xml
                 path: yarn-site.xml
+        - name: hadoop
+          emptyDir: { }
 
       restartPolicy: Always
 
@@ -117,11 +131,11 @@ metadata:
   labels:
     app: hive-metastore-service
 spec:
-#  ports:
-#    - port: 2181
-#      name: client
-#      targetPort: 2181
-#      protocol: TCP
+  #  ports:
+  #    - port: 2181
+  #      name: client
+  #      targetPort: 2181
+  #      protocol: TCP
 
   clusterIP: None
   selector:
