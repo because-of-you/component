@@ -45,24 +45,43 @@ spec:
       initContainers:
         - name: init-hadoop
           image: apache/hadoop:3.3.6
+          imagePullPolicy: IfNotPresent
           command:
-            - echo
-            - success
+            - cp
+            - -r
+            - /opt/hadoop
+            - /opt/component/
           volumeMounts:
-            - mountPath: /opt/hadoop
+            - mountPath: /opt/component/hadoop
               name: hadoop
+
+#        - name: download-postgresql-driver
+#          image: busybox:latest
+#          imagePullPolicy: IfNotPresent
+#          command:
+#            - busybox
+#            - wget
+#            - -O
+#            - /opt/component/hive/lib/
+#            - https://jdbc.postgresql.org/download/postgresql-42.7.1.jar
+#          volumeMounts:
+#            - mountPath: /opt/component/hadoop
+#              name: hadoop
 
       containers:
         - name: hive-metastore
           image: wfybelief/hive:dev
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: HIVE_METASTORE_HADOOP_OPTS
+              value: '-XX:InitialRAMPercentage=50.0 -XX:MaxRAMPercentage=50.0 -Xshareclasses -Xtune:virtualized -Xquickstart -XX:+UseContainerSupport'
 
           # 资源限制
           resources:
             limits:
               # 1024 / 3
               memory: 2048Mi
-              cpu: 500m
+              cpu: 2000m
             requests:
               cpu: 1m
               memory: 10Mi
@@ -101,6 +120,10 @@ spec:
               subPath: yarn-site.xml
               name: hive-metastore-conf
               readOnly: true
+            - mountPath: /opt/component/hive/conf/hive-env.sh
+              subPath: hive-env.sh
+              name: hive-metastore-conf
+              readOnly: true
 
       volumes:
         - name: hive-metastore-conf
@@ -117,6 +140,8 @@ spec:
                 path: mapred-site.xml
               - key: yarn-site.xml
                 path: yarn-site.xml
+              - key: hive-env.sh
+                path: hive-env.sh
         - name: hadoop
           emptyDir: { }
 
@@ -147,6 +172,8 @@ kind: ConfigMap
 metadata:
   name: hive-metastore-configmap
 data:
+  hive-env.sh: |
+    export HADOOP_HEAPSIZE=1024
   hive-site.xml: |
     <configuration>
         <!-- Hive产生的元数据存放位置-->
@@ -157,7 +184,7 @@ data:
         <!-- 数据库连接JDBC的URL地址-->
         <property>
             <name>javax.jdo.option.ConnectionURL</name>
-            <value>jdbc:postgresql://postgres-service:5432/hive_metastore?createDatabaseIfNotExist=true&amp;useSSL=false&amp;allowPublicKeyRetrieval=true</value>
+            <value>jdbc:postgresql://postgres-service:5432/default?createDatabaseIfNotExist=true&amp;useSSL=false&amp;allowPublicKeyRetrieval=true</value>
         </property>
         <!-- 数据库连接driver，即MySQL驱动-->
         <property>
@@ -173,8 +200,28 @@ data:
         <property>
             <name>javax.jdo.option.ConnectionPassword</name>
             <value>component</value>
+        </property>    
+        <property>
+            <name>hive.metastore.schema.verification</name>
+            <value>false</value>
+        </property>
+        <property>
+            <name>datanucleus.schema.autoCreateAll</name>
+            <value>true</value>
         </property>
         <!-- 暂时注释 
+        <property>
+            <name>datanucleus.autoCreateSchema</name>
+            <value>true</value>
+        </property>
+        <property>
+            <name>datanucleus.autoCreateTables</name>
+            <value>true</value>
+        </property>
+        <property>
+            <name>datanucleus.autoCreateColumns</name>
+            <value>true</value>
+        </property>
         <property>
             <name>hive.metastore.schema.verification</name>
             <value>false</value>
