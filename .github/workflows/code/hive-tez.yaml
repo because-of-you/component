@@ -7,7 +7,7 @@
 # documentation.
 
 # uni项目一体式构建方案
-name: jdk
+name: tez
 
 on:
   push:
