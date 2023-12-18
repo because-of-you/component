@@ -87,5 +87,5 @@ jobs:
           platforms: linux/amd64,linux/arm64
           file: hive/execution/tez/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: tez_0.10.2_hadoop_3.3.6
+          tags: wfybelief/tez:tez_0.10.2_hadoop_3.3.6
           labels: ${{ steps.meta.outputs.labels }}
