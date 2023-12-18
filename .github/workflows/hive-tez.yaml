@@ -50,6 +50,7 @@ jobs:
           java-version: '8'
           distribution: 'zulu'
           cache: maven
+          cache-dependency-path: tez/pom.xml
 
       - name: tez compile package
         run: |
