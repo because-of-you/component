@@ -6,9 +6,9 @@ kind: StatefulSet
 
 # 元数据
 metadata:
-  name: hive-metastore
+  name: hive-server
   labels:
-    app: hive-metastore
+    app: hive-server
 
 spec:
 
@@ -22,13 +22,13 @@ spec:
   minReadySeconds: 10
   # ----------------- 1.多副本策略 -----------------
 
-  serviceName: hive-metastore-service
+  serviceName: hive-server-service
 
   # 选择器
   selector:
     matchLabels:
       # 必须匹配 .spec.template.metadata.labels
-      app: hive-metastore
+      app: hive-server
 
 
 
@@ -36,10 +36,10 @@ spec:
   # 模版信息
   template:
     metadata:
-      name: hive-metastore
+      name: hive-server
       # 必须匹配 .spec.selector.matchLabels
       labels:
-        app: hive-metastore
+        app: hive-server
 
     spec:
       initContainers:
@@ -80,19 +80,6 @@ spec:
             - mountPath: /opt/component/hive
               name: hive-resource-dir
 
-        - name: tez-resource-init
-          imagePullPolicy: IfNotPresent
-          image: busybox:latest
-          command:
-            - busybox
-            - wget
-            - -O
-            - /opt/component/tez/tez.tar.gz
-            - https://mirrors.aliyun.com/apache/tez/0.10.2/apache-tez-0.10.2-bin.tar.gz
-          volumeMounts:
-            - mountPath: /opt/component/tez
-              name: tez-resource-dir
-
 #        - name: iceberg-driver-init
 #          imagePullPolicy: IfNotPresent
 #          image: busybox:latest
@@ -107,7 +94,7 @@ spec:
 #              name: hive-resource-dir
 
       containers:
-        - name: hive-metastore
+        - name: hive-server
           image: wfybelief/jdk-8:0.0.4
           imagePullPolicy: IfNotPresent
           command:
@@ -117,7 +104,7 @@ spec:
           args:
             - ./hive
             - --service
-            - metastore
+            - hiveserver2
           env:
             - name: HIVE_METASTORE_HADOOP_OPTS
               value: '-XX:InitialRAMPercentage=50.0 -XX:MaxRAMPercentage=50.0 -Xshareclasses -Xtune:virtualized -Xquickstart -XX:+UseContainerSupport'
@@ -127,15 +114,13 @@ spec:
               value: '/opt/component/hadoop'
             - name: HIVE_HOME
               value: '/opt/component/hive'
-            - name: TEZ_HOME
-              value: '/opt/component/tez'
 
           # 资源限制
           resources:
             limits:
               # 1024 / 3
-              memory: 2048Mi
-              cpu: 2000m
+              memory: 3072Mi
+              cpu: 4000m
             requests:
               cpu: 1m
               memory: 10Mi
@@ -147,47 +132,45 @@ spec:
               mountPath: /opt/component/hadoop
             - name: hive-resource-dir
               mountPath: /opt/component/hive
-            - name: tez-resource-dir
-              mountPath: /opt/component/tez
 
             # hive配置持久卷
             - mountPath: /opt/component/hive/conf/hive-site.xml
               subPath: hive-site.xml
-              name: hive-metastore-conf
+              name: hive-server-conf
               readOnly: true
             - mountPath: /opt/component/hive/conf/hive-env.sh
               subPath: hive-env.sh
-              name: hive-metastore-conf
+              name: hive-server-conf
               readOnly: true
 
             # hadoop配置持久卷
             - mountPath: /opt/component/hadoop/etc/hadoop/core-site.xml
               subPath: core-site.xml
-              name: hive-metastore-conf
+              name: hive-server-conf
               readOnly: true
             - mountPath: /opt/component/hadoop/etc/hadoop/hdfs-site.xml
               subPath: hdfs-site.xml
-              name: hive-metastore-conf
+              name: hive-server-conf
               readOnly: true
             - mountPath: /opt/component/hadoop/etc/hadoop/mapred-site.xml
               subPath: mapred-site.xml
-              name: hive-metastore-conf
+              name: hive-server-conf
               readOnly: true
             - mountPath: /opt/component/hadoop/etc/hadoop/yarn-site.xml
               subPath: yarn-site.xml
-              name: hive-metastore-conf
+              name: hive-server-conf
               readOnly: true
 
             # 启动脚本entrypoint.sh持久卷
             - mountPath: /entrypoint.sh
               subPath: entrypoint.sh
               readOnly: true
-              name: hive-metastore-conf
+              name: hive-server-conf
 
       volumes:
-        - name: hive-metastore-conf
+        - name: hive-server-conf
           configMap:
-            name: hive-metastore-configmap
+            name: hive-server-configmap
             items:
               - key: hive-site.xml
                 path: hive-site.xml
@@ -209,8 +192,6 @@ spec:
           emptyDir: { }
         - name: hive-resource-dir
           emptyDir: { }
-        - name: tez-resource-dir
-          emptyDir: { }
 
       restartPolicy: Always
 
@@ -219,9 +200,9 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: hive-metastore-service
+  name: hive-server-service
   labels:
-    app: hive-metastore-service
+    app: hive-server-service
 spec:
   #  ports:
   #    - port: 2181
@@ -231,43 +212,25 @@ spec:
 
   clusterIP: None
   selector:
-    app: hive-metastore
+    app: hive-server
 
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: hive-metastore-configmap
+  name: hive-server-configmap
 data:
   entrypoint.sh: |
     #!/usr/bin/env bash
     
-    # 初始化上传tez的jar
-    /opt/component/hadoop/bin/hdfs dfs -mkdir -p /component/storage/tez/
-    /opt/component/hadoop/bin/hdfs dfs -put -f /opt/component/tez/tez.tar.gz /component/storage/tez/tez.tar.gz
-    
     cd /opt/component/hive/bin/
     
-    ./schematool -dbType postgres -initOrUpgradeSchema -verbose
+    # ./schematool -dbType postgres -initOrUpgradeSchema -verbose
     
     # ./hive --service metastore
     exec "$@"
   hive-env.sh: |
     export HADOOP_HEAPSIZE=1536
-    export HADOOP_CLASSPATH=`/opt/component/hadoop/bin/hadoop classpath`
-    # export HADOOP_CLASSPATH=${HADOOP_CLASSPATH}:${TEZ_HOME}/conf/:${TEZ_HOME}/*:${TEZ_HOME}/lib/*
-    export HIVE_AUX_JARS_PATH=${TEZ_HOME}/conf:${TEZ_HOME}:${TEZ_HOME}/lib
-  tez-site.xml: |
-    <configuration>
-        <property>
-            <name>tez.lib.uris</name>
-            <value>hdfs://namenode-service:8020/component/storage/tez,hdfs://namenode-service:8020/component/storage/tez/lib</value>
-        </property>
-        <property>
-            <name>tez.use.cluster.hadoop-libs</name>
-            <value>true</value>
-        </property>
-    </configuration>
   hive-site.xml: |
     <configuration>
         <!-- Hive产生的元数据存放位置-->
@@ -294,7 +257,7 @@ data:
         <property>
             <name>javax.jdo.option.ConnectionPassword</name>
             <value>component</value>
-        </property>
+        </property>    
         <property>
             <name>hive.metastore.schema.verification</name>
             <value>false</value>
@@ -303,29 +266,37 @@ data:
             <name>datanucleus.schema.autoCreateAll</name>
             <value>true</value>
         </property>
-        <property>
+         <property>
             <name>hive.metastore.uris</name>
             <value>thrift://hive-metastore-service:9083</value>
         </property>
         <!-- 指定hive server 2连接的host -->
         <property>
-            <name>hive.server2.thrift.bind.host</name>
-            <value>hive-server-service</value>
+          <name>hive.server2.thrift.bind.host</name>
+          <value>hive-server-service</value>
         </property>
         <!-- 指定hive server 2连接的端口号 -->
         <property>
-            <name>hive.server2.thrift.port</name>
-            <value>10000</value>
+          <name>hive.server2.thrift.port</name>
+          <value>10000</value>
         </property>
         <property>
             <name>iceberg.engine.hive.enabled</name>
-            <value>true</value>
+            <value>false</value>
         </property>
         <property>
             <name>hive.execution.engine</name>
-            <value>mr</value>
+            <value>spark</value>
         </property>
-        <!-- 暂时注释 
+        <property>
+            <name>spark.yarn.jars</name>
+            <value>hdfs://namenode-service:8020/spark/jars/*</value>
+        </property>
+        <!-- 暂时注释
+        <property>
+            <name>hive.server2.active.passive.ha.enable</name>
+            <value>true</value>
+        </property>    
         <property>
             <name>datanucleus.autoCreateSchema</name>
             <value>true</value>
