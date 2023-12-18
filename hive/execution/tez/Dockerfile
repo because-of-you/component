@@ -1,6 +1,6 @@
 FROM busybox:latest
 
-ADD ./tez/tez-dist/target/* /opt/component/tez/
+COPY ./tez/tez-dist/target/*.tar.gz /opt/component/tez/
 
 ENTRYPOINT ["busybox"]
 CMD ["top", "-b"]
