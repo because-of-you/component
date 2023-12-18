@@ -80,19 +80,6 @@ spec:
             - mountPath: /opt/component/hive
               name: hive-resource-dir
 
-        - name: tez-resource-init
-          imagePullPolicy: IfNotPresent
-          image: busybox:latest
-          command:
-            - busybox
-            - wget
-            - -O
-            - /opt/component/tez/tez.tar.gz
-            - https://mirrors.aliyun.com/apache/tez/0.10.2/apache-tez-0.10.2-bin.tar.gz
-          volumeMounts:
-            - mountPath: /opt/component/tez
-              name: tez-resource-dir
-
 #        - name: iceberg-driver-init
 #          imagePullPolicy: IfNotPresent
 #          image: busybox:latest
@@ -127,8 +114,6 @@ spec:
               value: '/opt/component/hadoop'
             - name: HIVE_HOME
               value: '/opt/component/hive'
-            - name: TEZ_HOME
-              value: '/opt/component/tez'
 
           # 资源限制
           resources:
@@ -147,8 +132,6 @@ spec:
               mountPath: /opt/component/hadoop
             - name: hive-resource-dir
               mountPath: /opt/component/hive
-            - name: tez-resource-dir
-              mountPath: /opt/component/tez
 
             # hive配置持久卷
             - mountPath: /opt/component/hive/conf/hive-site.xml
@@ -209,8 +192,6 @@ spec:
           emptyDir: { }
         - name: hive-resource-dir
           emptyDir: { }
-        - name: tez-resource-dir
-          emptyDir: { }
 
       restartPolicy: Always
 
@@ -242,10 +223,6 @@ data:
   entrypoint.sh: |
     #!/usr/bin/env bash
     
-    # 初始化上传tez的jar
-    /opt/component/hadoop/bin/hdfs dfs -mkdir -p /component/storage/tez/
-    /opt/component/hadoop/bin/hdfs dfs -put -f /opt/component/tez/tez.tar.gz /component/storage/tez/tez.tar.gz
-    
     cd /opt/component/hive/bin/
     
     ./schematool -dbType postgres -initOrUpgradeSchema -verbose
@@ -253,21 +230,7 @@ data:
     # ./hive --service metastore
     exec "$@"
   hive-env.sh: |
-    export HADOOP_HEAPSIZE=1536
-    export HADOOP_CLASSPATH=`/opt/component/hadoop/bin/hadoop classpath`
-    # export HADOOP_CLASSPATH=${HADOOP_CLASSPATH}:${TEZ_HOME}/conf/:${TEZ_HOME}/*:${TEZ_HOME}/lib/*
-    export HIVE_AUX_JARS_PATH=${TEZ_HOME}/conf:${TEZ_HOME}:${TEZ_HOME}/lib
-  tez-site.xml: |
-    <configuration>
-        <property>
-            <name>tez.lib.uris</name>
-            <value>hdfs://namenode-service:8020/component/storage/tez,hdfs://namenode-service:8020/component/storage/tez/lib</value>
-        </property>
-        <property>
-            <name>tez.use.cluster.hadoop-libs</name>
-            <value>true</value>
-        </property>
-    </configuration>
+    export HADOOP_HEAPSIZE=1024
   hive-site.xml: |
     <configuration>
         <!-- Hive产生的元数据存放位置-->
@@ -319,11 +282,15 @@ data:
         </property>
         <property>
             <name>iceberg.engine.hive.enabled</name>
-            <value>true</value>
+            <value>false</value>
         </property>
         <property>
             <name>hive.execution.engine</name>
-            <value>mr</value>
+            <value>spark</value>
+        </property>
+        <property>
+            <name>spark.yarn.jars</name>
+            <value>hdfs://namenode-service:8020/spark/jars/*</value>
         </property>
         <!-- 暂时注释 
         <property>
