@@ -34,7 +34,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout private tools
+      - name: component
+        uses: actions/checkout@v4
+
+      - name: tez
         uses: actions/checkout@v4
         with:
           repository: apache/tez
