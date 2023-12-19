@@ -85,9 +85,16 @@ spec:
           image: wfybelief/tez:tez_0.10.3_hadoop_3.3.6
           command:
             - busybox
-            - cp
-            - /opt/component/tez/*
-            - /opt/component/tez/
+            - sh
+            - -c
+          args:
+            - |
+              TAR_DIR=/opt/component/storage/tez
+              mkdir -p $TAR_DIR/tez
+              tar -zxvf $TAR_DIR/*-SNAPSHOT.tar.gz -C $TAR_DIR/tez/
+              cp -r $TAR_DIR/tez /opt/component/
+              mkdir -p /opt/component/tez/storage
+              cp $TAR_DIR/*.tar.gz /opt/component/tez/storage
           volumeMounts:
             - mountPath: /opt/component/tez
               name: tez-resource-dir
@@ -241,10 +248,11 @@ data:
   entrypoint.sh: |
     #!/usr/bin/env bash
     
-    # 初始化上传tez的jar
+    # 初始化上传tez的jar 暂时这样
     /opt/component/hadoop/bin/hdfs dfs -mkdir -p /component/storage/tez/
-    /opt/component/hadoop/bin/hdfs dfs -put -f /opt/component/tez/tez.tar.gz /component/storage/tez/tez.tar.gz
-    
+    cd /opt/component/tez/storage
+    mv *-minimal.tar.gz tez-minimal.tar.gz
+    /opt/component/hadoop/bin/hdfs dfs -put -f /opt/component/tez/storage/tez-minimal.tar.gz /component/storage/tez/tez-minimal.tar.gz
     cd /opt/component/hive/bin/
     
     ./schematool -dbType postgres -initOrUpgradeSchema -verbose
@@ -253,14 +261,17 @@ data:
     exec "$@"
   hive-env.sh: |
     export HADOOP_HEAPSIZE=1536
-    export HADOOP_CLASSPATH=`/opt/component/hadoop/bin/hadoop classpath`
+    # export HADOOP_CLASSPATH=`/opt/component/hadoop/bin/hadoop classpath`
     # export HADOOP_CLASSPATH=${HADOOP_CLASSPATH}:${TEZ_HOME}/conf/:${TEZ_HOME}/*:${TEZ_HOME}/lib/*
-    export HIVE_AUX_JARS_PATH=${TEZ_HOME}/conf:${TEZ_HOME}:${TEZ_HOME}/lib
+    # export HIVE_AUX_JARS_PATH=${TEZ_HOME}/conf:${TEZ_HOME}:${TEZ_HOME}/lib
+    export TEZ_CONF_DIR=${TEZ_HOME}/conf
+    export TEZ_JARS=${TEZ_HOME}
+    export HADOOP_CLASSPATH=${TEZ_CONF_DIR}:${TEZ_JARS}/*:${TEZ_JARS}/lib/*
   tez-site.xml: |
     <configuration>
         <property>
             <name>tez.lib.uris</name>
-            <value>hdfs://namenode-service:8020/component/storage/tez,hdfs://namenode-service:8020/component/storage/tez/lib</value>
+            <value>hdfs://namenode-service:8020/component/storage/tez/tez-minimal.tar.gz</value>
         </property>
         <property>
             <name>tez.use.cluster.hadoop-libs</name>
