@@ -82,13 +82,12 @@ spec:
 
         - name: tez-resource-init
           imagePullPolicy: IfNotPresent
-          image: busybox:latest
+          image: wfybelief/tez:tez_0.10.3_hadoop_3.3.6
           command:
             - busybox
-            - wget
-            - -O
-            - /opt/component/tez/tez.tar.gz
-            - https://mirrors.aliyun.com/apache/tez/0.10.2/apache-tez-0.10.2-bin.tar.gz
+            - cp
+            - /opt/component/tez/*
+            - /opt/component/tez/
           volumeMounts:
             - mountPath: /opt/component/tez
               name: tez-resource-dir
