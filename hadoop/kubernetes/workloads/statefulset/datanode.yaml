@@ -2,28 +2,28 @@ apiVersion: apps/v1
 kind: StatefulSet
 
 metadata:
-  name: namenode
+  name: datanode
   labels:
-    app: namenode
+    app: datanode
 
 spec:
-  replicas: 1
+  replicas: 3
 
   updateStrategy:
     type: RollingUpdate
 
   minReadySeconds: 10
-  serviceName: namenode-service
+  serviceName: datanode-service
 
   selector:
     matchLabels:
-      app: namenode
+      app: datanode
 
   template:
     metadata:
-      name: namenode
+      name: datanode
       labels:
-        app: namenode
+        app: datanode
 
     spec:
       initContainers:
@@ -43,7 +43,7 @@ spec:
 
 
       containers:
-        - name: namenode
+        - name: datanode
           image: wfybelief/jdk-8:0.0.4
           imagePullPolicy: IfNotPresent
 
@@ -53,20 +53,21 @@ spec:
             - entrypoint.sh
           args:
             - hdfs
-            - namenode
+            - datanode
           env:
             - name: HDFS_NAMENODE_OPTS
               value: -XX:+UseContainerSupport
-                -XX:InitialRAMPercentage=60.0
-                -XX:MaxRAMPercentage=60.0 
-                -Xshareclasses 
-                -Xtune:virtualized 
-                -Xquickstart 
+                -XX:InitialRAMPercentage=40.0
+                -XX:MaxRAMPercentage=40.0
+                -Xshareclasses
+                -Xtune:virtualized
+                -Xquickstart
 
           resources:
             limits:
-              cpu: 2000m  # 2048 / 1
-              memory: 2048Mi
+              # 1024 / 1
+              memory: 1024Mi
+              cpu: 1000m
             requests:
               memory: 10Mi
               cpu: 1m
@@ -86,31 +87,31 @@ spec:
 
             - mountPath: /entrypoint.sh
               subPath: entrypoint.sh
-              name: namenode-config-volume
+              name: datanode-config-volume
               readOnly: true
 
             - mountPath: /opt/component/hadoop/etc/hadoop/core-site.xml
               subPath: core-site.xml
-              name: namenode-config-volume
+              name: datanode-config-volume
               readOnly: true
 
             - mountPath: /opt/component/hadoop/etc/hadoop/hdfs-site.xml
               subPath: hdfs-site.xml
-              name: namenode-config-volume
+              name: datanode-config-volume
               readOnly: true
 
             - mountPath: /opt/component/hadoop/etc/hadoop/mapred-site.xml
               subPath: mapred-site.xml
-              name: namenode-config-volume
+              name: datanode-config-volume
               readOnly: true
 
             - mountPath: /opt/component/hadoop/etc/hadoop/yarn-site.xml
               subPath: yarn-site.xml
-              name: namenode-config-volume
+              name: datanode-config-volume
               readOnly: true
 
       volumes:
-        - name: namenode-config-volume
+        - name: datanode-config-volume
 
           configMap:
             name: hadoop-configmap
@@ -150,4 +151,4 @@ spec:
           requests:
             storage: 1Gi
           limits:
-            storage: 10Gi
+            storage: 50Gi
