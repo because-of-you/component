@@ -59,6 +59,8 @@ jobs:
       - name: hadoop-project-code-package
         run: |
           cmake --version
+          apt update
+          apt install libprotobuf-dev protobuf-compiler -y
           cd hadoop 
           mvn clean package -DskipTests -Pdist,native -Dtar -Dmaven.javadoc.skip=true
 
