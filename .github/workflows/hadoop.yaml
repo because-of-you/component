@@ -6,12 +6,11 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-# uni项目一体式构建方案
-name: tez
+name: hadoop
 
 on:
   push:
-    # branches: [ "main" ]
+    branches: [ "main" ]
     #    paths-ignore:
     #      - README.md
     #      - .github/workflows/*
@@ -29,45 +28,44 @@ env:
 
 jobs:
 
-  tez-code-build-job:
-    if: contains( 'tez' ,  'tez')
+  hadoop-code-build-job:
+    if: contains( 'hadoop' ,  'hadoop')
     runs-on: ubuntu-latest
 
     steps:
-      - name: component
+      - name: component-project-code-load
         uses: actions/checkout@v4
 
-      - name: tez
+      - name: hadoop-project-code-load
         uses: actions/checkout@v4
         with:
-          repository: apache/tez
+          repository: apache/hadoop
           ref: master
-          path: tez
+          path: release-3.3.6
 
-      - name: set jdk 8
+      - name: jdk-8-load
         uses: actions/setup-java@v3
         with:
           java-version: '8'
           distribution: 'zulu'
           cache: maven
-          cache-dependency-path: tez/pom.xml
+          cache-dependency-path: hadoop/pom.xml
 
-      - name: tez compile package
+      - name: hadoop-project-code-package
         run: |
-          cd tez 
-          mvn clean install -DskipTests -Dmaven.javadoc.skip=true -Dhadoop.version=3.3.6
-          ls -al
+          cd hadoop 
+          mvn clean package -DskipTests -Pdist,native -Dtar -Dmaven.javadoc.skip=true
 
 
       # docker 镜像管理模块 ------> 加载docker镜像元数据管理服务
-      - name: docker meta manager service
+      - name: hadoop-image-meta-load
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/tez
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/hadoop
 
       # docker 镜像管理模块 ------> 加载docker登陆服务
-      - name: docker login service
+      - name: hadoop-image-registry-login
         uses: docker/login-action@v2
         if: github.event_name != 'pull_request'
         with:
@@ -76,16 +74,16 @@ jobs:
           registry: ${{ env.REGISTRY }}
 
       # docker 镜像管理模块 ------> 加载docker 多平台镜像构建服务
-      - name: docker build x service
+      - name: hadoop-image-build
         uses: docker/setup-buildx-action@v2
 
       # docker 镜像管理模块 ------> 构建和推送最新的镜像 ,linux/arm64
-      - name: docker build and push service
+      - name: hadoop-image-push
         uses: docker/build-push-action@v4
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           file: hive/execution/tez/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: wfybelief/tez:tez_0.10.3_hadoop_3.3.6
+          tags: wfybelief/hadoop:3.3.6
           labels: ${{ steps.meta.outputs.labels }}
