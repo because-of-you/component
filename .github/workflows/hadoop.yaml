@@ -40,8 +40,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: apache/hadoop
-          ref: master
-          path: release-3.3.6
+          ref: release-3.3.6
+          path: hadoop
 
       - name: jdk-8-load
         uses: actions/setup-java@v3
