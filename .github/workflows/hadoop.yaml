@@ -62,7 +62,7 @@ jobs:
         with:
           context: .
           platforms: linux/amd64,linux/arm64
-          file: hive/execution/tez/Dockerfile
+          file: images/hadoop/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: wfybelief/hadoop:3.3.6
           labels: ${{ steps.meta.outputs.labels }}
