@@ -36,6 +36,9 @@ jobs:
       - name: component-project-code-load
         uses: actions/checkout@v4
 
+      - name: cmake-load
+        uses: threeal/cmake-action@v1.3.0
+
       - name: hadoop-project-code-load
         uses: actions/checkout@v4
         with:
@@ -50,9 +53,6 @@ jobs:
           distribution: 'zulu'
           cache: maven
           cache-dependency-path: hadoop/pom.xml
-
-      - name: cmake-load
-        uses: threeal/cmake-action@v1.3.0
 
       - name: hadoop-project-code-package
         run: |
