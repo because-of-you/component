@@ -55,7 +55,7 @@ jobs:
       - name: tez compile package
         run: |
           cd tez 
-          mvn clean install -DskipTests -Dmaven.javadoc.skip=true -Dhadoop.version=3.3.1
+          mvn clean install -DskipTests -Dmaven.javadoc.skip=true -Dhadoop.version=3.3.1 -pl tez-ui
           ls -al
 
 
