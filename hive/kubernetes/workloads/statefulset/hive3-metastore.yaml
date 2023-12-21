@@ -1,0 +1,209 @@
+# 版本信息
+apiVersion: apps/v1
+
+# 类型
+kind: StatefulSet
+
+# 元数据
+metadata:
+  name: hive-metastore
+  labels:
+    app: hive-metastore
+
+spec:
+
+
+  # ----------------- 1.多副本策略 -----------------
+  replicas: 1
+  # 滚动更新
+  updateStrategy:
+    type: RollingUpdate
+  # 最短就绪时间
+  minReadySeconds: 10
+  # ----------------- 1.多副本策略 -----------------
+
+  serviceName: hive-metastore-service
+
+  # 选择器
+  selector:
+    matchLabels:
+      # 必须匹配 .spec.template.metadata.labels
+      app: hive-metastore
+
+
+
+
+  # 模版信息
+  template:
+    metadata:
+      name: hive-metastore
+      # 必须匹配 .spec.selector.matchLabels
+      labels:
+        app: hive-metastore
+
+    spec:
+      initContainers:
+        - name: hadoop-resource-init
+          image: wfybelief/hadoop:3.3.6
+          imagePullPolicy: IfNotPresent
+          command:
+            - busybox
+            - sh
+            - -c
+          args:
+            - |
+              tar -zxvf /opt/component/storage/hadoop/hadoop-*.tar.gz -C /opt/component/hadoop --strip-components 1
+          volumeMounts:
+            - mountPath: /opt/component/hadoop
+              name: hadoop-resource-volume
+
+        - name: tez-resource-init
+          imagePullPolicy: IfNotPresent
+          image: wfybelief/tez:tez_0.10.3_hadoop_3.3.6
+          command:
+            - busybox
+            - sh
+            - -c
+          args:
+            - |
+              tar -zxvf /opt/component/storage/tez/*-SNAPSHOT.tar.gz -C /opt/component/tez/
+          volumeMounts:
+            - mountPath: /opt/component/tez
+              name: tez-resource-volume
+
+        - name: hive-resource-init
+          imagePullPolicy: IfNotPresent
+          image: apache/hive:3.1.3
+          command:
+            - cp
+          args:
+            - -r
+            - /opt/hive
+            - /opt/component/
+          volumeMounts:
+            - mountPath: /opt/component/hive
+              name: hive-resource-volume
+
+      containers:
+        - name: hive-metastore
+          image: wfybelief/jdk-8:0.0.4
+          imagePullPolicy: IfNotPresent
+          command:
+            - busybox
+            - sh
+            - entrypoint.sh
+          args:
+            - top
+            - -b
+          env:
+            - name: HIVE_METASTORE_HADOOP_OPTS
+              value: -XX:+UseContainerSupport
+                -XX:InitialRAMPercentage=60.0
+                -XX:MaxRAMPercentage=60.0
+                -Xshareclasses
+                -Xtune:virtualized
+                -Xquickstart
+
+            - name: HADOOP_HEAPSIZE
+              value: '1536'
+
+          # 资源限制
+          resources:
+            limits:
+              # 1024 / 3
+              memory: 2048Mi
+              cpu: 2000m
+            requests:
+              cpu: 1m
+              memory: 10Mi
+
+          volumeMounts:
+            # hive配置持久卷
+            - name: hive-config-volume
+              mountPath: /opt/component/hive/conf/hive-site.xml
+              subPath: hive-site.xml
+              readOnly: true
+
+            - name: hive-config-volume
+              mountPath: /opt/component/hive/conf/hive-env.sh
+              readOnly: true
+              subPath: hive-env.sh
+
+            - name: hive-config-volume
+              mountPath: /entrypoint.sh
+              subPath: entrypoint.sh
+              readOnly: true
+
+            # 资源拷贝持久卷
+            - name: hadoop-resource-volume
+              mountPath: /opt/component/hadoop
+
+            - name: hive-resource-volume
+              mountPath: /opt/component/hive
+
+            - name: tez-resource-volume
+              mountPath: /opt/component/tez
+
+            # hadoop配置持久卷
+            - mountPath: /opt/component/hadoop/etc/hadoop/core-site.xml
+              subPath: core-site.xml
+              name: hadoop-config-volume
+              readOnly: true
+
+            - mountPath: /opt/component/hadoop/etc/hadoop/hdfs-site.xml
+              subPath: hdfs-site.xml
+              name: hadoop-config-volume
+              readOnly: true
+
+            - mountPath: /opt/component/hadoop/etc/hadoop/mapred-site.xml
+              subPath: mapred-site.xml
+              name: hadoop-config-volume
+              readOnly: true
+
+            - mountPath: /opt/component/hadoop/etc/hadoop/yarn-site.xml
+              subPath: yarn-site.xml
+              name: hadoop-config-volume
+              readOnly: true
+
+      volumes:
+        - name: hadoop-config-volume
+          configMap:
+            name: hadoop-configmap
+
+            items:
+              - key: core-site.xml
+                path: core-site.xml
+
+              - key: hdfs-site.xml
+                path: hdfs-site.xml
+
+              - key: mapred-site.xml
+                path: mapred-site.xml
+
+              - key: yarn-site.xml
+                path: yarn-site.xml
+
+        - name: hive-config-volume
+          configMap:
+            name: hive-configmap
+
+            items:
+              - key: entrypoint.sh
+                path: entrypoint.sh
+
+              - key: hive-env.sh
+                path: hive-env.sh
+
+              - key: hive-site.xml
+                path: hive-site.xml
+
+        - name: hadoop-resource-volume
+          emptyDir: { }
+        - name: hive-resource-volume
+          emptyDir: { }
+        - name: tez-resource-volume
+          emptyDir: { }
+
+      restartPolicy: Always
+
+
