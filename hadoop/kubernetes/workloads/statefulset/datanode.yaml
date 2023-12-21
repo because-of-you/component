@@ -55,7 +55,7 @@ spec:
             - hdfs
             - datanode
           env:
-            - name: HDFS_NAMENODE_OPTS
+            - name: HDFS_DATANODE_OPTS
               value: -XX:+UseContainerSupport
                 -XX:InitialRAMPercentage=40.0
                 -XX:MaxRAMPercentage=40.0
