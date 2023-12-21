@@ -55,7 +55,7 @@ jobs:
       - name: tez compile package
         run: |
           cd tez 
-          mvn clean install -DskipTests -Dmaven.javadoc.skip=true -Dhadoop.version=3.3.6
+          mvn clean install -DskipTests -Dmaven.javadoc.skip=true -Dhadoop.version=3.3.1
           ls -al
 
 
@@ -87,5 +87,5 @@ jobs:
           platforms: linux/amd64,linux/arm64
           file: images/tez/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: wfybelief/tez:tez_0.10.2_hadoop_3.3.6
+          tags: wfybelief/tez:tez_0.10.2_hadoop_3.3.1
           labels: ${{ steps.meta.outputs.labels }}
