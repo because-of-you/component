@@ -27,4 +27,5 @@ description: yarn配置 | 基于kubernetes的本地个性化开发集群
 
 ## 参考
 
+https://docs.cloudera.com/HDPDocuments/HDP2/HDP-2.1.1/bk_installing_manually_book/content/rpm-chap1-11.html
 https://developer.aliyun.com/article/5911

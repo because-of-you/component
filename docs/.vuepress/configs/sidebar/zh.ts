@@ -5,10 +5,12 @@ export const sidebarZh: SidebarConfig = {
         {
             text: '指南',
             children: [
-                '/guide/README.md',
                 '/guide/getting-started.md',
                 '/guide/source.md',
-                '/guide/yarn.md'
+                '/guide/hadoop.md',
+                '/guide/hadoop-configuration.md',
+                '/guide/hadoop-network.md',
+                '/guide/hadoop-statefulset.md',
             ],
         },
     ],
