@@ -1,0 +1,139 @@
+apiVersion: apps/v1
+kind: StatefulSet
+
+metadata:
+  name: resourcemanager
+  labels:
+    app: resourcemanager
+
+spec:
+  replicas: 1
+
+  updateStrategy:
+    type: RollingUpdate
+
+  minReadySeconds: 10
+  serviceName: resourcemanager-service
+
+  selector:
+    matchLabels:
+      app: resourcemanager
+
+  template:
+    metadata:
+      name: resourcemanager
+      labels:
+        app: resourcemanager
+
+    spec:
+      initContainers:
+        - name: hadoop-resource-init
+          image: wfybelief/hadoop:3.3.6
+          imagePullPolicy: IfNotPresent
+          command:
+            - busybox
+            - sh
+            - -c
+          args:
+            - |
+              tar -zxvf /opt/component/storage/hadoop/hadoop-*.tar.gz -C /opt/component/hadoop --strip-components 1
+          volumeMounts:
+            - mountPath: /opt/component/hadoop
+              name: hadoop-resource-volume
+
+
+      containers:
+        - name: resourcemanager
+          image: wfybelief/jdk-8:0.0.4
+          imagePullPolicy: IfNotPresent
+
+          command:
+            - busybox
+            - sh
+            - entrypoint.sh
+          args:
+            - yarn
+            - resourcemanager
+          env:
+            - name: YARN_RESOURCEMANAGER_OPTS
+              value: -XX:+UseContainerSupport
+                -XX:InitialRAMPercentage=60.0
+                -XX:MaxRAMPercentage=60.0
+                -Xshareclasses
+                -Xtune:virtualized
+                -Xquickstart
+
+          # 资源限制
+          resources:
+            limits:
+              # 2048 / 1
+              memory: 3072Mi
+              cpu: 2000m
+            requests:
+              cpu: 1m
+              memory: 10Mi
+
+          ports:
+            - containerPort: 8088
+              protocol: TCP
+            - containerPort: 19888
+              protocol: TCP
+
+          volumeMounts:
+
+            - mountPath: /opt/component/hadoop
+              name: hadoop-resource-volume
+              readOnly: false
+
+            - mountPath: /entrypoint.sh
+              subPath: entrypoint.sh
+              name: resourcemanager-config-volume
+              readOnly: true
+
+            - mountPath: /opt/component/hadoop/etc/hadoop/core-site.xml
+              subPath: core-site.xml
+              name: resourcemanager-config-volume
+              readOnly: true
+
+            - mountPath: /opt/component/hadoop/etc/hadoop/hdfs-site.xml
+              subPath: hdfs-site.xml
+              name: resourcemanager-config-volume
+              readOnly: true
+
+            - mountPath: /opt/component/hadoop/etc/hadoop/mapred-site.xml
+              subPath: mapred-site.xml
+              name: resourcemanager-config-volume
+              readOnly: true
+
+            - mountPath: /opt/component/hadoop/etc/hadoop/yarn-site.xml
+              subPath: yarn-site.xml
+              name: resourcemanager-config-volume
+              readOnly: true
+
+      volumes:
+        - name: resourcemanager-config-volume
+
+          configMap:
+            name: hadoop-configmap
+
+            items:
+              - key: core-site.xml
+                path: core-site.xml
+
+              - key: hdfs-site.xml
+                path: hdfs-site.xml
+
+              - key: mapred-site.xml
+                path: mapred-site.xml
+
+              - key: yarn-site.xml
+                path: yarn-site.xml
+
+              - key: entrypoint.sh
+                path: entrypoint.sh
+
+        - name: hadoop-resource-volume
+          emptyDir:
+            { }
+
+      restartPolicy: Always
