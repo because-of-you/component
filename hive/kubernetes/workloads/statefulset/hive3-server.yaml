@@ -1,18 +1,45 @@
 # 版本信息
-apiVersion: batch/v1
+apiVersion: apps/v1
 
 # 类型
-kind: Job
+kind: StatefulSet
 
 # 元数据
 metadata:
-  name:  hive-init
+  name: hive-server
+  labels:
+    app: hive-server
 
 spec:
+
+
+  # ----------------- 1.多副本策略 -----------------
+  replicas: 1
+  # 滚动更新
+  updateStrategy:
+    type: RollingUpdate
+  # 最短就绪时间
+  minReadySeconds: 10
+  # ----------------- 1.多副本策略 -----------------
+
+  serviceName: hive-server-service
+
+  # 选择器
+  selector:
+    matchLabels:
+      # 必须匹配 .spec.template.metadata.labels
+      app: hive-server
+
+
+
+
   # 模版信息
   template:
     metadata:
-      name:  hive-init
+      name: hive-server
+      # 必须匹配 .spec.selector.matchLabels
+      labels:
+        app: hive-server
 
     spec:
       initContainers:
@@ -40,7 +67,6 @@ spec:
           args:
             - |
               tar -zxvf /opt/component/storage/tez/*-SNAPSHOT.tar.gz -C /opt/component/tez/
-              mv /opt/component/storage/tez/tez-*-minimal.tar.gz /opt/component/tez/tez-minimal.tar.gz
           volumeMounts:
             - mountPath: /opt/component/tez
               name: tez-resource-volume
@@ -72,25 +98,22 @@ spec:
               name: hive-resource-volume
 
       containers:
-        - name:  hive-init
+        - name: hive-server
           image: wfybelief/jdk-8:0.0.4
           imagePullPolicy: IfNotPresent
           command:
             - busybox
             - sh
             - entrypoint.sh
-            - sh
-            - -c
           args:
-            - |
-              hdfs dfs -mkdir -p /component/storage/tez
-              hdfs dfs -put -f /opt/component/tez/tez-minimal.tar.gz /component/storage/tez/tez-minimal.tar.gz
-              schematool -dbType postgres -initSchema --verbose
+            - hive
+            - --service
+            - hiveserver2
           env:
-            - name: HIVE_METASTORE_HADOOP_OPTS
+            - name: HIVE_SERVER2_HADOOP_OPTS
               value: -XX:+UseContainerSupport
-                -XX:InitialRAMPercentage=60.0
-                -XX:MaxRAMPercentage=60.0
+                -XX:InitialRAMPercentage=50.0
+                -XX:MaxRAMPercentage=50.0
                 -Xshareclasses
                 -Xtune:virtualized
                 -Xquickstart
@@ -102,8 +125,8 @@ spec:
           resources:
             limits:
               # 1024 / 3
-              memory: 2048Mi
-              cpu: 2000m
+              memory: 3072Mi
+              cpu: 4000m
             requests:
               cpu: 1m
               memory: 10Mi
@@ -119,6 +142,11 @@ spec:
               mountPath: /opt/component/hive/conf/hive-env.sh
               readOnly: true
               subPath: hive-env.sh
+
+            - name: hive-config-volume
+              mountPath: /opt/component/tez/conf/tez-site.xml
+              readOnly: true
+              subPath: tez-site.xml
 
             - name: hive-config-volume
               mountPath: /entrypoint.sh
@@ -187,6 +215,8 @@ spec:
 
               - key: hive-site.xml
                 path: hive-site.xml
+              - key: tez-site.xml
+                path: tez-site.xml
 
         - name: hadoop-resource-volume
           emptyDir: { }
@@ -195,6 +225,6 @@ spec:
         - name: tez-resource-volume
           emptyDir: { }
 
-      restartPolicy: OnFailure
+      restartPolicy: Always
 
 

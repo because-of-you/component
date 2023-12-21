@@ -33,10 +33,12 @@ data:
     echo "$@"
     exec "$@"
   
+
   hive-env.sh: |
     export TEZ_CONF_DIR=${TEZ_HOME}/conf
     export TEZ_JARS=${TEZ_HOME}
-    export HADOOP_CLASSPATH=${TEZ_CONF_DIR}:${TEZ_JARS}/*:${TEZ_JARS}/lib/*
+    export HADOOP_CLASSPATH=`/opt/component/hadoop/bin/hadoop classpath`
+    export HADOOP_CLASSPATH=$HADOOP_CLASSPATH:${TEZ_CONF_DIR}:${TEZ_JARS}/*:${TEZ_JARS}/lib/*
 
   hive-site.xml: |
     <configuration>
@@ -124,5 +126,17 @@ data:
         <property>
             <name>hive.execution.engine</name>
             <value>tez</value>
+        </property>
+    </configuration>
+
+  tez-site.xml: |
+    <configuration>
+        <property>
+            <name>tez.lib.uris</name>
+            <value>${fs.defaultFS}/component/storage/tez/tez-minimal.tar.gz</value>
+        </property>
+        <property>
+            <name>tez.use.cluster.hadoop-libs</name>
+            <value>true</value>
         </property>
     </configuration>

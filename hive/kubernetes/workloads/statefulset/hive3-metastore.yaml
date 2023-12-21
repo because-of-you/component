@@ -84,6 +84,19 @@ spec:
             - mountPath: /opt/component/hive
               name: hive-resource-volume
 
+        - name: driver-resource-init
+          imagePullPolicy: IfNotPresent
+          image: wfybelief/jdbc-driver:0.0.1
+          command:
+            - sh
+            - -c
+          args:
+            - |
+              cp /opt/component/storage/jdbc/driver/postgres/postgresql-*.jar /opt/component/hive/lib/
+          volumeMounts:
+            - mountPath: /opt/component/hive
+              name: hive-resource-volume
+
       containers:
         - name: hive-metastore
           image: wfybelief/jdk-8:0.0.4
@@ -93,19 +106,20 @@ spec:
             - sh
             - entrypoint.sh
           args:
-            - top
-            - -b
+            - hive
+            - --service
+            - metastore
           env:
             - name: HIVE_METASTORE_HADOOP_OPTS
               value: -XX:+UseContainerSupport
-                -XX:InitialRAMPercentage=60.0
-                -XX:MaxRAMPercentage=60.0
+                -XX:InitialRAMPercentage=50.0
+                -XX:MaxRAMPercentage=50.0
                 -Xshareclasses
                 -Xtune:virtualized
                 -Xquickstart
 
             - name: HADOOP_HEAPSIZE
-              value: '1536'
+              value: '1024'
 
           # 资源限制
           resources:
@@ -128,6 +142,11 @@ spec:
               mountPath: /opt/component/hive/conf/hive-env.sh
               readOnly: true
               subPath: hive-env.sh
+
+            - name: hive-config-volume
+              mountPath: /opt/component/tez/conf/tez-site.xml
+              readOnly: true
+              subPath: tez-site.xml
 
             - name: hive-config-volume
               mountPath: /entrypoint.sh
@@ -196,6 +215,9 @@ spec:
 
               - key: hive-site.xml
                 path: hive-site.xml
+
+              - key: tez-site.xml
+                path: tez-site.xml
 
         - name: hadoop-resource-volume
           emptyDir: { }
