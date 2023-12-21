@@ -55,7 +55,8 @@ jobs:
       - name: tez compile package
         run: |
           cd tez 
-          mvn clean install -DskipTests -Dmaven.javadoc.skip=true -Dhadoop.version=3.3.1 -pl tez-ui
+          echo '{"allow_root": true }' > ~/.bowerrc
+          mvn clean install -DskipTests -Dmaven.javadoc.skip=true -Dhadoop.version=3.3.1
           ls -al
 
 
