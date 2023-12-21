@@ -1,0 +1,57 @@
+# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: jdbc-driver
+
+on:
+  push:
+    branches: [ "main" ]
+
+
+env:
+  REGISTRY: docker.io
+
+jobs:
+
+  hadoop-code-build-job:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: component-project-code-load
+        uses: actions/checkout@v4
+
+      # docker 镜像管理模块 ------> 加载docker镜像元数据管理服务
+      - name: jdbc-driver-image-meta-load
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/jdbc-driver
+
+      # docker 镜像管理模块 ------> 加载docker登陆服务
+      - name: jdbc-driver-image-registry-login
+        uses: docker/login-action@v2
+        if: github.event_name != 'pull_request'
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ${{ env.REGISTRY }}
+
+      # docker 镜像管理模块 ------> 加载docker 多平台镜像构建服务
+      - name: jdbc-driver-image-build
+        uses: docker/setup-buildx-action@v2
+
+      # docker 镜像管理模块 ------> 构建和推送最新的镜像 ,linux/arm64
+      - name: jdbc-driver-image-push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          file: images/jdbc-driver/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: wfybelief/jdbc-driver:0.0.1
+          labels: ${{ steps.meta.outputs.labels }}
