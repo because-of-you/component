@@ -1,0 +1,128 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hive-configmap
+data:
+
+  entrypoint.sh: |
+    #!/usr/bin/env bash
+    
+    # 设置环境变量
+    HADOOP_HOME=${HADOOP_HOME-"/opt/component/hadoop"}
+    HIVE_HOME=${HIVE_HOME-"/opt/component/hive"}
+    TEZ_HOME=${TEZ_HOME-"/opt/component/tez"}
+    
+    cat <<EOF >> /etc/profile
+    export HADOOP_HOME=$HADOOP_HOME
+    export HIVE_HOME=$HIVE_HOME
+    export TEZ_HOME=$TEZ_HOME
+    
+    export PATH=$PATH:$HADOOP_HOME/bin:$HIVE_HOME/bin
+    EOF
+    
+    cat <<EOF >> /`whoami`/.bashrc
+    export HADOOP_HOME=$HADOOP_HOME
+    export HIVE_HOME=$HIVE_HOME
+    export TEZ_HOME=$TEZ_HOME
+    
+    export PATH=$PATH:$HADOOP_HOME/bin:$HIVE_HOME/bin
+    EOF
+    
+    source /etc/profile
+    
+    echo "$@"
+    exec "$@"
+  
+  hive-env.sh: |
+    export TEZ_CONF_DIR=${TEZ_HOME}/conf
+    export TEZ_JARS=${TEZ_HOME}
+    export HADOOP_CLASSPATH=${TEZ_CONF_DIR}:${TEZ_JARS}/*:${TEZ_JARS}/lib/*
+
+  hive-site.xml: |
+    <configuration>
+        
+        <!-- Hive产生的元数据存放位置-->
+        <property>
+            <name>hive.metastore.warehouse.dir</name>
+            <value>/user/hive/warehouse</value>
+        </property>
+        
+        <property>
+            <name>hive.exec.scratchdir</name>
+            <value>/user/hive/scratch_dir</value>
+        </property>
+        
+        <property>
+            <name>hive.user.install.directory</name>
+            <value>/user/hive/install_dir</value>
+        </property>    
+        
+        <!-- https://blog.csdn.net/zhanglong_4444/article/details/106853938  -->
+        <property>
+            <name>hive.server2.enable.doAs</name>
+            <value>true</value>
+        </property>
+        
+        <!-- 数据库连接JDBC的URL地址-->
+        <property>
+            <name>javax.jdo.option.ConnectionURL</name>
+            <value>jdbc:postgresql://postgres-service:5432/hive_metastore?</value>
+        </property>
+        
+        <!-- 数据库连接driver-->
+        <property>
+            <name>javax.jdo.option.ConnectionDriverName</name>
+            <value>org.postgresql.Driver</value>
+        </property>
+        
+        <!-- 数据库用户名-->
+        <property>
+            <name>javax.jdo.option.ConnectionUserName</name>
+            <value>root</value>
+        </property>
+        
+        <!-- 数据库密码-->
+        <property>
+            <name>javax.jdo.option.ConnectionPassword</name>
+            <value>component</value>
+        </property>
+        
+        <!--  不验证schema  -->
+        <property>
+            <name>hive.metastore.schema.verification</name>
+            <value>false</value>
+        </property>
+        
+        <!--  自己玩可以设置未true  -->
+        <property>
+            <name>datanucleus.schema.autoCreateAll</name>
+            <value>true</value>
+        </property>
+        
+        <property>
+            <name>hive.metastore.uris</name>
+            <value>thrift://hive-metastore-service:9083</value>
+        </property>
+        
+        <!-- 指定hive server 2连接的host -->
+        <property>
+            <name>hive.server2.thrift.bind.host</name>
+            <value>hive-server-service</value>
+        </property>
+        
+        <!-- 指定hive server 2连接的端口号 -->
+        <property>
+            <name>hive.server2.thrift.port</name>
+            <value>10000</value>
+        </property>
+        
+        <property>
+            <name>iceberg.engine.hive.enabled</name>
+            <value>true</value>
+        </property>
+        
+        <property>
+            <name>hive.execution.engine</name>
+            <value>tez</value>
+        </property>
+    </configuration>
