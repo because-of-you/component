@@ -40,8 +40,8 @@ jobs:
       - name: tez
         uses: actions/checkout@v4
         with:
-          repository: apache/tez
-          ref: rel/release-0.10.2
+          repository: wfy-belief/tez
+          ref: branch-0.10.2
           path: tez
 
       - name: set jdk 8
