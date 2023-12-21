@@ -3,7 +3,7 @@ services:
 
   hadoop:
     build:
-      dockerfile: ./DockerFile
+      dockerfile: DockerFile
     configs:
       - source: core-site
         target: /opt/hadoop/etc/hadoop/core-site.xml
@@ -123,20 +123,20 @@ networks:
 configs:
   core-site:
     name: "core-site.xml"
-    file: ./config/core-site.xml
+    file: config/core-site.xml
   hdfs-site:
     name: "hdfs-site.xml"
-    file: ./config/hdfs-site.xml
+    file: config/hdfs-site.xml
   mapred-site:
     name: "mapred-site.xml"
-    file: ./config/mapred-site.xml
+    file: config/mapred-site.xml
   yarn-site:
     name: "yarn-site.xml"
-    file: ./config/yarn-site.xml
+    file: config/yarn-site.xml
   master:
     name: "master"
-    file: ./config/master
+    file: config/master
   hive-site:
     name: "hive-site.xml"
-    file: ./hive-config/hive-site.xml
+    file: hive-config/hive-site.xml
 
