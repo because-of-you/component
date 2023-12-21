@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nodemanager-service
+  labels:
+    app: nodemanager
+spec:
+  ports:
+    - port: 9870
+      name: nodemanager-web
+      targetPort: 9870
+      protocol: TCP
+
+  clusterIP: None
+  selector:
+    app: nodemanager
