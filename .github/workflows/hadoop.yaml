@@ -10,7 +10,7 @@ name: hadoop
 
 on:
   push:
-    branches: [ "mainx" ]
+    branches: [ "main" ]
     #    paths-ignore:
     #      - README.md
     #      - .github/workflows/*
