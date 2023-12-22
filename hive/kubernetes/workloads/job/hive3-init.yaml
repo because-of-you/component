@@ -30,8 +30,8 @@ spec:
             - mountPath: /opt/component/hadoop
               name: hadoop-resource-volume
 
-        - name: hadoop-resource-init
-          image: wfybelief/hadoop:3.3.2
+        - name: tez-hadoop-resource-init
+          image: wfybelief/hadoop:3.3.6
           imagePullPolicy: IfNotPresent
           command:
             - busybox
@@ -39,7 +39,7 @@ spec:
             - -c
           args:
             - |
-              tar -zxvf /opt/component/storage/hadoop/hadoop-*.tar.gz -C /opt/component/hadoop --strip-components 1
+              cp /opt/component/storage/hadoop/hadoop-*.tar.gz /opt/component/hadoop/hadoop.tar.gz
           volumeMounts:
             - mountPath: /opt/component/hadoop
               name: hadoop-resource-volume
@@ -98,7 +98,9 @@ spec:
           args:
             - |
               hdfs dfs -mkdir -p /component/storage/tez
+              hdfs dfs -mkdir -p /component/storage/hadoop
               hdfs dfs -put -f /opt/component/tez/tez-minimal.tar.gz /component/storage/tez/tez-minimal.tar.gz
+              hdfs dfs -put -f /opt/component/hadoop/hadoop.tar.gz /component/storage/hadoop/hadoop.tar.gz
               schematool -dbType postgres -initSchema --verbose
           env:
             - name: HIVE_METASTORE_HADOOP_OPTS

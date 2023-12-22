@@ -99,7 +99,7 @@ spec:
 
       containers:
         - name: hive-metastore
-          image: wfybelief/jdk-11:0.0.4
+          image: wfybelief/jdk-8:0.0.4
           imagePullPolicy: IfNotPresent
           command:
             - busybox
