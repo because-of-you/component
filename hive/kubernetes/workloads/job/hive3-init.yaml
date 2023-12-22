@@ -30,6 +30,20 @@ spec:
             - mountPath: /opt/component/hadoop
               name: hadoop-resource-volume
 
+        - name: hadoop-resource-init
+          image: wfybelief/hadoop:3.3.2
+          imagePullPolicy: IfNotPresent
+          command:
+            - busybox
+            - sh
+            - -c
+          args:
+            - |
+              tar -zxvf /opt/component/storage/hadoop/hadoop-*.tar.gz -C /opt/component/hadoop --strip-components 1
+          volumeMounts:
+            - mountPath: /opt/component/hadoop
+              name: hadoop-resource-volume
+
         - name: tez-resource-init
           imagePullPolicy: IfNotPresent
           image: wfybelief/tez:tez_0.10.3_hadoop_3.3.6
