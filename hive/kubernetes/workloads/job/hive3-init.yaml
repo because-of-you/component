@@ -53,8 +53,8 @@ spec:
             - -c
           args:
             - |
-              tar -zxvf /opt/component/storage/tez/tez-*[0-9]*SNAPSHOT.tar.gz -C /opt/component/tez/
-              mv /opt/component/storage/tez/tez-*-minimal.tar.gz /opt/component/tez/tez-minimal.tar.gz
+              tar -zxvf /opt/component/storage/tez/tez-*[0-9].tar.gz -C /opt/component/tez/
+              mv /opt/component/storage/tez/tez-*minimal.tar.gz /opt/component/tez/tez-minimal.tar.gz
           volumeMounts:
             - mountPath: /opt/component/tez
               name: tez-resource-volume
@@ -102,17 +102,18 @@ spec:
               hdfs dfs -put -f /opt/component/tez/tez-minimal.tar.gz /component/storage/tez/tez-minimal.tar.gz
               hdfs dfs -put -f /opt/component/hadoop/hadoop.tar.gz /component/storage/hadoop/hadoop.tar.gz
               schematool -dbType postgres -initSchema --verbose
+              
           env:
             - name: HIVE_METASTORE_HADOOP_OPTS
               value: -XX:+UseContainerSupport
-                -XX:InitialRAMPercentage=60.0
-                -XX:MaxRAMPercentage=60.0
+                -XX:InitialRAMPercentage=50.0
+                -XX:MaxRAMPercentage=50.0
                 -Xshareclasses
                 -Xtune:virtualized
                 -Xquickstart
 
             - name: HADOOP_HEAPSIZE
-              value: '1536'
+              value: '1024'
 
           # 资源限制
           resources:
