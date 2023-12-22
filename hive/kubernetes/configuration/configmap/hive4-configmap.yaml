@@ -92,13 +92,13 @@ data:
         <!--  不验证schema  -->
         <property>
             <name>hive.metastore.schema.verification</name>
-            <value>false</value>
+            <value>true</value>
         </property>
         
         <!--  自己玩可以设置未true  -->
         <property>
             <name>datanucleus.schema.autoCreateAll</name>
-            <value>true</value>
+            <value>false</value>
         </property>
         
         <property>

@@ -38,7 +38,7 @@ data:
     export TEZ_CONF_DIR=${TEZ_HOME}/conf
     export TEZ_JARS=${TEZ_HOME}
     export HADOOP_CLASSPATH=`/opt/component/hadoop/bin/hadoop classpath`
-    export HADOOP_CLASSPATH=${HADOOP_CLASSPATH}:${TEZ_CONF_DIR}:${TEZ_JARS}/*:${TEZ_JARS}/lib/*
+    export HADOOP_CLASSPATH=${TEZ_CONF_DIR}:${TEZ_JARS}/*:${TEZ_JARS}/lib/*
 
   hive-site.xml: |
     <configuration>
@@ -92,13 +92,13 @@ data:
         <!--  不验证schema  -->
         <property>
             <name>hive.metastore.schema.verification</name>
-            <value>false</value>
+            <value>true</value>
         </property>
         
         <!--  自己玩可以设置未true  -->
         <property>
             <name>datanucleus.schema.autoCreateAll</name>
-            <value>true</value>
+            <value>false</value>
         </property>
         
         <property>
@@ -139,4 +139,13 @@ data:
             <name>tez.use.cluster.hadoop-libs</name>
             <value>true</value>
         </property>
+        <!--    
+        <property>
+            <name>tez.am.resource.memory.mb</name>
+            <value>2048</value>
+        </property>
+        <property>
+            <name>tez.task.resource.memory.mb</name>
+            <value>1024</value>
+        </property> -->
     </configuration>

@@ -100,10 +100,9 @@ spec:
 
       containers:
         - name: hive-server
-          image: wfybelief/jdk-8:0.0.4
+          image: adoptopenjdk/openjdk8:ubuntu-jre
           imagePullPolicy: IfNotPresent
           command:
-            - busybox
             - sh
             - entrypoint.sh
           args:
@@ -120,14 +119,14 @@ spec:
                 -Xquickstart
 
             - name: HADOOP_HEAPSIZE
-              value: '1536'
+              value: '1024'
 
           # 资源限制
           resources:
             limits:
               # 1024 / 3
-              memory: 3072Mi
-              cpu: 4000m
+              memory: 2048Mi
+              cpu: 2000m
             requests:
               cpu: 1m
               memory: 10Mi
