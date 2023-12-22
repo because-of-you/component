@@ -10,7 +10,7 @@ name: hadoop
 
 on:
   push:
-    branches: [ "mainx" ]
+    branches: [ "main" ]
     #    paths-ignore:
     #      - README.md
     #      - .github/workflows/*
@@ -64,5 +64,5 @@ jobs:
           platforms: linux/amd64,linux/arm64
           file: images/hadoop/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: wfybelief/hadoop:3.3.2
+          tags: wfybelief/hadoop:3.3.4
           labels: ${{ steps.meta.outputs.labels }}

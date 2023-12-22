@@ -46,7 +46,7 @@ spec:
 
         - name: tez-resource-init
           imagePullPolicy: IfNotPresent
-          image: wfybelief/tez:tez_0.10.3_hadoop_3.3.6
+          image: wfybelief/tez:tez_0.10.2_hadoop_3.3.4
           command:
             - busybox
             - sh
