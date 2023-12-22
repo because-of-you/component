@@ -11,7 +11,7 @@ name: tez
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "mainx" ]
     #    paths-ignore:
     #      - README.md
     #      - .github/workflows/*

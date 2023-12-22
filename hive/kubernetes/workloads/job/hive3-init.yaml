@@ -32,14 +32,14 @@ spec:
 
         - name: tez-resource-init
           imagePullPolicy: IfNotPresent
-          image: wfybelief/tez:tez_0.10.2_hadoop_3.3.2
+          image: wfybelief/tez:tez_0.10.3_hadoop_3.3.6
           command:
             - busybox
             - sh
             - -c
           args:
             - |
-              tar -zxvf /opt/component/storage/tez/tez-*[0-9].tar.gz -C /opt/component/tez/
+              tar -zxvf /opt/component/storage/tez/tez-*[0-9]*SNAPSHOT.tar.gz -C /opt/component/tez/
               mv /opt/component/storage/tez/tez-*-minimal.tar.gz /opt/component/tez/tez-minimal.tar.gz
           volumeMounts:
             - mountPath: /opt/component/tez
