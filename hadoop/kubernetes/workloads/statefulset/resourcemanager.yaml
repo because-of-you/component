@@ -26,6 +26,10 @@ spec:
         app: resourcemanager
 
     spec:
+      # nodeName: local-1-6c-32g-10m
+#      nodeSelector:
+#         storage: "true"
+
       initContainers:
         - name: hadoop-resource-init
           image: wfybelief/hadoop:3.3.6
@@ -40,7 +44,6 @@ spec:
           volumeMounts:
             - mountPath: /opt/component/hadoop
               name: hadoop-resource-volume
-
 
       containers:
         - name: resourcemanager
@@ -74,9 +77,7 @@ spec:
               memory: 10Mi
 
           ports:
-            - containerPort: 8088
-              protocol: TCP
-            - containerPort: 19888
+            - containerPort: 8188
               protocol: TCP
 
           volumeMounts:

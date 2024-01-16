@@ -2,9 +2,9 @@ apiVersion: apps/v1
 kind: StatefulSet
 
 metadata:
-  name: resourcemanager
+  name: timelineserver
   labels:
-    app: resourcemanager
+    app: timelineserver
 
 spec:
   replicas: 1
@@ -13,17 +13,17 @@ spec:
     type: RollingUpdate
 
   minReadySeconds: 10
-  serviceName: resourcemanager-service
+  serviceName: timelineserver-service
 
   selector:
     matchLabels:
-      app: resourcemanager
+      app: timelineserver
 
   template:
     metadata:
-      name: resourcemanager
+      name: timelineserver
       labels:
-        app: resourcemanager
+        app: timelineserver
 
     spec:
       # nodeName: local-1-6c-32g-10m
@@ -46,7 +46,7 @@ spec:
               name: hadoop-resource-volume
 
       containers:
-        - name: resourcemanager
+        - name: timelineserver
           image: wfybelief/jdk-8:0.0.4
           imagePullPolicy: IfNotPresent
 
@@ -56,12 +56,12 @@ spec:
             - entrypoint.sh
           args:
             - yarn
-            - resourcemanager
+            - timelineserver
           env:
-            - name: YARN_RESOURCEMANAGER_OPTS
+            - name: YARN_TIMELINESERVER_OPTS
               value: -XX:+UseContainerSupport
-                -XX:InitialRAMPercentage=60.0
-                -XX:MaxRAMPercentage=60.0
+                -XX:InitialRAMPercentage=50.0
+                -XX:MaxRAMPercentage=50.0
                 -Xshareclasses
                 -Xtune:virtualized
                 -Xquickstart
@@ -70,14 +70,16 @@ spec:
           resources:
             limits:
               # 2048 / 1
-              memory: 3072Mi
-              cpu: 2000m
+              memory: 1024Mi
+              cpu: 1000m
             requests:
               cpu: 1m
               memory: 10Mi
 
           ports:
-            - containerPort: 8188
+            - containerPort: 8088
+              protocol: TCP
+            - containerPort: 19888
               protocol: TCP
 
           volumeMounts:
@@ -88,31 +90,31 @@ spec:
 
             - mountPath: /entrypoint.sh
               subPath: entrypoint.sh
-              name: resourcemanager-config-volume
+              name: timelineserver-config-volume
               readOnly: true
 
             - mountPath: /opt/component/hadoop/etc/hadoop/core-site.xml
               subPath: core-site.xml
-              name: resourcemanager-config-volume
+              name: timelineserver-config-volume
               readOnly: true
 
             - mountPath: /opt/component/hadoop/etc/hadoop/hdfs-site.xml
               subPath: hdfs-site.xml
-              name: resourcemanager-config-volume
+              name: timelineserver-config-volume
               readOnly: true
 
             - mountPath: /opt/component/hadoop/etc/hadoop/mapred-site.xml
               subPath: mapred-site.xml
-              name: resourcemanager-config-volume
+              name: timelineserver-config-volume
               readOnly: true
 
             - mountPath: /opt/component/hadoop/etc/hadoop/yarn-site.xml
               subPath: yarn-site.xml
-              name: resourcemanager-config-volume
+              name: timelineserver-config-volume
               readOnly: true
 
       volumes:
-        - name: resourcemanager-config-volume
+        - name: timelineserver-config-volume
 
           configMap:
             name: hadoop-configmap
