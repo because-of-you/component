@@ -80,6 +80,11 @@ data:
             <name>mapreduce.framework.name</name>
             <value>yarn</value>
         </property>
+         <!-- 设置Application Master是否发送数据到timeline服务器 -->
+        <property>
+          <name>mapreduce.job.emit-timeline-data</name>
+          <value>true</value>
+        </property>
         <property>
           <name>yarn.app.mapreduce.am.env</name>
           <value>HADOOP_MAPRED_HOME=${HADOOP_HOME}</value>
@@ -153,5 +158,36 @@ data:
           <name>yarn.resourcemanager.resource-tracker.address</name>
           <value>resourcemanager-service</value>
         </property>
+        
+         <!-- 设置是否开启/使用Yarn Timeline服务 -->
+        <property>
+          <name>yarn.timeline-service.enabled</name>
+          <value>true</value>
+        </property>
+        
+        <!-- 设置RM是否发布信息到Timeline服务器 -->
+        <property>
+          <name>yarn.resourcemanager.system-metrics-publisher.enabled</name>
+          <value>true</value>
+        </property>
+        
+        <!-- 设置是否从Timeline history-service中获取常规信息,如果为否,则是通过RM获取 -->
+        <property>
+            <name>yarn.timeline-service.generic-application-history.enabled</name>
+            <value>true</value>
+        </property>
+        
+        <!-- 设置Timeline Service Web App的主机名,此处将Timeline服务器部署在集群中的hadoop103上 -->
+        <property>
+          <name>yarn.timeline-service.hostname</name>
+          <value>timelineserver-service</value>
+        </property>
+        
+        <!-- 启动Timeline数据自动过期清除 -->
+        <property>
+            <name>yarn.timeline-service.ttl-enable</name>
+            <value>true</value>
+        </property>
+        
     </configuration>
       
