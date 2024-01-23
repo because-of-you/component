@@ -1,0 +1,21 @@
+apiVersion: apisix.apache.org/v2
+kind: ApisixRoute
+metadata:
+  name: httpbin-route1
+spec:
+  http:
+    - name: route-1
+      match:
+        hosts:
+          - namenode.acitrus.cn
+        paths:
+          - /*
+
+      backends:
+        - serviceName: namenode-service
+          servicePort: 9870
+#      plugins:
+#        - name: proxy-rewrite
+#          enable: true
+#          config:
+#            uri: /*
