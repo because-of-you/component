@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tez-server
+  labels:
+    app: tez-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tez-server
+  template:
+    metadata:
+      name: tez-server
+      labels:
+        app: tez-server
+    spec:
+      # nodeName: local-1-6c-32g-10m
+#      nodeSelector:
+#        storage: "true"
+
+      initContainers:
+        - name: tez-init
+          image: busybox:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - busybox
+            - sh
+            - -c
+          args:
+            - |
+              busybox wget https://repository.apache.org/content/repositories/releases/org/apache/tez/tez-ui/0.10.2/tez-ui-0.10.2.war -O tez-ui.war
+              busybox unzip tez-ui.war -n -d /usr/share/nginx/html
+          volumeMounts:
+            - mountPath: /usr/share/nginx/html
+              name: tez-ui-resource-volume
+
+      containers:
+        - name: tez-server
+          image: nginx:latest
+          imagePullPolicy: IfNotPresent
+
+          volumeMounts:
+            - mountPath: /usr/share/nginx/html
+              name: tez-ui-resource-volume
+
+            - mountPath: /usr/share/nginx/html/config/configs.js
+              subPath: configs.js
+              name: hive-config-volume
+              readOnly: true
+
+      volumes:
+        - name: tez-ui-resource-volume
+          emptyDir: { }
+
+        - name: hive-config-volume
+          configMap:
+            name: hive-configmap
+
+            items:
+              - key: configs.js
+                path: configs.js
+
+      restartPolicy: Always
+      

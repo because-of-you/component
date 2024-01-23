@@ -42,6 +42,10 @@ spec:
         app: postgres
 
     spec:
+      # nodeName: local-1-6c-32g-10m
+#      nodeSelector:
+#        storage: "true"
+
       containers:
         - name: postgres
           image: postgres:16
@@ -80,7 +84,7 @@ spec:
       spec:
         accessModes:
           - ReadWriteOnce
-        # storageClassName: csi-disk-ssd | hostpath
+        storageClassName: local-path # csi-disk-ssd | hostpath
         resources:
           requests:
             storage: 1Gi

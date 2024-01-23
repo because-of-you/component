@@ -26,6 +26,10 @@ spec:
         app: nodemanager
 
     spec:
+      # nodeName: local-1-6c-32g-10m
+#      nodeSelector:
+#        storage: "true"
+
       initContainers:
         - name: hadoop-resource-init
           image: wfybelief/hadoop:3.3.6
@@ -40,7 +44,6 @@ spec:
           volumeMounts:
             - mountPath: /opt/component/hadoop
               name: hadoop-resource-volume
-
 
       containers:
         - name: nodemanager

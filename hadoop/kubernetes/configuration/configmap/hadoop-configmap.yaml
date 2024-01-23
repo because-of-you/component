@@ -189,5 +189,11 @@ data:
             <value>true</value>
         </property>
         
+        <!-- 设置http是否允许CORS(跨域资源共享,Cross-Origin Resource Sharing) -->
+        <property>
+          <name>yarn.timeline-service.http-cross-origin.enabled</name>
+          <value>true</value>
+        </property>
+        
     </configuration>
       
