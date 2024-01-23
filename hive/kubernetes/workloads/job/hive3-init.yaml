@@ -87,7 +87,7 @@ spec:
 
       containers:
         - name:  hive-init
-          image: wfybelief/jdk-8:0.0.4
+          image: wfybelief/jdk-8:0.0.6
           imagePullPolicy: IfNotPresent
           command:
             - busybox

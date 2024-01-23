@@ -63,7 +63,7 @@ spec:
 
       containers:
         - name: namenode
-          image: wfybelief/jdk-8:0.0.4
+          image: wfybelief/jdk-8:0.0.6
           imagePullPolicy: IfNotPresent
 
           command:
@@ -220,7 +220,7 @@ spec:
 
       containers:
         - name: datanode
-          image: wfybelief/jdk-8:0.0.4
+          image: wfybelief/jdk-8:0.0.6
           imagePullPolicy: IfNotPresent
 
           command:
@@ -378,7 +378,7 @@ spec:
 
       containers:
         - name: nodemanager
-          image: wfybelief/jdk-8:0.0.4
+          image: wfybelief/jdk-8:0.0.6
           imagePullPolicy: IfNotPresent
 
           command:
@@ -518,7 +518,7 @@ spec:
 
       containers:
         - name: resourcemanager
-          image: wfybelief/jdk-8:0.0.4
+          image: wfybelief/jdk-8:0.0.6
           imagePullPolicy: IfNotPresent
 
           command:

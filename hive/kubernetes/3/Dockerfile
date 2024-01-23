@@ -11,7 +11,7 @@ ARG HIVE_HOME=/opt/component/hive
 
 FROM apache/hive:3.1.3 as hive
 # FROM wfybelief/namenode:0.0.5 as hadoop
-FROM wfybelief/jdk-8:0.0.4 as jdk
+FROM wfybelief/jdk-8:0.0.6 as jdk
 
 ARG HIVE_METASTORE_HADOOP_OPTS
 ARG HDFS_META_HOME
