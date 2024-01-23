@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: redis
+  labels:
+    app: redis
+    id: xxxxx
+spec:
+  containers:
+    - name: redis
+      image: redis:latest
+      imagePullPolicy: IfNotPresent
+  restartPolicy: Always
+  

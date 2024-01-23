@@ -26,6 +26,10 @@ spec:
         app: datanode
 
     spec:
+      # nodeName: local-1-6c-32g-10m
+#      nodeSelector:
+#        storage: "true"
+
       initContainers:
         - name: hadoop-resource-init
           image: wfybelief/hadoop:3.3.6
@@ -40,7 +44,6 @@ spec:
           volumeMounts:
             - mountPath: /opt/component/hadoop
               name: hadoop-resource-volume
-
 
       containers:
         - name: datanode
@@ -146,7 +149,7 @@ spec:
       spec:
         accessModes:
           - ReadWriteOnce
-        storageClassName: standard # csi-disk-ssd | hostpath
+        storageClassName: local-path # csi-disk-ssd | hostpath
         resources:
           requests:
             storage: 1Gi

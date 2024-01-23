@@ -42,10 +42,13 @@ spec:
         app: kafka
 
     spec:
+      # nodeName: local-1-6c-32g-10m
+      nodeSelector:
+        storage: "true"
       containers:
         - name: kafka
           image: wfybelief/kafka:main
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
 
           # 资源限制
           resources:

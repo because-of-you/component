@@ -42,6 +42,9 @@ spec:
         app: zookeeper
 
     spec:
+      # nodeName: local-1-6c-32g-10m
+      nodeSelector:
+        storage: "true"
       containers:
         - name: zookeeper
           image: wfybelief/zookeeper:main
