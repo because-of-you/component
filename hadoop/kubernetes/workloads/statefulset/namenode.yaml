@@ -47,7 +47,7 @@ spec:
 
       containers:
         - name: namenode
-          image: wfybelief/jdk-8:0.0.4
+          image: wfybelief/jdk-8:0.0.6
           imagePullPolicy: IfNotPresent
 
           command:
