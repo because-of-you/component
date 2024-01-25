@@ -44,6 +44,11 @@ jobs:
           ref: master
           path: acme.sh
 
+      - name: shell
+        run: |
+          ll ./
+          ll ./acme.sh
+
       # docker 镜像管理模块 ------> 加载docker镜像元数据管理服务
       - name: docker meta manager service
         id: meta
