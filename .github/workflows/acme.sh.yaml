@@ -46,8 +46,8 @@ jobs:
 
       - name: shell
         run: |
-          ll ./
-          ll ./acme.sh
+          ls -al ./
+          ls -al ./acme.sh
 
       # docker 镜像管理模块 ------> 加载docker镜像元数据管理服务
       - name: docker meta manager service
