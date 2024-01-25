@@ -9,6 +9,7 @@ ADD https://gist.githubusercontent.com/anjia0532/9ebf8011322f43e3f5037bc2af3aeaa
 
 RUN apt-get update && \
     apt-get install curl -y && \
+    ls -al /root/.acme.sh && \
     /root/.acme.sh/acme.sh --install --email mail@acitrus.cn --force && \
     apt-get autoclean && \
     rm -rf /var/lib/apt/lists/*
