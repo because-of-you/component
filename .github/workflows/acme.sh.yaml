@@ -29,7 +29,7 @@ env:
 
 jobs:
 
-  acme.sh-code-build-job:
+  acme-sh-code-build-job:
     if: contains( 'acme.sh' ,  'acme.sh')
     runs-on: ubuntu-latest
 
