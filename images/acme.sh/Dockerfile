@@ -9,7 +9,9 @@ ADD https://gist.githubusercontent.com/anjia0532/9ebf8011322f43e3f5037bc2af3aeaa
 
 RUN apt-get update && \
     apt-get install curl && \
-    /root/.acme.sh/acme.sh --install --email mail@acitrus.cn
+    /root/.acme.sh/acme.sh --install --email mail@acitrus.cn && \
+    apt-get autoclean && \
+    rm -rf /var/lib/apt/lists/*
 
 
 ENTRYPOINT ["top", "-b"]
