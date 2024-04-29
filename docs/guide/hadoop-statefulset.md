@@ -47,7 +47,7 @@ spec:
     spec:
       initContainers:
         - name: hadoop-resource-init
-          image: wfybelief/hadoop:3.3.6
+          image: wfybelief/hadoop:3.4.0
           imagePullPolicy: IfNotPresent
           command:
             - busybox
@@ -204,7 +204,7 @@ spec:
     spec:
       initContainers:
         - name: hadoop-resource-init
-          image: wfybelief/hadoop:3.3.6
+          image: wfybelief/hadoop:3.4.0
           imagePullPolicy: IfNotPresent
           command:
             - busybox
@@ -362,7 +362,7 @@ spec:
     spec:
       initContainers:
         - name: hadoop-resource-init
-          image: wfybelief/hadoop:3.3.6
+          image: wfybelief/hadoop:3.4.0
           imagePullPolicy: IfNotPresent
           command:
             - busybox
@@ -502,7 +502,7 @@ spec:
     spec:
       initContainers:
         - name: hadoop-resource-init
-          image: wfybelief/hadoop:3.3.6
+          image: wfybelief/hadoop:3.4.0
           imagePullPolicy: IfNotPresent
           command:
             - busybox

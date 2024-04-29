@@ -26,13 +26,13 @@ spec:
         app: resourcemanager
 
     spec:
-      # nodeName: local-1-6c-32g-10m
+#      nodeName: local-1-6c-32g-10m
 #      nodeSelector:
 #         storage: "true"
 
       initContainers:
         - name: hadoop-resource-init
-          image: wfybelief/hadoop:3.3.6
+          image: wfybelief/hadoop:3.4.0
           imagePullPolicy: IfNotPresent
           command:
             - busybox
