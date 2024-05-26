@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: server
+  labels:
+    app: server
+  namespace: teamcity
+
+spec:
+  serviceName: server-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: server
+  template:
+    metadata:
+      name: server
+      labels:
+        app: server
+    spec:
+      initContainers:
+        - name: jdk-init
+          image: wfybelief/jdk-17:0.0.6
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+          args:
+            - |
+              cp -r /opt/java/openjdk/* /opt/component/java/openjdk/
+
+          volumeMounts:
+            - mountPath: /opt/component/java/openjdk
+              name: jdk-resource-volume
+
+      containers:
+        - name: server
+          image: jetbrains/teamcity-server:2024.03.1
+          imagePullPolicy: IfNotPresent
+
+          env:
+            - name: TEAMCITY_SERVER_MEM_OPTS
+              value: -XX:+UseContainerSupport
+                -XX:InitialRAMPercentage=60.0
+                -XX:MaxRAMPercentage=60.0
+
+            - name: TEAMCITY_SERVER_OPTS
+              value: -Xshareclasses
+                -Xtune:virtualized
+                -Xquickstart
+
+            - name: JAVA_OPTS
+              value: -Xshareclasses
+                -Xtune:virtualized
+                -Xquickstart
+
+          resources:
+            limits:
+              # 1024 / 1
+              memory: 5072Mi
+              cpu: 6000m
+            requests:
+              memory: 2000Mi
+              cpu: 1m
+
+          ports:
+            - containerPort: 8111
+              protocol: TCP
+
+          volumeMounts:
+            - mountPath: /data/teamcity_server/datadir
+              name: component-storage
+              readOnly: false
+
+            - mountPath: /opt/java/openjdk
+              name: jdk-resource-volume
+              readOnly: true
+
+      restartPolicy: Always
+      volumes:
+        - name: jdk-resource-volume
+          emptyDir:
+            { }
+
+  # 持久卷
+  volumeClaimTemplates:
+    - metadata:
+        name: component-storage
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: local-path # csi-disk-ssd | hostpath
+        resources:
+          requests:
+            storage: 1Gi
+          limits:
+            storage: 50Gi
+      

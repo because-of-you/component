@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: agent
+  labels:
+    app: agent
+  namespace: teamcity
+
+spec:
+  serviceName: agent-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agent
+  template:
+    metadata:
+      name: agent
+      labels:
+        app: agent
+    spec:
+      initContainers:
+        - name: jdk-init
+          image: wfybelief/jdk-17:0.0.6
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+          args:
+            - |
+              cp -r /opt/java/openjdk/* /opt/component/java/openjdk/
+
+          volumeMounts:
+            - mountPath: /opt/component/java/openjdk
+              name: jdk-resource-volume
+
+      containers:
+        - name: agent
+          image: jetbrains/teamcity-agent:2024.03.1
+          imagePullPolicy: IfNotPresent
+
+          env:
+            #            - name: TEAMCITY_AGENT_MEM_OPTS
+            #              value: -XX:+UseContainerSupport
+            #                -XX:InitialRAMPercentage=60.0
+            #                -XX:MaxRAMPercentage=60.0
+
+            - name: TEAMCITY_AGENT_OPTS
+              value: -Xshareclasses
+                -Xtune:virtualized
+                -Xquickstart
+
+            #            - name: TEAMCITY_LAUNCHER_MEM_OPTS
+            #              value: -XX:+UseContainerSupport
+            #                -XX:InitialRAMPercentage=60.0
+            #                -XX:MaxRAMPercentage=60.0
+
+            - name: TEAMCITY_LAUNCHER_OPTS
+              value: -Xshareclasses
+                -Xtune:virtualized
+                -Xquickstart
+
+
+
+            - name: SERVER_URL
+              value: server-service:8111
+
+          resources:
+            limits:
+              # 1024 / 1
+              memory: 4096Mi
+              cpu: 6000m
+            requests:
+              memory: 1000Mi
+              cpu: 1m
+
+          ports:
+            - containerPort: 9090
+              protocol: TCP
+
+          volumeMounts:
+            - mountPath: /opt/java/openjdk
+              name: jdk-resource-volume
+              readOnly: true
+
+      restartPolicy: Always
+      volumes:
+        - name: jdk-resource-volume
+          emptyDir:
+            { }
+      
