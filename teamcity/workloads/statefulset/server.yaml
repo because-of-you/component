@@ -38,9 +38,6 @@ spec:
           image: jetbrains/teamcity-server:2024.03.1
           imagePullPolicy: IfNotPresent
 
-          securityContext:
-            allowPrivilegeEscalation: false
-
           env:
             - name: TEAMCITY_SERVER_MEM_OPTS
               value: -XX:+UseContainerSupport
@@ -56,6 +53,8 @@ spec:
               value: -Xshareclasses
                 -Xtune:virtualized
                 -Xquickstart
+            - name: TZ
+              value: Asia/Shanghai
 
           resources:
             limits:
