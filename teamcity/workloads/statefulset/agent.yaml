@@ -19,7 +19,7 @@ spec:
         app: agent
     spec:
       initContainers:
-        - name: jdk-init
+        - name: jdk-17-init
           image: wfybelief/jdk-17:0.0.6
           imagePullPolicy: IfNotPresent
           command:
@@ -28,15 +28,51 @@ spec:
           args:
             - |
               cp -r /opt/java/openjdk/* /opt/component/java/openjdk/
+              cp -r /opt/java/openjdk/* /opt/buildagent/tools/jdk-17/
 
           volumeMounts:
             - mountPath: /opt/component/java/openjdk
               name: jdk-resource-volume
 
+            - mountPath: /opt/buildagent/tools/jdk-17
+              name: jdk-17
+
+        - name: jdk-11-init
+          image: wfybelief/jdk-11:0.0.6
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+          args:
+            - |
+              cp -r /opt/java/openjdk/* /opt/buildagent/tools/jdk-11/
+
+          volumeMounts:
+            - mountPath: /opt/buildagent/tools/jdk-11
+              name: jdk-11
+
+        - name: jdk-8-init
+          image: wfybelief/jdk-8:0.0.6
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+          args:
+            - |
+              cp -r /opt/java/openjdk/* /opt/buildagent/tools/jdk-8/
+
+          volumeMounts:
+            - mountPath: /opt/buildagent/tools/jdk-8
+              name: jdk-8
+
       containers:
         - name: agent
           image: jetbrains/teamcity-agent:2024.03.1
           imagePullPolicy: IfNotPresent
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsUser: 0
 
           env:
             #            - name: TEAMCITY_AGENT_MEM_OPTS
@@ -78,13 +114,54 @@ spec:
               protocol: TCP
 
           volumeMounts:
+            - mountPath: /opt/buildagent/tools/jdk-8
+              name: jdk-8
+              readOnly: true
+
+            - mountPath: /opt/buildagent/tools/jdk-11
+              name: jdk-11
+              readOnly: true
+
+            - mountPath: /opt/buildagent/tools/jdk-17
+              name: jdk-17
+              readOnly: true
+
             - mountPath: /opt/java/openjdk
               name: jdk-resource-volume
               readOnly: true
+
+            - mountPath: /data/teamcity_agent/conf
+              name: component-storage
+              readOnly: false
 
       restartPolicy: Always
       volumes:
         - name: jdk-resource-volume
           emptyDir:
             { }
-      
+
+        - name: jdk-8
+          emptyDir:
+            { }
+
+        - name: jdk-11
+          emptyDir:
+            { }
+
+        - name: jdk-17
+          emptyDir:
+            { }
+
+  # 持久卷
+  volumeClaimTemplates:
+    - metadata:
+        name: component-storage
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: local-path # csi-disk-ssd | hostpath
+        resources:
+          requests:
+            storage: 1Gi
+          limits:
+            storage: 50Gi
