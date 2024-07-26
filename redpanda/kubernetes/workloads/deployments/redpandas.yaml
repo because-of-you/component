@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: StatefulSet
+
+metadata:
+  name: redpandas
+  labels:
+    app: redpandas
+
+spec:
+  replicas: 1
+
+  updateStrategy:
+    type: RollingUpdate
+
+  minReadySeconds: 10
+  serviceName: redpandas-service
+
+  selector:
+    matchLabels:
+      app: redpandas
+
+  template:
+    metadata:
+      name: redpandas
+      labels:
+        app: redpandas
+
+    spec:
+
+      containers:
+        - name: redpandas
+          image: redpandadata/redpanda:v24.1.11
+          imagePullPolicy: IfNotPresent
+
+
+          args:
+            - |
+              --memory 512M
+#          env:
+#            - name: ENABLE_DEFAULT_LISTENERS
+#              value: "false"
+
+
+          resources:
+            limits:
+              cpu: 2000m  # 2048 / 1
+              memory: 2048Mi
+            requests:
+              memory: 10Mi
+              cpu: 1m
+
+          ports:
+            - containerPort: 9870
+              protocol: TCP
+
+#          volumeMounts:
+#            - mountPath: /var/lib/redpanda/data/
+#              name: component-storage
+#              readOnly: false
+
+      restartPolicy: Always
+
+
+  # 持久卷
+#  volumeClaimTemplates:
+#    - metadata:
+#        name: component-storage
+#      spec:
+#        accessModes:
+#          - ReadWriteOnce
+##        storageClassName: local-path # csi-disk-ssd | hostpath
+#        resources:
+#          requests:
+#            storage: 20Gi
+#          limits:
+#            storage: 20Gi

@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redpanda
+  namespace: redpanda
+  labels:
+    app: redpanda
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redpanda
+  template:
+    metadata:
+      name: redpanda
+      labels:
+        app: redpanda
+    spec:
+      containers:
+        - name: redpanda
+          image: redpandadata/redpanda:v24.1.11
+          imagePullPolicy: IfNotPresent
+
+          args:
+            - | 
+              redpanda
+              start
+              --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+              --advertise-kafka-addr internal://localhost:9092,external://localhost:19092 
+              -pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:18082
+              --advertise-pandaproxy-addr internal://localhost:8082,external://localhost:18082
+              --schema-registry-addr internal://0.0.0.0:8081,external://0.0.0.0:18081
+              --rpc-addr localhost:33145
+              --advertise-rpc-addr localhost:33145
+              --smp 1
+              --memory 512M
+              --default-log-level info
+          env:
+            - name: ENABLE_DEFAULT_LISTENERS
+              value: "false"
+          ports:
+            - containerPort: 9092
+              protocol: TCP
+            - containerPort: 33333
+              protocol: TCP
+
+
+      #          resources:
+      #            limits:
+      #              # 1024 / 3
+      #              memory: 4500Mi
+      #              cpu: 1000m
+      #            requests:
+      #              cpu: 1m
+      #              memory: 10Mi
+
+      restartPolicy: Always
+
+
+

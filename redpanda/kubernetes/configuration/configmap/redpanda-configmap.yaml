@@ -1,0 +1,211 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: redpanda
+  name: redpanda-configmap
+data:
+  bootstrap.yaml: |-
+    audit_enabled: false
+    compacted_log_segment_size: 67108864
+    default_topic_replications: 3
+    enable_rack_awareness: false
+    enable_sasl: false
+    group_topic_partitions: 16
+    kafka_batch_max_bytes: 1048576
+    kafka_connection_rate_limit: 1000
+    kafka_enable_authorization: false
+    log_segment_size: 134217728
+    log_segment_size_max: 268435456
+    log_segment_size_min: 16777216
+    max_compacted_log_segment_size: 536870912
+    storage_min_free_bytes: 1073741824
+    topic_partitions_per_shard: 1000
+  redpanda.yaml: |-
+    config_file: /etc/redpanda/redpanda.yaml
+    pandaproxy:
+      pandaproxy_api:
+        - address: 0.0.0.0
+          name: internal
+          port: 8082
+        - address: 0.0.0.0
+          name: default
+          port: 8083
+
+    pandaproxy_client:
+      brokers:
+        - address: redpanda-0.redpanda-service.redpanda.svc.cluster.local.
+          port: 9093
+        - address: redpanda-1.redpanda-service.redpanda.svc.cluster.local.
+          port: 9093
+        - address: redpanda-2.redpanda-service.redpanda.svc.cluster.local.
+          port: 9093
+    redpanda:
+      admin:
+        - address: 0.0.0.0
+          name: internal
+          port: 9644
+        - address: 0.0.0.0
+          name: default
+          port: 9645
+      admin_api_tls:
+      audit_enabled: false
+      compacted_log_segment_size: 67108864
+      crash_loop_limit: 5
+      default_topic_replications: 3
+      empty_seed_starts_cluster: false
+      enable_sasl: false
+      group_topic_partitions: 16
+      kafka_api:
+        - address: 0.0.0.0
+          name: internal
+          port: 9093
+        - address: 0.0.0.0
+          name: default
+          port: 9094
+      advertised_kafka_api:
+        - address: localhost
+          port: 9092
+          name: internal
+        - address: localhost
+          port: 19092
+          name: external
+      kafka_batch_max_bytes: 1048576
+      kafka_connection_rate_limit: 1000
+      kafka_enable_authorization: false
+      log_segment_size: 134217728
+      log_segment_size_max: 268435456
+      log_segment_size_min: 16777216
+      max_compacted_log_segment_size: 536870912
+      rpc_server:
+        address: 0.0.0.0
+        port: 33145
+      seed_servers:
+        - host:
+            address: redpanda-0.redpanda-service.redpanda.svc.cluster.local.
+            port: 33145
+        - host:
+            address: redpanda-1.redpanda-service.redpanda.svc.cluster.local.
+            port: 33145
+        - host:
+            address: redpanda-2.redpanda-service.redpanda.svc.cluster.local.
+            port: 33145
+      storage_min_free_bytes: 1073741824
+      topic_partitions_per_shard: 1000
+    rpk:
+      additional_start_flags:
+        - --default-log-level=debug
+        - --memory=1024M
+        - --reserve-memory=205M
+        - --smp=1
+      admin_api:
+        addresses:
+          - redpanda-0.redpanda-service.redpanda.svc.cluster.local.:9644
+          - redpanda-1.redpanda-service.redpanda.svc.cluster.local.:9644
+          - redpanda-2.redpanda-service.redpanda.svc.cluster.local.:9644
+      enable_memory_locking: false
+      kafka_api:
+        brokers:
+          - redpanda-0.redpanda-service.redpanda.svc.cluster.local.:9093
+          - redpanda-1.redpanda-service.redpanda.svc.cluster.local.:9093
+          - redpanda-2.redpanda-service.redpanda.svc.cluster.local.:9093
+      overprovisioned: false
+      tune_aio_events: true
+    schema_registry:
+      schema_registry_api:
+        - address: 0.0.0.0
+          name: internal
+          port: 8081
+        - address: 0.0.0.0
+          name: default
+          port: 8084
+      brokers:
+        - address: redpanda-0.redpanda-service.redpanda.svc.cluster.local.
+          port: 9093
+        - address: redpanda-1.redpanda-service.redpanda.svc.cluster.local.
+          port: 9093
+        - address: redpanda-2.redpanda-service.redpanda.svc.cluster.local.
+          port: 9093
+
+  redpanda2.yaml: |
+    # https://docs.redpanda.com/current/reference/properties/broker-properties/
+    redpanda:
+      data_directory: /var/lib/redpanda/data
+      empty_seed_starts_cluster: false
+      seed_servers:
+        - host:
+          address: redpanda-0.redpanda-service.redpanda.svc.cluster.local.
+          port: 33145
+        - host:
+          address: redpanda-1.redpanda-service.redpanda.svc.cluster.local.
+          port: 33145
+        - host:
+          address: redpanda-2.redpanda-service.redpanda.svc.cluster.local.
+          port: 33145
+      
+      rpc_server:
+        address: 0.0.0.0
+        port: 33145
+      advertised_rpc_api:
+        address: redpanda-service.redpanda
+        port: 33145
+      
+      kafka_api:
+        - address: 0.0.0.0
+          port: 9092
+          name: internal
+        - address: 0.0.0.0
+          port: 19092
+          name: external
+      admin:
+        - address: 0.0.0.0
+          port: 9644
+      
+      advertised_kafka_api:
+        - address: localhost
+          port: 9092
+          name: internal
+        - address: localhost
+          port: 19092
+          name: external
+      
+      # https://docs.redpanda.com/current/reference/rpk/rpk-redpanda/rpk-redpanda-mode/
+      developer_mode: true
+      
+      auto_create_topics_enabled: true
+      fetch_reads_debounce_timeout: 10
+      group_initial_rebalance_delay: 0
+      group_topic_partitions: 3
+      log_segment_size_min: 1
+      storage_min_free_bytes: 10485760
+      topic_partitions_per_shard: 1000
+      write_caching_default: "true"
+    rpk:
+      overprovisioned: true
+      coredump_dir: /var/lib/redpanda/coredump
+    pandaproxy:
+      pandaproxy_api:
+        - address: 0.0.0.0
+          port: 8082
+          name: internal
+        - address: 0.0.0.0
+          port: 18082
+          name: external
+      advertised_pandaproxy_api:
+        - address: localhost
+          port: 8082
+          name: internal
+        - address: localhost
+          port: 18082
+          name: external
+    schema_registry:
+      schema_registry_api:
+        - address: 0.0.0.0
+          port: 8081
+          name: internal
+        - address: 0.0.0.0
+          port: 18081
+          name: external
+    logger:
+      level: ERROR
+    parse_log:
+      default_timezone: Asia/Shanghai

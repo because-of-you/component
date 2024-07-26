@@ -1,0 +1,141 @@
+apiVersion: apps/v1
+kind: StatefulSet
+
+metadata:
+  namespace: redpanda
+  name: redpanda
+  labels:
+    app: redpanda
+
+spec:
+  replicas: 3
+
+  updateStrategy:
+    type: RollingUpdate
+
+  minReadySeconds: 1
+  serviceName: redpanda-service
+
+  selector:
+    matchLabels:
+      app: redpanda
+
+  template:
+    metadata:
+      name: redpanda
+      labels:
+        app: redpanda
+
+    spec:
+      initContainers:
+        - name: init
+          image: dockerproxy.cn/library/busybox:latest
+          command:
+            - sh
+            - -c
+          args:
+            - |
+              cp /etc/redpanda-origin/redpanda-origin.yaml /etc/redpanda/redpanda11.yaml
+              cat /etc/redpanda/redpanda11.yaml
+              chmod -R 777 /etc/redpanda/
+
+          volumeMounts:
+            - mountPath: /etc/redpanda/
+              name: redpanda-resource-volume
+              readOnly: false
+
+            - mountPath: /etc/redpanda-origin/redpanda-origin.yaml
+              subPath: redpanda-origin.yaml
+              name: redpanda-config-volume
+              readOnly: true
+
+      securityContext:
+        runAsUser: 0
+
+      containers:
+        - name: redpanda
+          image: redpandadata/redpanda:v24.1.11
+          imagePullPolicy: IfNotPresent
+
+          args:
+            - redpanda
+            - start
+            - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+            # Address the broker advertises to clients that connect to the Kafka API.
+            # Use the internal addresses to connect to the Redpanda brokers'
+            # from inside the same Docker network.
+            # Use the external addresses to connect to the Redpanda brokers'
+            # from outside the Docker network.
+            - --advertise-kafka-addr internal://$(SERVICE_NAME).redpanda-service.redpanda.svc.cluster.local.:9092,external://localhost:19092
+            - --pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:18082
+            # Address the broker advertises to clients that connect to the HTTP Proxy.
+            - --advertise-pandaproxy-addr internal://$(SERVICE_NAME).redpanda-service.redpanda.svc.cluster.local.:8082,external://localhost:18082
+            - --schema-registry-addr internal://0.0.0.0:8081,external://0.0.0.0:18081
+            # Redpanda brokers use the RPC API to communicate with each other internally.
+            - --rpc-addr $(SERVICE_NAME).redpanda-service.redpanda.svc.cluster.local.:33145
+            - --advertise-rpc-addr $(SERVICE_NAME).redpanda-service.redpanda.svc.cluster.local.:33145
+            # Mode dev-container uses well-known configuration properties for development in containers.
+            - --mode dev-container
+            # Tells Seastar (the framework Redpanda uses under the hood) to use 1 core on the system.
+            - --smp 1
+            - --default-log-level=info
+            - --advertise-rpc-addr=$(SERVICE_NAME).redpanda-service.redpanda.svc.cluster.local.:33145
+            - --seeds redpanda-0.redpanda-service.redpanda.svc.cluster.local.:33145
+          #          args:
+          #            - |
+          #              redpanda
+          #              start
+          #              --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+          #              --advertise-kafka-addr internal://localhost:9092,external://localhost:19092
+          #              --pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:18082
+          #              --advertise-pandaproxy-addr internal://localhost:8082,external://localhost:18082
+          #              --schema-registry-addr internal://0.0.0.0:8081,external://0.0.0.0:18081
+          #              --rpc-addr localhost:33145
+          #              --advertise-rpc-addr=$(SERVICE_NAME).redpanda-service.redpanda.svc.cluster.local.:33145
+          #              --smp 1
+          #              --memory 512M
+          #              --default-log-level info
+          env:
+            - name: SERVICE_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+
+
+
+
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1500Mi
+            requests:
+              cpu: 1m
+              memory: 10Mi
+
+          ports:
+            - containerPort: 9092
+              protocol: TCP
+            - containerPort: 33333
+              protocol: TCP
+            - containerPort: 33145
+              name: rpc
+              protocol: TCP
+
+          volumeMounts:
+            - mountPath: /etc/redpanda/
+              name: redpanda-resource-volume
+              readOnly: false
+
+      volumes:
+        - name: redpanda-resource-volume
+          emptyDir:
+            { }
+        - name: redpanda-config-volume
+          configMap:
+            name: redpanda-configmap
+            items:
+              - key: redpanda.yaml
+                path: redpanda-origin.yaml
+
+      restartPolicy: Always
