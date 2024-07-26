@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: data-generator
+  labels:
+    role: data-generator
+spec:
+  containers:
+    - name: data-generator
+      image: dockerproxy.cn/conduktor/conduktor-data-generator:0.4
+      imagePullPolicy: IfNotPresent
+      env:
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka-service.default:9092"
+  restartPolicy: Always
+  

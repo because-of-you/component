@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: console
+  namespace: conduktor
+  labels:
+    app: console
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: console
+  template:
+    metadata:
+      name: console
+      labels:
+        app: console
+    spec:
+      initContainers:
+        - name: open-17-jdk
+          imagePullPolicy: IfNotPresent
+          image: dockerproxy.cn/library/ibm-semeru-runtimes:open-17-jdk
+          command:
+            - sh
+            - -c
+          args:
+            - |
+              cp -r /opt/java/openjdk/ /opt/component/java/
+          volumeMounts:
+            - mountPath: /opt/component/java/openjdk
+              name: jdk-resource-volume
+
+      containers:
+        - name: console
+          image: dockerproxy.cn/conduktor/conduktor-console:1.25.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+
+          resources:
+            limits:
+              # 1024 / 3
+              memory: 4048Mi
+              cpu: 2000m
+            requests:
+              cpu: 1m
+              memory: 10Mi
+
+          env:
+            - name: CDK_DATABASE_URL
+              value: "postgresql://root:component@postgres-service.default:5432/conduktor"
+            - name: CDK_ADMIN_PASSWORD
+              value: "mail@acitrus.cn"
+            - name: CDK_MONITORING_NOTIFICATIONS-CALLBACK-URL
+              value: "http://localhost:8080"
+            - name: CDK_MONITORING_CORTEX-URL
+              value: "http://console-cortex-service.conduktor.svc.cluster.local:9009"
+            - name: CDK_MONITORING_ALERT-MANAGER-URL
+              value: "http://console-cortex-service.conduktor.svc.cluster.local:9010"
+            - name: CDK_MONITORING_CALLBACK-URL
+              value: "http://console-service.conduktor.svc.cluster.local:8080/monitoring/api/"
+            - name: CDK_ADMIN_EMAIL
+              value: "mail@acitrus.cn"
+
+
+            - name: CDK_CLUSTERS_0_ID
+              value: "kafka-default"
+
+            - name: CDK_CLUSTERS_0_NAME
+              value: "kafka-default"
+
+            - name: CDK_CLUSTERS_0_BOOTSTRAPSERVERS
+              value: "kafka-service.default:9092"
+
+
+            - name: CDK_CLUSTERS_0_COLOR
+              value: "#6A57C8"
+
+            - name: CDK_CLUSTERS_0_ICON
+              value: "kafka"
+
+            # BASE_CONSOLE_JAVA_OPTS
+            - name: CONSOLE_MEMORY_OPTS
+              value: "-XX:+IgnoreUnrecognizedXXColonOptions -Xshareclasses -Xscmx300m -Xtune:virtualized -Xquickstart -XX:+UseContainerSupport -XX:InitialRAMPercentage=30.0 -XX:MaxRAMPercentage=70.0"
+
+          volumeMounts:
+            - mountPath: /opt/java/openjdk
+              name: jdk-resource-volume
+
+      volumes:
+        - name: jdk-resource-volume
+          emptyDir:
+            { }
+      restartPolicy: Always
+      

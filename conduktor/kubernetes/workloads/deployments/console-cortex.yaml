@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: console-cortex
+  namespace: conduktor
+  labels:
+    app: console-cortex
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: console-cortex
+  template:
+    metadata:
+      name: console-cortex
+      labels:
+        app: console-cortex
+    spec:
+      containers:
+        - name: console-cortex
+          image: dockerproxy.cn/conduktor/conduktor-console-cortex:1.25.1
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: CDK_CONSOLE-URL
+              value: "http://console-service.conduktor.svc.cluster.local:8080"
+          ports:
+            - containerPort: 9009
+              protocol: TCP
+            - containerPort: 9010
+              protocol: TCP
+      restartPolicy: Always
+      

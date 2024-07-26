@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: getaway-service
+  namespace: conduktor
+
+spec:
+  selector:
+    app: getaway
+  ports:
+    - protocol: TCP
+      port: 9092
+      targetPort: 9092
+      name: kafka-9092
+
+    - protocol: TCP
+      port: 9093
+      targetPort: 9093
+      name: kafka-9093
+
+    - protocol: TCP
+      port: 9094
+      targetPort: 9094
+      name: kafka-9094
+
+
+  type: LoadBalancer
+#  clusterIP: None

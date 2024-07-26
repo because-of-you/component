@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: console-cortex-service
+  namespace: conduktor
+
+spec:
+  selector:
+    app: console-cortex
+  ports:
+    - protocol: TCP
+      port: 9009
+      targetPort: 9009
+      name: "9009"
+    - protocol: TCP
+      port: 9010
+      targetPort: 9010
+      name: "9010"
+  type: ClusterIP
+  

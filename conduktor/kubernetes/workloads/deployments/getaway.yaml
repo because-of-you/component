@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: getaway
+  namespace: conduktor
+  labels:
+    app: getaway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: getaway
+  template:
+    metadata:
+      name: getaway
+      labels:
+        app: getaway
+    spec:
+      containers:
+        - name: getaway
+          image: dockerproxy.cn/conduktor/conduktor-gateway:3.2.0
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              # 1024 / 3
+              memory: 2048Mi
+              cpu: 2000m
+            requests:
+              cpu: 1m
+              memory: 10Mi
+          ports:
+            - containerPort: 9092
+              protocol: TCP
+            - containerPort: 9093
+              protocol: TCP
+            - containerPort: 9094
+              protocol: TCP
+          env:
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka-0.kafka-service.default:9092,kafka-1.kafka-service.default:9092,kafka-2.kafka-service.default:9092"
+            - name: GATEWAY_PORT_START
+              value: "9092"
+            - name: GATEWAY_ADVERTISED_HOST
+              value: "kafka.acitrus.cn"
+#            - name: GATEWAY_SECURITY_PROTOCOL
+#              value: "PLAINTEXT"
+#            - name: GATEWAY_FEATURE_FLAGS_ANALYTICS
+#              value: "false"
+            - name: GATEWAY_PORT_COUNT
+              value: "3"
+      restartPolicy: Always
+      
