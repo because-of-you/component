@@ -44,7 +44,7 @@ spec:
     spec:
       initContainers:
         - name: hadoop-resource-init
-          image: wfybelief/hadoop:3.3.6
+          image: wfybelief/hadoop:3.4.0
           imagePullPolicy: IfNotPresent
           command:
             - busybox
@@ -59,7 +59,7 @@ spec:
 
         - name: tez-resource-init
           imagePullPolicy: IfNotPresent
-          image: wfybelief/tez:tez_0.10.3_hadoop_3.3.6
+          image: wfybelief/tez:tez_0.10.3_hadoop_3.4.0
           command:
             - busybox
             - sh

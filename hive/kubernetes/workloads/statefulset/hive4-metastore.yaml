@@ -70,7 +70,7 @@ spec:
             - -c
           args:
             - |
-              tar -zxvf /opt/component/storage/tez/*-SNAPSHOT.tar.gz -C /opt/component/tez/
+              tar -zxvf /opt/component/storage/tez/tez-0.10.3.tar.gz -C /opt/component/tez/
           volumeMounts:
             - mountPath: /opt/component/tez
               name: tez-resource-volume

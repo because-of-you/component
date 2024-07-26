@@ -68,7 +68,7 @@ data:
         <!-- 数据库连接JDBC的URL地址-->
         <property>
             <name>javax.jdo.option.ConnectionURL</name>
-            <value>jdbc:postgresql://postgres-service:5432/hive_metastore?</value>
+            <value>jdbc:postgresql://postgres-service:5432/default?</value>
         </property>
         
         <!-- 数据库连接driver-->

@@ -44,7 +44,7 @@ spec:
     spec:
       initContainers:
         - name: hadoop-resource-init
-          image: apache/hadoop:3.3.6
+          image: wfybelief/hadoop:3.4.0
           imagePullPolicy: IfNotPresent
           command:
             - cp
@@ -57,7 +57,7 @@ spec:
 
         - name: hive-resource-init
           imagePullPolicy: IfNotPresent
-          image: apache/hive:4.0.0-beta-2-SNAPSHOT
+          image: apache/hive:4.0.0
           command:
             - cp
             - -r
