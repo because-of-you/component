@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: gateway
+  labels:
+    app: api-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      name: api-gateway
+      labels:
+        app: api-gateway
+    spec:
+#      nodeSelector:
+#        storage: "true"
+      serviceAccountName: gateway-serviceaccount
+      volumes:
+        - name: api-gateway-configmap-volume
+          configMap:
+            name: api-gateway-configmap
+            defaultMode: 420
+      containers:
+        - name: api-gateway
+          image: apache/apisix:3.9.1-debian
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 9080
+              protocol: TCP
+            - name: http-admin
+              containerPort: 9180
+              protocol: TCP
+            - name: https
+              containerPort: 9443
+              protocol: TCP
+
+          volumeMounts:
+            - name: api-gateway-configmap-volume
+              mountPath: /usr/local/apisix/conf/config.yaml
+              subPath: config.yaml
+              readOnly: true
+
+          env:
+            - name: TZ
+              value: Asia/Shanghai
+
+        - name:  api-gateway-ingress-controller
+          image: apache/apisix-ingress-controller:1.8.2
+          command:
+            - /ingress-apisix/apisix-ingress-controller
+            - ingress
+            - "--log-output"
+            - stdout
+            - "--apisix-resource-sync-interval"
+            - 1h
+            - "--apisix-resource-sync-comparison=true"
+            - "--http-listen"
+            - ":8080"
+            - "--https-listen"
+            - ":8443"
+            - "--default-apisix-cluster-name"
+            - gateway
+            - "--default-apisix-cluster-base-url"
+            - http://127.0.0.1:9180/apisix/admin
+            - "--default-apisix-cluster-admin-key"
+            - edd1c9f034335f136f87ad84b625c8f1
+            - "--api-version"
+            - apisix.apache.org/v2
+            - "--ingress-status-address"
+            - ""
+            - "--disable-status-updates=false"
+            - "--etcd-server-enabled=true"
+            - "--apisix-admin-api-version"
+            - "v3"
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: https
+              containerPort: 8443
+              protocol: TCP
+            - name: etcd
+              containerPort: 12379
+              protocol: TCP
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+            - name: TZ
+              value: Asia/Shanghai
+
+      restartPolicy: Always

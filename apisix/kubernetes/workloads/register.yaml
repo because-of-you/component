@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: register
+  namespace: gateway
+  labels:
+    role: register
+spec:
+  containers:
+    - name: ssl-certificate
+      image: ubuntu:24.04
+      imagePullPolicy: IfNotPresent
+      command:
+        - top
+        - -b
+  restartPolicy: OnFailure
+  
