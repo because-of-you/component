@@ -1,0 +1,44 @@
+apiVersion: apisix.apache.org/v2
+kind: ApisixRoute
+metadata:
+  namespace: teamcity
+  name: server-service-route
+spec:
+  http:
+    - name: server-service-http
+      match:
+        hosts:
+          - pipeline.acitrus.cn
+        paths:
+          - /*
+
+      backends:
+        - serviceName: server-service
+          servicePort: 8111
+      websocket: true
+
+      plugins:
+        - name: proxy-rewrite
+          enable: false
+          config:
+            uri: /*
+
+        - name: redirect
+          enable: true
+          config:
+            http_to_https: true
+
+
+#apiVersion: apisix.apache.org/v2
+#kind: ApisixRoute
+#metadata:
+#  name: tcp-route
+#spec:
+#  stream:
+#    - name: tcp-route-rule1
+#      protocol: TCP
+#      match:
+#        ingressPort: 9100
+#      backend:
+#        serviceName: tcp-server
+#        servicePort: 8080

@@ -10,5 +10,6 @@ spec:
     - protocol: TCP
       port: 8111
       targetPort: 8111
-  type: LoadBalancer
+#  type: LoadBalancer
+  clusterIP: None
   

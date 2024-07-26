@@ -1,25 +1,25 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: agent
+  name: cloud-agent
   labels:
-    app: agent
-  namespace: teamcity
+    app: cloud-agent
+  namespace: data-asset-platform-test
 
 spec:
-  serviceName: agent-service
+  serviceName: cloud-agent-service
   replicas: 1
   selector:
     matchLabels:
-      app: agent
+      app: cloud-agent
   template:
     metadata:
-      name: agent
+      name: cloud-agent
       labels:
-        app: agent
+        app: cloud-agent
     spec:
       containers:
-        - name: agent
+        - name: cloud-agent
           image: registry.cn-shenzhen.aliyuncs.com/acitrus/teamcity:agent-2024-05-26
           imagePullPolicy: IfNotPresent
 
@@ -57,7 +57,7 @@ spec:
       spec:
         accessModes:
           - ReadWriteOnce
-        storageClassName: local-path # csi-disk-ssd | hostpath
+        storageClassName: csi-disk-ssd # csi-disk-ssd | hostpath
         resources:
           requests:
             storage: 1Gi
