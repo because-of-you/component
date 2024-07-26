@@ -42,9 +42,6 @@ spec:
         app: kafka
 
     spec:
-      # nodeName: local-1-6c-32g-10m
-      nodeSelector:
-        storage: "true"
       containers:
         - name: kafka
           image: wfybelief/kafka:main
@@ -54,8 +51,8 @@ spec:
           resources:
             limits:
               # 2048 / 3
-              memory: 682Mi
-              cpu: 500m
+              memory: 2048Mi
+              cpu: 2000m
             requests:
               memory: 10Mi
               cpu: 1m
