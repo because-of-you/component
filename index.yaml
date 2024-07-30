@@ -1,0 +1,31 @@
+apiVersion: v1
+entries:
+  common:
+  - annotations:
+      category: Infrastructure
+      licenses: Apache-2.0
+    apiVersion: v2
+    appVersion: 1.0.0
+    created: "2024-07-30T07:52:09.101467983Z"
+    description: A Library Helm Chart for grouping common logic between bitnami charts.
+      This chart is not deployable by itself.
+    digest: 866e2d4d51806c5908dd5dbbabf37f2fadee5c202f69c6578065048c0a7312d6
+    home: https://bitnami.com
+    icon: https://bitnami.com/downloads/logos/bitnami-mark.png
+    keywords:
+    - common
+    - helper
+    - template
+    - function
+    - bitnami
+    maintainers:
+    - name: Broadcom, Inc. All Rights Reserved.
+      url: https://github.com/bitnami/charts
+    name: common
+    sources:
+    - https://github.com/bitnami/charts/tree/main/bitnami/common
+    type: library
+    urls:
+    - common-1.0.0.tgz
+    version: 1.0.0
+generated: "2024-07-30T07:52:09.101479244Z"
