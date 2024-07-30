@@ -85,9 +85,9 @@ diagnosticMode:
 ## @param image.debug Specify if debug values should be set
 ##
 image:
-  registry: docker.io
-  repository: bitnami/zookeeper
-  tag: 3.9.2-debian-12-r11
+  registry: registry.cn-shenzhen.aliyuncs.com
+  repository: gravitation/zookeeper
+  tag: 3.9.2
   digest: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
@@ -204,7 +204,7 @@ autopurge:
 logLevel: ERROR
 ## @param jvmFlags Default JVM flags for the ZooKeeper process
 ##
-jvmFlags: ""
+jvmFlags: "-XX:+UseContainerSupport -XX:InitialRAMPercentage=40.0 -XX:MaxRAMPercentage=40.0 -Xshareclasses -Xtune:virtualized -Xquickstart"
 ## @param dataLogDir Dedicated data log directory
 ## This allows a dedicated log device to be used, and helps avoid competition between logging and snapshots.
 ## E.g.
@@ -767,9 +767,9 @@ volumePermissions:
   ## @param volumePermissions.image.pullSecrets Init container volume-permissions image pull secrets
   ##
   image:
-    registry: docker.io
-    repository: bitnami/os-shell
-    tag: 12-debian-12-r27
+    registry: registry.cn-shenzhen.aliyuncs.com
+    repository: gravitation/os-shell
+    tag: debian-12
     digest: ""
     pullPolicy: IfNotPresent
     ## Optionally specify an array of imagePullSecrets.
