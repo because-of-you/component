@@ -38,7 +38,6 @@ jobs:
           charts_dir: '.'
           packages_with_index: true
           pages_branch: charts-releases
-          skip_packaging: false
           skip_existing: false
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
