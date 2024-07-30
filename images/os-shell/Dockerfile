@@ -1,0 +1,2 @@
+FROM dockerproxy.cn/bitnami/os-shell:12-debian-12-r27
+# docker buildx build  --platform linux/arm64,linux/amd64 -t registry.cn-shenzhen.aliyuncs.com/gravitation/os-shell:3.9.2-debian-12 -t registry.cn-shenzhen.aliyuncs.com/gravitation/os-shell:3.9.2-debian -t registry.cn-shenzhen.aliyuncs.com/gravitation/os-shell:3.9.2 -t registry.cn-shenzhen.aliyuncs.com/gravitation/os-shell:latest -f Dockerfile . --push --no-cache
