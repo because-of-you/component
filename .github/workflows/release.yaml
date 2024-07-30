@@ -40,6 +40,5 @@ jobs:
           pages_branch: charts-releases
           skip_packaging: false
           skip_existing: false
-          skip_upload: false
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
