@@ -122,10 +122,9 @@ data:
       - serverless-post-function       # priority: -2000
       - ext-plugin-post-req            # priority: -3000
       - ext-plugin-post-resp           # priority: -4000
-    
-    # https://apisix.apache.org/zh/docs/apisix/plugins/redirect/#%E5%90%AF%E7%94%A8%E6%8F%92%E4%BB%B6
+
     plugin_attr:
-      redirect:
+      redirect:     # https://apisix.apache.org/zh/docs/apisix/plugins/redirect/#%E5%90%AF%E7%94%A8%E6%8F%92%E4%BB%B6
         https_port: 443
       prometheus:
         enable_export_server: false

@@ -1,0 +1,40 @@
+apiVersion: apisix.apache.org/v2
+kind: ApisixRoute
+metadata:
+  name: kafka-route
+  namespace: conduktor
+spec:
+  http:
+    - name: kafka-route-console
+      match:
+        hosts:
+          - kafka.acitrus.cn
+        paths:
+          - /*
+      backends:
+        - serviceName: console-service
+          servicePort: 8080
+      websocket: true
+      plugins:
+        - name: redirect
+          enable: true
+          config:
+            http_to_https: true
+
+        - name: proxy-rewrite
+          enable: false
+          config:
+            regex_uri: [ "^/hdfs/(.*)", "/$2" ]
+#        - name: response-rewrite
+#          enable: true
+#          config:
+#            status_code: 302
+#            # "body": "{\"code\":\"ok\",\"message\":\"new json body\"}"
+#            headers:
+#              set:
+#                X-Server-id: 3
+#                X-Server-status: 'on'
+#                X-Server-balancer-addr: '$balancer_ip:$balancer_port'
+#                Location: acitrus.cn/hdfs/
+#            vars:
+#              - "[ \"status\",\"==\",403 ]"
