@@ -28,6 +28,10 @@ jobs:
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
+      - name: Add repositories
+        run: |
+          helm repo add acitrus https://charts.acitrus.cn
+
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.6.0
         with:
