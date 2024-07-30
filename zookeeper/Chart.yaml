@@ -6,7 +6,7 @@ annotations:
   licenses: Apache-2.0
   images: |
     - name: os-shell
-      image: registry.cn-shenzhen.aliyuncs.com/gravitation/os-shell:3.9.2-debian
+      image: registry.cn-shenzhen.aliyuncs.com/gravitation/os-shell:12
     - name: zookeeper
       image: registry.cn-shenzhen.aliyuncs.com/gravitation/zookeeper:3.9.2
 apiVersion: v2
