@@ -10,7 +10,7 @@ annotations:
     - name: zookeeper
       image: registry.cn-shenzhen.aliyuncs.com/gravitation/zookeeper:3.9.2
 apiVersion: v2
-appVersion: 1.0.0
+appVersion: 3.9.2
 dependencies:
   - name: common
     repository: https://charts.acitrus.cn
