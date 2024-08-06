@@ -38,6 +38,39 @@ entries:
           image: registry.cn-shenzhen.aliyuncs.com/gravitation/zookeeper:3.9.2
       licenses: Apache-2.0
     apiVersion: v2
+    appVersion: 3.9.2
+    created: "2024-08-06T09:11:41.931724885Z"
+    dependencies:
+    - name: common
+      repository: https://charts.acitrus.cn
+      tags:
+      - common
+      version: 1.x.x
+    description: Apache ZooKeeper provides a reliable, centralized register of configuration
+      data and services for distributed applications.
+    digest: 2d0470e649c9916942c5ac5238680b450a4429a2c55ea1a7dcfa0fd308eb678a
+    home: https://bitnami.com
+    icon: https://bitnami.com/assets/stacks/zookeeper/img/zookeeper-stack-220x234.png
+    keywords:
+    - zookeeper
+    maintainers:
+    - name: Broadcom, Inc. All Rights Reserved.
+      url: https://github.com/bitnami/charts
+    name: zookeeper
+    sources:
+    - https://github.com/bitnami/charts/tree/main/bitnami/zookeeper
+    urls:
+    - zookeeper-1.0.1.tgz
+    version: 1.0.1
+  - annotations:
+      category: Infrastructure
+      images: |
+        - name: os-shell
+          image: registry.cn-shenzhen.aliyuncs.com/gravitation/os-shell:12
+        - name: zookeeper
+          image: registry.cn-shenzhen.aliyuncs.com/gravitation/zookeeper:3.9.2
+      licenses: Apache-2.0
+    apiVersion: v2
     appVersion: 1.0.0
     created: "2024-07-30T14:43:09.044352738Z"
     dependencies:
@@ -62,4 +95,4 @@ entries:
     urls:
     - zookeeper-1.0.0.tgz
     version: 1.0.0
-generated: "2024-07-30T14:43:09.044362296Z"
+generated: "2024-08-06T09:11:41.931739863Z"
