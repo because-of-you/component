@@ -204,7 +204,7 @@ autopurge:
 logLevel: ERROR
 ## @param jvmFlags Default JVM flags for the ZooKeeper process
 ##
-jvmFlags: "-XX:+UseContainerSupport -XX:InitialRAMPercentage=40.0 -XX:MaxRAMPercentage=40.0 -Xshareclasses -Xtune:virtualized -Xquickstart"
+jvmFlags: "-XX:+UseContainerSupport -XX:InitialRAMPercentage=40.0 -XX:MaxRAMPercentage=40.0 -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
 ## @param dataLogDir Dedicated data log directory
 ## This allows a dedicated log device to be used, and helps avoid competition between logging and snapshots.
 ## E.g.
