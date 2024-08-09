@@ -1,0 +1,1 @@
+FROM docker.io/bitnami/jmx-exporter:1.0.1-debian-12-r5
