@@ -6,6 +6,33 @@ entries:
       licenses: Apache-2.0
     apiVersion: v2
     appVersion: 1.0.0
+    created: "2024-08-09T07:46:30.606877122Z"
+    description: A Library Helm Chart for grouping common logic between bitnami charts.
+      This chart is not deployable by itself.
+    digest: 334794ff7bf7af31611a7c609ee6e43668b31d5c1d2ed3b594ee7078f958c139
+    home: https://bitnami.com
+    icon: https://bitnami.com/downloads/logos/bitnami-mark.png
+    keywords:
+    - common
+    - helper
+    - template
+    - function
+    - bitnami
+    maintainers:
+    - name: Broadcom, Inc. All Rights Reserved.
+      url: https://github.com/bitnami/charts
+    name: common
+    sources:
+    - https://github.com/bitnami/charts/tree/main/bitnami/common
+    type: library
+    urls:
+    - common-1.0.1.tgz
+    version: 1.0.1
+  - annotations:
+      category: Infrastructure
+      licenses: Apache-2.0
+    apiVersion: v2
+    appVersion: 1.0.0
     created: "2024-07-30T07:52:09.101467983Z"
     description: A Library Helm Chart for grouping common logic between bitnami charts.
       This chart is not deployable by itself.
@@ -95,4 +122,4 @@ entries:
     urls:
     - zookeeper-1.0.0.tgz
     version: 1.0.0
-generated: "2024-08-06T09:11:41.931739863Z"
+generated: "2024-08-09T07:46:30.606891679Z"
