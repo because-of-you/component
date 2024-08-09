@@ -55,6 +55,53 @@ entries:
     urls:
     - common-1.0.0.tgz
     version: 1.0.0
+  kafka:
+  - annotations:
+      category: Infrastructure
+      images: |
+        - name: jmx-exporter
+          image: registry.cn-shenzhen.aliyuncs.com/gravitation/jmx-exporter:1.0.1-debian-12-r5
+        - name: kafka
+          image: registry.cn-shenzhen.aliyuncs.com/gravitation/kafka:3.8.0-debian-12-r2
+        - name: kubectl
+          image: registry.cn-shenzhen.aliyuncs.com/gravitation/kubectl:1.30.3-debian-12-r5
+        - name: os-shell
+          image: registry.cn-shenzhen.aliyuncs.com/gravitation/os-shell:12
+      licenses: Apache-2.0
+    apiVersion: v2
+    appVersion: 3.8.0
+    created: "2024-08-09T07:51:17.196261356Z"
+    dependencies:
+    - condition: zookeeper.enabled
+      name: zookeeper
+      repository: https://charts.acitrus.cn
+      version: 1.x.x
+    - name: common
+      repository: https://charts.acitrus.cn
+      tags:
+      - bitnami-common
+      version: 1.x.x
+    description: Apache Kafka is a distributed streaming platform designed to build
+      real-time pipelines and can be used as a message broker or as a replacement
+      for a log aggregation solution for big data applications.
+    digest: 5b5808a435fe17c63852b8a731d3798adb179c78639bc5f6bf5341aa83a64f09
+    home: https://bitnami.com
+    icon: https://bitnami.com/assets/stacks/kafka/img/kafka-stack-220x234.png
+    keywords:
+    - kafka
+    - zookeeper
+    - streaming
+    - producer
+    - consumer
+    maintainers:
+    - name: Broadcom, Inc. All Rights Reserved.
+      url: https://github.com/bitnami/charts
+    name: kafka
+    sources:
+    - https://github.com/bitnami/charts/tree/main/bitnami/kafka
+    urls:
+    - kafka-1.0.0.tgz
+    version: 1.0.0
   zookeeper:
   - annotations:
       category: Infrastructure
@@ -122,4 +169,4 @@ entries:
     urls:
     - zookeeper-1.0.0.tgz
     version: 1.0.0
-generated: "2024-08-09T07:46:30.606891679Z"
+generated: "2024-08-09T07:51:17.196274139Z"
