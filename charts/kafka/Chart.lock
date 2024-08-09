@@ -1,9 +1,0 @@
-dependencies:
-- name: zookeeper
-  repository: https://charts.acitrus.cn
-  version: 1.0.1
-- name: common
-  repository: https://charts.acitrus.cn
-  version: 1.0.1
-digest: sha256:20b67c0399b4ddfe8f7d7b0733e216a6c2daa7c3671bb11264740802f661f1fe
-generated: "2024-08-09T15:50:03.827933+08:00"

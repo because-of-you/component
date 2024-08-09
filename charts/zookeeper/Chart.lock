@@ -1,6 +1,0 @@
-dependencies:
-- name: common
-  repository: https://charts.acitrus.cn
-  version: 1.0.0
-digest: sha256:53dbb74db2a8c8ae4dccafe07ea4f7382b0c55cfa152c9b11c130b2d3b3e4d68
-generated: "2024-07-30T16:49:20.420648+08:00"
