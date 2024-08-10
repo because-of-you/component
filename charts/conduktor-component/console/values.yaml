@@ -88,6 +88,16 @@ config:
     password: "component"
     username: "root"
 
+  clusters:
+    - id: 'confluent-pkc'
+      name: 'Confluent Prod'
+      bootstrapServers: 'pkc-lq8v7.eu-central-1.aws.confluent.cloud:9092'
+      properties: |
+        security.protocol=SASL_SSL
+        sasl.mechanism=PLAIN
+        sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="<username>" password="<password>";
+
+
   ## @param config.license Conduktor Console Enterprise license, if none given, the product will run in free tier
   license: ""
 
