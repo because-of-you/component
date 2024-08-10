@@ -989,15 +989,15 @@ platformCortex:
   ##   - name: FOO
   ##     value: "bar"
   ##
-  extraEnvVars:
-    - name: RUN_MODE
-      value: "custom"
-    - name: CONSOLE_MEMORY_OPTS
-      value: "-XX:+UseContainerSupport -Xmx1700m -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
-    - name: GOVERNANCE_MEMORY_OPTS
-      value: "-XX:+UseContainerSupport -Xmx512m -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
-    - name: AUTHENTICATOR_MEMORY_OPTS
-      value: "-XX:+UseContainerSupport -Xmx128m -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
+  extraEnvVars: []
+#    - name: RUN_MODE
+#      value: "custom"
+#    - name: CONSOLE_MEMORY_OPTS
+#      value: "-XX:+UseContainerSupport -Xmx1700m -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
+#    - name: GOVERNANCE_MEMORY_OPTS
+#      value: "-XX:+UseContainerSupport -Xmx512m -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
+#    - name: AUTHENTICATOR_MEMORY_OPTS
+#      value: "-XX:+UseContainerSupport -Xmx128m -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
   ## @param platformCortex.extraEnvVarsCM Name of existing ConfigMap containing extra env vars for Conduktor Console Cortex nodes
   ##
   extraEnvVarsCM: ""

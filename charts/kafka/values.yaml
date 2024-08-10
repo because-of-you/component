@@ -526,7 +526,7 @@ controller:
   existingSecretConfig: ""
   ## @param controller.heapOpts Kafka Java Heap size for controller-eligible nodes
   ##
-  heapOpts: -Xmx1024m -Xms1024m
+  heapOpts: "-XX:+UseContainerSupport -XX:InitialRAMPercentage=40.0 -XX:MaxRAMPercentage=70.0 -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
   ## @param controller.command Override Kafka container command
   ##
   command: [ ]
@@ -990,7 +990,7 @@ broker:
   existingSecretConfig: ""
   ## @param broker.heapOpts Kafka Java Heap size for broker-only nodes
   ##
-  heapOpts: -Xmx1024m -Xms1024m
+  heapOpts: "-XX:+UseContainerSupport -XX:InitialRAMPercentage=40.0 -XX:MaxRAMPercentage=70.0 -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
   ## @param broker.command Override Kafka container command
   ##
   command: [ ]
