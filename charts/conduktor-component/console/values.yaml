@@ -84,18 +84,19 @@ config:
   database:
     host: "postgresql.default"
     port: 5432
-    name: "default"
+    name: "conduktor"
     password: "component"
     username: "root"
 
   clusters:
-    - id: 'confluent-pkc'
-      name: 'Confluent Prod'
-      bootstrapServers: 'pkc-lq8v7.eu-central-1.aws.confluent.cloud:9092'
+    - id: 'kafka-default'
+      name: 'kafka-default'
+      bootstrapServers: 'kafka.default:9092'
+      icon: kafka
       properties: |
-        security.protocol=SASL_SSL
+        security.protocol=SASL_PLAINTEXT
         sasl.mechanism=PLAIN
-        sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="<username>" password="<password>";
+        sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='kafka' password='77N3jwnxZw';
 
 
   ## @param config.license Conduktor Console Enterprise license, if none given, the product will run in free tier
