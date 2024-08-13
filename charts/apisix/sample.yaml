@@ -15,6 +15,7 @@ controlPlane:
       role_traditional:
         config_provider: etcd
   service:
+    type: LoadBalancer
     extraPorts:
       - name: http
         port: 80
@@ -33,14 +34,14 @@ image:
 
 
 ingressController:
-  service:
-    type: LoadBalancer
-    ports:
-      http: 80
-      https: 443
-    nodePorts:
-      http: "80"
-      https: "443"
+  #  service:
+  #    type: LoadBalancer
+  #    ports:
+  #      http: 80
+  #      https: 443
+  #    nodePorts:
+  #      http: "80"
+  #      https: "443"
   image:
     registry: registry.cn-shenzhen.aliyuncs.com
     repository: gravitation/apisix-ingress-controller

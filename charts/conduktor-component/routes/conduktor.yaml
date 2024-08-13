@@ -17,6 +17,6 @@ spec:
       websocket: true
       plugins:
         - name: redirect
-          enable: true
+          enable: false
           config:
             http_to_https: true

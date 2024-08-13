@@ -1,0 +1,1 @@
+FROM bitnami/apisix-dashboard:3.0.1-debian-12-r40
