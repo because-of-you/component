@@ -1,0 +1,22 @@
+apiVersion: apisix.apache.org/v2
+kind: ApisixRoute
+metadata:
+  name: conduktor-route
+  namespace: conduktor
+spec:
+  http:
+    - name: kafka-route-console
+      match:
+        hosts:
+          - kafka.acitrus.cn
+        paths:
+          - /*
+      backends:
+        - serviceName: console
+          servicePort: 80
+      websocket: true
+      plugins:
+        - name: redirect
+          enable: true
+          config:
+            http_to_https: true

@@ -33,6 +33,14 @@ image:
 
 
 ingressController:
+  service:
+    type: LoadBalancer
+    ports:
+      http: 80
+      https: 443
+    nodePorts:
+      http: "80"
+      https: "443"
   image:
     registry: registry.cn-shenzhen.aliyuncs.com
     repository: gravitation/apisix-ingress-controller
@@ -44,6 +52,7 @@ ingressController:
     limits:
       cpu: 2000m
       memory: 512Mi
+
 
 waitContainer:
   image:
