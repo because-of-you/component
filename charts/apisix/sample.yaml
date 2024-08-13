@@ -1,0 +1,83 @@
+dataPlane:
+  enabled: false
+controlPlane:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 100Mi
+    limits:
+      cpu: 1000m
+      memory: 1024Mi
+
+  extraConfig:
+    deployment:
+      role: traditional
+      role_traditional:
+        config_provider: etcd
+  service:
+    extraPorts:
+      - name: http
+        port: 80
+        targetPort: 9080
+      - name: https
+        port: 443
+        targetPort: 9443
+
+dashboard:
+  enabled: false
+
+image:
+  registry: registry.cn-shenzhen.aliyuncs.com
+  repository: gravitation/apisix
+  tag: 3.9.1-debian-12-r8
+
+
+ingressController:
+  image:
+    registry: registry.cn-shenzhen.aliyuncs.com
+    repository: gravitation/apisix-ingress-controller
+    tag: 1.8.2-debian-12-r11
+  resources:
+    requests:
+      cpu: 10m
+      memory: 100Mi
+    limits:
+      cpu: 2000m
+      memory: 512Mi
+
+waitContainer:
+  image:
+    registry: registry.cn-shenzhen.aliyuncs.com
+    repository: gravitation/os-shell
+    tag: 12-debian-12-r27
+
+etcd:
+  image:
+    registry: registry.cn-shenzhen.aliyuncs.com
+    repository: gravitation/etcd
+    tag: 3.5.15-debian-12-r4
+  resources:
+    limits:
+      cpu: 500m
+      ephemeral-storage: 2Gi
+      memory: 500Mi
+    requests:
+      cpu: 10m
+      ephemeral-storage: 50Mi
+      memory: 256Mi
+
+extraDeploy:
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: apisix-routes
+    data:
+      apisix.yaml: |-
+        routes:
+          -
+            uri: /hello
+            upstream:
+                nodes:
+                    "127.0.0.1:1980": 1
+                type: roundrobin
+        #END
