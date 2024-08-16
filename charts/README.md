@@ -21,7 +21,11 @@ helm install postgresql bitnami/postgresql -f postgresql/values.yaml
 
 ## conduktor
 ```bash
+# helm uninstall console --kubeconfig ~/PycharmProjects/k8sClusters/0/cloud-cluster.yaml -n conduktor
+helm upgrade --install console conduktor/console -f conduktor-component/console/sample.yaml --create-namespace -n conduktor
 
+# helm uninstall gateway --kubeconfig ~/PycharmProjects/k8sClusters/0/cloud-cluster.yaml -n conduktor
+helm upgrade --install gateway conduktor/conduktor-gateway -f conduktor-component/gateway/sample.yaml --create-namespace -n conduktor
 ```
 
 ## apisix
@@ -76,4 +80,20 @@ Substituted images detected:
   - registry.cn-shenzhen.aliyuncs.com/gravitation/apisix:3.9.1-debian-12-r8
   - registry.cn-shenzhen.aliyuncs.com/gravitation/apisix-ingress-controller:1.8.2-debian-12-r11
   - registry.cn-shenzhen.aliyuncs.com/gravitation/os-shell:12-debian-12-r27
+```
+
+## cert
+
+aliyun
+```bash
+# https://github.com/pragkent/alidns-webhook
+# Install alidns-webhook to cert-manager namespace. 
+helm install cert-manager bitnami/cert-manager --kubeconfig ~/PycharmProjects/k8sClusters/0/cloud-cluster.yaml --namespace cert-manager --create-namespace -f cert-manager/sample.yaml 
+
+helm upgrade --install alidns-webhook alidns-webhook \
+    --repo https://wjiec.github.io/alidns-webhook \
+    --namespace cert-manager --create-namespace \
+    --set groupName=acme.acitrus.cn,certManager.serviceAccountName=cert-manager-controller --kubeconfig cloud-cluster.yaml
+    
+执行 aliyun 下面的文件即可 
 ```

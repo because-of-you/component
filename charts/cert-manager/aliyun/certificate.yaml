@@ -1,0 +1,14 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: cert-acitrus-cn
+spec:
+  secretName: cert-acitrus-cn-tls
+  commonName: "acitrus.cn"
+  dnsNames:
+  - "acitrus.cn"
+  - "*.acitrus.cn"
+  issuerRef:
+    name: acitrus-acme
+    kind: ClusterIssuer
+    # kind: Issuer

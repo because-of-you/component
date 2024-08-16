@@ -1,2 +1,2 @@
-FROM conduktor/conduktor-console:1.25.1
-# docker buildx build  --platform linux/arm64,linux/amd64 -t registry.cn-shenzhen.aliyuncs.com/gravitation/conduktor-console:1.25.1 -f Dockerfile . --push --no-cache
+FROM conduktor/conduktor-console-cortex:1.26.0
+# docker buildx build  --platform linux/arm64,linux/amd64 -t registry.cn-shenzhen.aliyuncs.com/gravitation/conduktor-console-cortex:1.26.0 -f Dockerfile . --push --no-cache

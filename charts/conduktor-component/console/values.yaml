@@ -10,7 +10,7 @@
 ## @param global.storageClass Global StorageClass for Persistent Volume(s)
 ##
 global:
-  imageRegistry: "registry.cn-shenzhen.aliyuncs.com"
+  imageRegistry: ""
   ## E.g.
   ## imagePullSecrets:
   ##   - myRegistryKeySecretName
@@ -68,13 +68,13 @@ diagnosticMode:
 config:
   ## @param config.organization.name Your Conduktor Console Organization, you can only set it at install! You will need to change it in the Conduktor Console UI after the installation
   organization:
-    name: "mail@acitrus.cn"
+    name: ""
 
   admin:
     ## @param config.admin.email Your Conduktor Console Admin email, you can only set it at install! You will need to change it in the Conduktor Console UI after the installation
-    email: "mail@acitrus.cn"
+    email: ""
     ## @param config.admin.password Your Conduktor Console Admin password, you can only set it at install! You will need to change it in the Conduktor Console UI after the installation
-    password: "mail@acitrus.cn"
+    password: ""
 
   ## @param config.database.host Your Conduktor Console Database host
   ## @param config.database.port Your Conduktor Console Database port
@@ -82,22 +82,11 @@ config:
   ## @param config.database.username Your Conduktor Console Database username
   ## @param config.database.password Your Conduktor Console Database password
   database:
-    host: "postgresql.default"
+    host: ""
     port: 5432
-    name: "conduktor"
-    password: "component"
-    username: "root"
-
-  clusters:
-    - id: 'kafka-default'
-      name: 'kafka-default'
-      bootstrapServers: 'kafka.default:9092'
-      icon: kafka
-      properties: |
-        security.protocol=SASL_PLAINTEXT
-        sasl.mechanism=PLAIN
-        sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='kafka' password='77N3jwnxZw';
-
+    name: "postgres"
+    password: ""
+    username: ""
 
   ## @param config.license Conduktor Console Enterprise license, if none given, the product will run in free tier
   license: ""
@@ -241,8 +230,8 @@ platform:
   ## @param platform.image.debug Enable Conduktor Console image debug mode
   ##
   image:
-    registry: registry.cn-shenzhen.aliyuncs.com
-    repository: gravitation/conduktor-console
+    registry: docker.io
+    repository: conduktor/conduktor-console
     tag: 1.25.1
     digest: ""
     ## Specify a imagePullPolicy
@@ -332,9 +321,9 @@ platform:
       memory: 4Gi
     requests:
       ## @param platform.resources.requests.cpu CPU resource requests
-      cpu: 10m
+      cpu: 1000m
       ## @param platform.resources.requests.memory Memory resource requests
-      memory: 1Gi
+      memory: 2Gi
   ## @param platform.podSecurityContext Conduktor Console Pod Security Context
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
   ## default:
@@ -454,15 +443,7 @@ platform:
   ##   - name: FOO
   ##     value: "bar"
   ##
-  extraEnvVars:
-    - name: RUN_MODE
-      value: "custom"
-    - name: CONSOLE_MEMORY_OPTS
-      value: "-XX:+UseContainerSupport -Xmx1700m -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
-    - name: GOVERNANCE_MEMORY_OPTS
-      value: "-XX:+UseContainerSupport -Xmx512m -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
-    - name: AUTHENTICATOR_MEMORY_OPTS
-      value: "-XX:+UseContainerSupport -Xmx128m -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
+  extraEnvVars: []
   ## @param platform.extraEnvVarsCM Name of existing ConfigMap containing extra env vars for Conduktor Console nodes
   ## ref: https://docs.conduktor.io/platform/configuration/env-variables/
   ##
@@ -556,10 +537,10 @@ platform:
       ##  extraParams:
       ##    basicAuth:
       ##      password:
-      ##        name: conduktor-component-admin-user # secret name
+      ##        name: conduktor-admin-user # secret name
       ##        key: password
       ##      username:
-      ##        name: conduktor-component-admin-user # secret name
+      ##        name: conduktor-admin-user # secret name
       ##        key: username
       ##
       extraParams: {}
@@ -789,8 +770,8 @@ platformCortex:
   ## @param platformCortex.image.debug Enable Conduktor Console Cortex image debug mode
   ##
   image:
-    registry: registry.cn-shenzhen.aliyuncs.com
-    repository: gravitation/conduktor-console-cortex
+    registry: docker.io
+    repository: conduktor/conduktor-console-cortex
     tag: 1.25.1
     digest: ""
     ## Specify a imagePullPolicy
@@ -810,7 +791,7 @@ platformCortex:
     ##
     debug: false
 
-  ## @param platformCortex.replicaCount Number of Conduktor Console replicas to deploy
+  ## @param platformCortex.replicaCount Number of Conduktor Console Cortex replicas to deploy
   ##
   replicaCount: 1
 
@@ -887,9 +868,9 @@ platformCortex:
       memory: 2Gi
     requests:
       ## @param platformCortex.resources.requests.cpu CPU resource requests
-      cpu: 10m
+      cpu: 500m
       ## @param platformCortex.resources.requests.memory Memory resource requests
-      memory: 100Mi
+      memory: 500Mi
   ## @param platformCortex.podSecurityContext Conduktor Console Cortex Pod Security Context
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
   ## default:
@@ -1001,14 +982,6 @@ platformCortex:
   ##     value: "bar"
   ##
   extraEnvVars: []
-#    - name: RUN_MODE
-#      value: "custom"
-#    - name: CONSOLE_MEMORY_OPTS
-#      value: "-XX:+UseContainerSupport -Xmx1700m -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
-#    - name: GOVERNANCE_MEMORY_OPTS
-#      value: "-XX:+UseContainerSupport -Xmx512m -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
-#    - name: AUTHENTICATOR_MEMORY_OPTS
-#      value: "-XX:+UseContainerSupport -Xmx128m -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
   ## @param platformCortex.extraEnvVarsCM Name of existing ConfigMap containing extra env vars for Conduktor Console Cortex nodes
   ##
   extraEnvVarsCM: ""
@@ -1121,8 +1094,8 @@ tests:
   #    - name: cdkt-test-04
   #      type: Opaque
   #      stringData:
-  #        CDK_ORGANIZATION_NAME: conduktor-component
-  #        CDK_ADMIN_EMAIL: admin@conduktor-component.io
+  #        CDK_ORGANIZATION_NAME: conduktor
+  #        CDK_ADMIN_EMAIL: admin@conduktor.io
   #        CDK_ADMIN_PASSWORD: admin
   #        CDK_DATABASE_PASSWORD: conduktor123
   #        CDK_DATABASE_USERNAME: postgres

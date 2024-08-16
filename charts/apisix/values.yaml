@@ -1659,7 +1659,7 @@ controlPlane:
 dashboard:
   ## @param dashboard.enabled Enable APISIX Dashboard
   ##
-  enabled: true
+  enabled: false
   ## @param dashboard.replicaCount Number of APISIX Dashboard replicas to deploy
   ##
   replicaCount: 1

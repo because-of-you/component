@@ -1,1 +1,24 @@
+image:
+  registry: registry.cn-shenzhen.aliyuncs.com
+  repository: gravitation/kafka
+  tag: 3.8.0-debian-12-r3
 heapOpts: "-XX:+UseContainerSupport -XX:InitialRAMPercentage=40.0 -XX:MaxRAMPercentage=70.0 -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
+
+sasl:
+  client:
+    users:
+      - kafka
+      - skyline
+    passwords:
+      - "QHZTQCVTN3A2JXlXaCEmaU1AYjBTZyRuSEImMmU3UE0="
+      - "Jmh4ZmY4cFRpWVdvS3l6bkFZR2pTVl42UXlmZiNISVQ="
+
+controller:
+  heapOpts: "-XX:+UseContainerSupport -XX:InitialRAMPercentage=40.0 -XX:MaxRAMPercentage=70.0 -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
+  resources:
+    requests:
+      cpu: 1m
+      memory: 10Mi
+    limits:
+      cpu: 1500m
+      memory: 2048Mi

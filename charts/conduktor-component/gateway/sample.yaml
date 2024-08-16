@@ -1,0 +1,23 @@
+gateway:
+  image:
+    registry: registry.cn-shenzhen.aliyuncs.com
+    repository: gravitation/conduktor-gateway
+    tag: 3.2.1
+  env:
+    GATEWAY_ADVERTISED_HOST: kafka.acitrus.cn
+  extraSecretEnvVars:
+    - name: GATEWAY_ADVERTISED_HOST
+      value: kafka.acitrus.cn
+    - name: KAFKA_BOOTSTRAP_SERVERS
+      value: kafka.default:9092
+    - name: KAFKA_SASL_MECHANISM
+      value: PLAIN
+    - name: KAFKA_SECURITY_PROTOCOL
+      value: SASL_PLAINTEXT
+    - name: KAFKA_SASL_JAAS_CONFIG
+      value: "org.apache.kafka.common.security.plain.PlainLoginModule required username='kafka' password='QHZTQCVTN3A2JXlXaCEmaU1AYjBTZyRuSEImMmU3UE0=';"
+
+service:
+  external:
+    enable: true
+    type: LoadBalancer

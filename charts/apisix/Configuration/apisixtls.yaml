@@ -1,0 +1,11 @@
+apiVersion: apisix.apache.org/v2
+kind: ApisixTls
+metadata:
+  name: cert-acitrus-cn
+spec:
+  hosts:
+    - kafka.acitrus.cn
+    - kafka2.acitrus.cn
+  secret:
+    name: cert-acitrus-cn-tls
+    namespace: default

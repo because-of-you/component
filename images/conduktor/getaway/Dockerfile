@@ -1,0 +1,1 @@
+FROM dockerproxy.cn/conduktor/conduktor-gateway:3.2.1

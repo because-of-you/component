@@ -9,6 +9,7 @@ spec:
       match:
         hosts:
           - kafka.acitrus.cn
+#          - kafka2.acitrus.cn
         paths:
           - /*
       backends:
@@ -17,6 +18,6 @@ spec:
       websocket: true
       plugins:
         - name: redirect
-          enable: false
+          enable: true
           config:
             http_to_https: true

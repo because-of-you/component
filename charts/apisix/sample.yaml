@@ -1,29 +1,3 @@
-dataPlane:
-  enabled: false
-controlPlane:
-  resources:
-    requests:
-      cpu: 10m
-      memory: 100Mi
-    limits:
-      cpu: 1000m
-      memory: 1024Mi
-
-  extraConfig:
-    deployment:
-      role: traditional
-      role_traditional:
-        config_provider: etcd
-  service:
-    type: LoadBalancer
-    extraPorts:
-      - name: http
-        port: 80
-        targetPort: 9080
-      - name: https
-        port: 443
-        targetPort: 9443
-
 dashboard:
   enabled: false
 
@@ -32,16 +6,32 @@ image:
   repository: gravitation/apisix
   tag: 3.9.1-debian-12-r8
 
+controlPlane:
+  resources:
+    requests:
+      cpu: 10m
+      ephemeral-storage: 50Mi
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      ephemeral-storage: 2Gi
+      memory: 1024Mi
+
+dataPlane:
+  containerPorts:
+    http: 80
+    https: 443
+  resources:
+    requests:
+      cpu: 10m
+      ephemeral-storage: 50Mi
+      memory: 100Mi
+    limits:
+      cpu: 1000m
+      ephemeral-storage: 2Gi
+      memory: 1024Mi
 
 ingressController:
-  #  service:
-  #    type: LoadBalancer
-  #    ports:
-  #      http: 80
-  #      https: 443
-  #    nodePorts:
-  #      http: "80"
-  #      https: "443"
   image:
     registry: registry.cn-shenzhen.aliyuncs.com
     repository: gravitation/apisix-ingress-controller
@@ -51,9 +41,8 @@ ingressController:
       cpu: 10m
       memory: 100Mi
     limits:
-      cpu: 2000m
+      cpu: 1000m
       memory: 512Mi
-
 
 waitContainer:
   image:

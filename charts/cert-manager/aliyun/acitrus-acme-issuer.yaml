@@ -1,0 +1,40 @@
+#
+# example-acme-issuer.yaml
+# https://github.com/wjiec/alidns-webhook
+#
+
+apiVersion: v1
+kind: Secret
+metadata:
+  namespace: cert-manager
+  name: alidns-secret
+stringData:
+  access-key-id: ""
+  access-key-secret: ""
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: acitrus-acme
+spec:
+  acme:
+    # The ACME server URL
+    server: https://acme-v02.api.letsencrypt.org/directory
+    # Email address used for ACME registration
+    email: mail@acitrus.cn # Change ME
+    # Name of a secret used to store the ACME account private key
+    privateKeySecretRef:
+      name: acitrus-acme
+    solvers:
+      - dns01:
+          webhook:
+            groupName: "acme.acitrus.cn"
+            solverName: alidns
+            config:
+              region: "" # Optional
+              accessKeyIdRef:
+                name: alidns-secret
+                key: access-key-id
+              accessKeySecretRef:
+                name: alidns-secret
+                key: access-key-secret
