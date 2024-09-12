@@ -2,7 +2,7 @@ gateway:
   image:
     registry: registry.cn-shenzhen.aliyuncs.com
     repository: gravitation/conduktor-gateway
-    tag: 3.2.1
+    tag: 3.3.0
   env:
     GATEWAY_ADVERTISED_HOST: kafka.acitrus.cn
   extraSecretEnvVars:

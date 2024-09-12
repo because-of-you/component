@@ -1,7 +1,7 @@
 ## 安装 bitnami
 ```bash
 helm repo add bitnami https://charts.bitnami.com/bitnami
-helm repo add conduktor-component https://helm.conduktor.io
+helm repo add conduktor https://helm.conduktor.io
 helm repo update
 ```
 ## 运行 zookeeper

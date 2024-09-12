@@ -9,7 +9,7 @@ spec:
       match:
         hosts:
           - kafka.acitrus.cn
-#          - kafka2.acitrus.cn
+#          - kafka3.acitrus.cn
         paths:
           - /*
       backends:
