@@ -12,7 +12,7 @@ spec:
         paths:
           - /*
       backends:
-        - serviceName: casdoor-casdoor-helm-charts
+        - serviceName: casdoor
           servicePort: 8000
       websocket: true
       plugins:
