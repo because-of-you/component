@@ -23,10 +23,10 @@ jobs:
           token: '${{ github.token }}'
           values: |
             database:
-              host: '${{ secrets.casdoor_database_host }}'
-              port: '${{ secrets.casdoor_database_port }}'
-              user: '${{ secrets.casdoor_database_user }}'
-              password: '${{ secrets.casdoor_database_password }}'
+              host: '${{ secrets.CASDOOR_DATABASE_HOST }}'
+              port: '${{ secrets.CASDOOR_DATABASE_PORT }}'
+              user: '${{ secrets.CASDOOR_DATABASE_USER }}'
+              password: '${{ secrets.CASDOOR_DATABASE_PASSWORD }}'
               driver: mysql
               databaseName: casdoor
           value-files: "charts/casdoor/sample.yaml"
