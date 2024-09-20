@@ -26,9 +26,6 @@ jobs:
               password: '${{ secrets.casdoor_database_password }}'
               driver: mysql
               databaseName: casdoor
-          value-files: >-
-          [
-            "charts/casdoor/sample.yaml",
-          ]
+          value-files: "charts/casdoor/sample.yaml"
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
