@@ -1,0 +1,34 @@
+# .github/workflows/deploy.yml
+name: Deploy
+on: [ 'deployment' ]
+
+
+jobs:
+  deployment:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: 'casdoor'
+        uses: 'deliverybot/helm@v1'
+        with:
+          release: 'casdoor'
+          namespace: 'casdoor'
+          chart: 'oci://registry-1.docker.io/casbin/casdoor-helm-charts'
+          #          repo: 'oci://registry-1.docker.io/casbin/'
+          #          repo-alias: casdoor
+          token: '${{ github.token }}'
+          values: |
+            database:
+              host: '${{ secrets.casdoor_database_host }}'
+              port: '${{ secrets.casdoor_database_port }}'
+              user: '${{ secrets.casdoor_database_user }}'
+              password: '${{ secrets.casdoor_database_password }}'
+              driver: mysql
+              databaseName: casdoor
+          value-files: >-
+          [
+            "charts/casdoor/sample.yaml",
+          ]
+        env:
+          KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
