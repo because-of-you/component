@@ -14,6 +14,10 @@ jobs:
         with:
           ref: trunk
 
+      - uses: tale/kubectl-action@v1
+        with:
+          base64-kube-config: ${{ secrets.KUBECONFIG_BASED }}
+
       - name: 'casdoor'
         uses: vimeda/helm@v1.7.0
         with:

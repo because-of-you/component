@@ -1,0 +1,22 @@
+apiVersion: apisix.apache.org/v2
+kind: ApisixRoute
+metadata:
+  name: casdoor-route
+  namespace: casdoor
+spec:
+  http:
+    - name: casdoor-route
+      match:
+        hosts:
+          - auth.acitrus.cn
+        paths:
+          - /*
+      backends:
+        - serviceName: casdoor-casdoor-helm-charts
+          servicePort: 8000
+      websocket: true
+      plugins:
+        - name: redirect
+          enable: true
+          config:
+            http_to_https: true
