@@ -17,6 +17,8 @@ jobs:
       - uses: tale/kubectl-action@v1
         with:
           base64-kube-config: ${{ secrets.KUBECONFIG_BASED }}
+
+      - name: Generate kubeconfig
         run: |
           kubectl apply -k charts/casdoor/workloads
 
