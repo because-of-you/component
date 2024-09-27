@@ -95,29 +95,29 @@ jobs:
               admin:
                 password: "${{ secrets.STRONG_PASSWORD }}"
             platform:
+              extraEnvVars:
+                - name: CDK_SSO_OAUTH2_0_NAME
+                  value: "auth.acitrus.cn"
+                - name: CDK_SSO_OAUTH2_0_DEFAULT
+                  value: "true"
+                - name: CDK_SSO_OAUTH2_0_CLIENT-ID
+                  value: "${{ secrets.CONDUKTOR_OAUTH2_ID }}"
+                - name: CDK_SSO_OAUTH2LOGOUT
+                  value: "false"
+                - name: CDK_SSO_OAUTH2_0_CLIENT-SECRET
+                  value: "${{ secrets.CONDUKTOR_OAUTH2_SECRET }}"
+                - name: CDK_SSO_OAUTH2_0_OPENID_ISSUER
+                  value: "https://auth.acitrus.cn"
+                - name: RUN_MODE
+                  value: "custom"
+                - name: CONSOLE_MEMORY_OPTS
+                  value: "-XX:+UseContainerSupport -Xmx1700m -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
+                - name: GOVERNANCE_MEMORY_OPTS
+                  value: "-XX:+UseContainerSupport -Xmx512m -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
+                - name: AUTHENTICATOR_MEMORY_OPTS
+                  value: "-XX:+UseContainerSupport -Xmx128m -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
               image:
                 tag: ${{ env.TAG }}
-                extraEnvVars:
-                  - name: CDK_SSO_OAUTH2_0_NAME
-                    value: "auth.acitrus.cn"
-                  - name: CDK_SSO_OAUTH2_0_DEFAULT
-                    value: "true"
-                  - name: CDK_SSO_OAUTH2_0_CLIENT-ID
-                    value: "${{ secrets.CONDUKTOR_OAUTH2_ID }}"
-                  - name: CDK_SSO_OAUTH2LOGOUT
-                    value: "false"
-                  - name: CDK_SSO_OAUTH2_0_CLIENT-SECRET
-                    value: "${{ secrets.CONDUKTOR_OAUTH2_SECRET }}"
-                  - name: CDK_SSO_OAUTH2_0_OPENID_ISSUER
-                    value: "https://auth.acitrus.cn"
-                  - name: RUN_MODE
-                    value: "custom"
-                  - name: CONSOLE_MEMORY_OPTS
-                    value: "-XX:+UseContainerSupport -Xmx1700m -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
-                  - name: GOVERNANCE_MEMORY_OPTS
-                    value: "-XX:+UseContainerSupport -Xmx512m -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
-                  - name: AUTHENTICATOR_MEMORY_OPTS
-                    value: "-XX:+UseContainerSupport -Xmx128m -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
             platformCortex:
               image:
                 tag: ${{ env.TAG }}
