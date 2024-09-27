@@ -57,7 +57,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           file: images/conduktor/console/Dockerfile_replaced
           push: ${{ github.event_name != 'pull_request' }}
-          tags: gravitation/conduktor-console:${{ env.TAG }}
+          tags: ${{ env.REGISTRY }}/gravitation/conduktor-console:${{ env.TAG }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: console-context-image-push
@@ -67,7 +67,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           file: images/conduktor/console-cortex/Dockerfile_replaced
           push: ${{ github.event_name != 'pull_request' }}
-          tags: gravitation/conduktor-console-cortex:${{ env.TAG }}
+          tags: ${{ env.REGISTRY }}/gravitation/conduktor-console-cortex:${{ env.TAG }}
           labels: ${{ steps.meta.outputs.labels }}
 
       # https://github.com/marketplace/actions/kubernetes-cli-kubectl
