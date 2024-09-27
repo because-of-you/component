@@ -1,11 +1,11 @@
 # .github/workflows/deploy.yml
-name: conduktor deploy
+name: conduktor console deploy
 on:
   push:
     tags:
-      - conduktor-*.*.*
+      - conduktor-console-*.*.*
     branches:
-      - conduktor-*.*.*
+      - conduktor-console-*.*.*
 
 env:
   REGISTRY: registry.cn-shenzhen.aliyuncs.com
