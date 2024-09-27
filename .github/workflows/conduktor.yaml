@@ -19,9 +19,15 @@ jobs:
 
       - name: modify files
         run: |
-          export TAG=${{ env.TAG }}
+          # export TAG=${{ env.TAG }}
+          
+          cat images/conduktor/console/Dockerfile
           envsubst < images/conduktor/console/Dockerfile > images/conduktor/console/Dockerfile
+          cat images/conduktor/console/Dockerfile
+        
+          cat images/conduktor/console-cortex/Dockerfile
           envsubst < images/conduktor/console-cortex/Dockerfile > images/conduktor/console-cortex/Dockerfile
+          cat images/conduktor/console-cortex/Dockerfile
 
       # docker 镜像管理模块 ------> 加载docker镜像元数据管理服务
       - name: image-meta-load
