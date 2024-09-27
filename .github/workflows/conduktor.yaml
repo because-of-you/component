@@ -24,7 +24,7 @@ jobs:
           cat images/conduktor/console/Dockerfile
           envsubst < images/conduktor/console/Dockerfile > images/conduktor/console/Dockerfile_replaced
           cat images/conduktor/console/Dockerfile_replaced
-        
+          
           cat images/conduktor/console-cortex/Dockerfile
           envsubst < images/conduktor/console-cortex/Dockerfile > images/conduktor/console-cortex/Dockerfile_replaced
           cat images/conduktor/console-cortex/Dockerfile_replaced
@@ -75,29 +75,53 @@ jobs:
         with:
           base64-kube-config: ${{ secrets.KUBECONFIG_BASED }}
 
-#      - name: Generate kubeconfig
-#        run: |
-#          kubectl apply -k charts/casdoor/workloads
-#
-#      # https://github.com/marketplace/actions/helm-deploy
-#      - name: 'conduktor'
-#        uses: vimeda/helm@v1.7.0
-#        with:
-#          release: 'console'
-#          namespace: 'conduktor'
-#          chart: 'https://helm.conduktor.io/console'
-#          #          repo: 'oci://registry-1.docker.io/casbin/'
-#          #          repo-alias: casdoor
-#          token: '${{ github.token }}'
-#          chart-version: 1.27.1
-#          values: |
-#            database:
-#              host: '${{ secrets.CASDOOR_DATABASE_HOST }}'
-#              port: '${{ secrets.CASDOOR_DATABASE_PORT }}'
-#              user: '${{ secrets.CASDOOR_DATABASE_USER }}'
-#              password: '${{ secrets.CASDOOR_DATABASE_PASSWORD }}'
-#              driver: mysql
-#              databaseName: casdoor
-#          value-files: "charts/casdoor/sample.yaml"
-#        env:
-#          KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
+      - name: Generate kubeconfig
+        run: |
+          kubectl apply -k charts/conduktor/workloads/
+
+      # https://github.com/marketplace/actions/helm-deploy
+      - name: 'conduktor'
+        uses: vimeda/helm@v1.7.0
+        with:
+          release: 'console'
+          namespace: 'conduktor'
+          chart: 'https://helm.conduktor.io/console'
+          #          repo: 'oci://registry-1.docker.io/casbin/'
+          #          repo-alias: casdoor
+          token: '${{ github.token }}'
+          chart-version: ${{ env.TAG }}
+          values: |
+            config:
+              admin:
+                password: "${{ secrets.STRONG_PASSWORD }}"
+            platform:
+              image:
+                tag: ${{ env.TAG }}
+                extraEnvVars:
+                  - name: CDK_SSO_OAUTH2_0_NAME
+                    value: "auth.acitrus.cn"
+                  - name: CDK_SSO_OAUTH2_0_DEFAULT
+                    value: "true"
+                  - name: CDK_SSO_OAUTH2_0_CLIENT-ID
+                    value: "${{ secrets.CONDUKTOR_OAUTH2_ID }}"
+                  - name: CDK_SSO_OAUTH2LOGOUT
+                    value: "false"
+                  - name: CDK_SSO_OAUTH2_0_CLIENT-SECRET
+                    value: "${{ secrets.CONDUKTOR_OAUTH2_SECRET }}"
+                  - name: CDK_SSO_OAUTH2_0_OPENID_ISSUER
+                    value: "https://auth.acitrus.cn"
+                  - name: RUN_MODE
+                    value: "custom"
+                  - name: CONSOLE_MEMORY_OPTS
+                    value: "-XX:+UseContainerSupport -Xmx1700m -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
+                  - name: GOVERNANCE_MEMORY_OPTS
+                    value: "-XX:+UseContainerSupport -Xmx512m -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
+                  - name: AUTHENTICATOR_MEMORY_OPTS
+                    value: "-XX:+UseContainerSupport -Xmx128m -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
+            platformCortex:
+              image:
+                tag: ${{ env.TAG }}
+
+          value-files: "charts/conduktor/console/sample.yaml"
+        env:
+          KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
