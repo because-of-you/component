@@ -16,12 +16,12 @@ jobs:
     runs-on: 'ubuntu-latest'
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: trunk
 
       - name: modify files
         run: |
           export TAG=${{ env.TAG }}
+          envsubst < images/conduktor/console/Dockerfile > images/conduktor/console/Dockerfile
+          envsubst < images/conduktor/console-cortex/Dockerfile > images/conduktor/console-cortex/Dockerfile
 
       # docker 镜像管理模块 ------> 加载docker镜像元数据管理服务
       - name: image-meta-load
