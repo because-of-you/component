@@ -17,6 +17,10 @@ spec:
       websocket: true
       plugins:
         - name: redirect
-          enable: true
+          enable: false
           config:
             http_to_https: true
+#        - name: real-ip
+#          enable: true
+#          config:
+#            source: "http_x_forwarded_for"
