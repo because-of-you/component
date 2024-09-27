@@ -1,0 +1,38 @@
+# .github/workflows/deploy.yml
+name: conduktor deploy
+on:
+  push:
+    tags:
+      - conduktor-gateway-*.*.*
+    branches:
+      - conduktor-gateway-*.*.*
+
+env:
+  REGISTRY: registry.cn-shenzhen.aliyuncs.com
+  TAG: 3.3.0
+
+jobs:
+  deployment:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: actions/checkout@v4
+
+      # https://github.com/marketplace/actions/kubernetes-cli-kubectl
+      - uses: tale/kubectl-action@v1
+        with:
+          base64-kube-config: ${{ secrets.KUBECONFIG_BASED }}
+
+      # https://github.com/marketplace/actions/helm-deploy
+      - name: 'gateway'
+        uses: vimeda/helm@v1.7.0
+        with:
+          release: 'gateway'
+          namespace: 'conduktor'
+          chart: 'conduktor/conduktor-gateway'
+          repo: "https://helm.conduktor.io"
+          repo-alias: "conduktor"
+          token: '${{ github.token }}'
+          timeout: 30m0s
+          value-files: "charts/conduktor/gateway/sample.yaml"
+        env:
+          KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
