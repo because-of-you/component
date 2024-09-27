@@ -36,7 +36,7 @@ jobs:
         if: github.event_name != 'pull_request'
         with:
           username: ${{ secrets.ALIYUN_IMAGES_HUB_NAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          password: ${{ secrets.ALIYUN_IMAGES_HUB_PASSWORD }}
           registry: ${{ env.REGISTRY }}
 
       # docker 镜像管理模块 ------> 加载docker 多平台镜像构建服务
