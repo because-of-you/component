@@ -85,9 +85,9 @@ jobs:
         with:
           release: 'console'
           namespace: 'conduktor'
-          chart: 'https://helm.conduktor.io/console'
-          #          repo: 'oci://registry-1.docker.io/casbin/'
-          #          repo-alias: casdoor
+          chart: 'conduktor/console'
+          repo: "https://helm.conduktor.io"
+          repo-alias: "conduktor"
           token: '${{ github.token }}'
           chart-version: ${{ env.TAG }}
           values: |
