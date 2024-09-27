@@ -4,15 +4,18 @@ global:
 config:
   organization:
     name: "mail@acitrus.cn"
+
   admin:
     email: "mail@acitrus.cn"
-    password: "mail@acitrus.cn"
+    # password: ""
+
   database:
     host: "postgresql.default"
     port: 5432
     name: "conduktor"
     password: "component"
     username: "root"
+
   clusters:
     - id: 'kafka-default'
       name: 'kafka-default'
@@ -27,7 +30,7 @@ platform:
   image:
     registry: registry.cn-shenzhen.aliyuncs.com
     repository: gravitation/conduktor-console
-    tag: 1.26.0
+#    tag: 1.26.0
   resources:
     limits:
       cpu: 3000m
@@ -35,20 +38,11 @@ platform:
     requests:
       cpu: 10m
       memory: 1Gi
-  extraEnvVars:
-    - name: RUN_MODE
-      value: "custom"
-    - name: CONSOLE_MEMORY_OPTS
-      value: "-XX:+UseContainerSupport -Xmx1700m -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
-    - name: GOVERNANCE_MEMORY_OPTS
-      value: "-XX:+UseContainerSupport -Xmx512m -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
-    - name: AUTHENTICATOR_MEMORY_OPTS
-      value: "-XX:+UseContainerSupport -Xmx128m -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
 platformCortex:
   image:
     registry: registry.cn-shenzhen.aliyuncs.com
     repository: gravitation/conduktor-console-cortex
-    tag: 1.25.1
+#    tag: 1.25.1
   resources:
     limits:
       cpu: 2000m
