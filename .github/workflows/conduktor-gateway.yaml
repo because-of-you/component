@@ -1,5 +1,5 @@
 # .github/workflows/deploy.yml
-name: conduktor deploy
+name: conduktor gateway deploy
 on:
   push:
     tags:
