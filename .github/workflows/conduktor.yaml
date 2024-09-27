@@ -89,6 +89,7 @@ jobs:
           repo: "https://helm.conduktor.io"
           repo-alias: "conduktor"
           token: '${{ github.token }}'
+          timeout: 30m0s
           values: |
             config:
               admin:
