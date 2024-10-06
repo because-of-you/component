@@ -42,7 +42,7 @@ jobs:
               port: '${{ secrets.CASDOOR_DATABASE_PORT }}'
               user: '${{ secrets.CASDOOR_DATABASE_USER }}'
               password: '${{ secrets.CASDOOR_DATABASE_PASSWORD }}'
-              driver: mysql
+              driver: postgres
               databaseName: casdoor
           value-files: "charts/casdoor/sample.yaml"
         env:
