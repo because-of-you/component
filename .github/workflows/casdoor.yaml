@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - casdoor-*.*.*
+    branches:
+      - casdoor-*.*.*
 
 
 jobs:
@@ -33,14 +35,14 @@ jobs:
           #          repo: 'oci://registry-1.docker.io/casbin/'
           #          repo-alias: casdoor
           token: '${{ github.token }}'
-          chart-version: v1.713.0
+          chart-version: v1.721.0
           values: |
             database:
               host: '${{ secrets.CASDOOR_DATABASE_HOST }}'
               port: '${{ secrets.CASDOOR_DATABASE_PORT }}'
               user: '${{ secrets.CASDOOR_DATABASE_USER }}'
               password: '${{ secrets.CASDOOR_DATABASE_PASSWORD }}'
-              driver: mysql
+              driver: postgres
               databaseName: casdoor
           value-files: "charts/casdoor/sample.yaml"
         env:
