@@ -1,0 +1,39 @@
+# .github/workflows/deploy.yml
+name: apisix-deploy
+on:
+  push:
+    tags:
+      - apisix-*.*.*
+    branches:
+      - apisix-*.*.*
+
+jobs:
+  deployment:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: actions/checkout@v4
+
+
+      # https://github.com/marketplace/actions/kubernetes-cli-kubectl
+      - uses: tale/kubectl-action@v1
+        with:
+          base64-kube-config: ${{ secrets.KUBECONFIG_BASED }}
+
+      # https://github.com/marketplace/actions/helm-deploy
+      - name: 'apisix'
+        uses: vimeda/helm@v1.7.0
+        with:
+          release: 'apisix'
+          namespace: 'gateway'
+          # https://github.com/bitnami/charts/tree/main/bitnami/apisix
+          chart: 'oci://registry-1.docker.io/bitnamicharts/apisix'
+          token: '${{ github.token }}'
+          chart-version: 3.5.2
+          value-files: "charts/apisix/sample.yaml"
+          timeout: 30m0s
+        env:
+          KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
+
+      - name: Generate kubeconfig
+        run: |
+          kubectl apply -k charts/apisix/workloads
