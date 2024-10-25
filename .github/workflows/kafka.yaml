@@ -1,0 +1,80 @@
+# .github/workflows/deploy.yml
+name: kafka-deploy
+on:
+  push:
+    tags:
+      - kafka-*.*.*
+    branches:
+      - kafka-*.*.*
+
+env:
+  REGISTRY: registry.cn-shenzhen.aliyuncs.com
+  TAG: 3.8.0-debian-12-r5
+  CHART_VERSION: 30.1.6
+
+jobs:
+  deployment:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: modify files
+        run: |
+          # export TAG=${{ env.TAG }}
+          
+          cat images/kafka/Dockerfile
+          envsubst < images/kafka/Dockerfile > images/kafka/Dockerfile_replaced
+          mv images/kafka/Dockerfile_replaced images/kafka/Dockerfile
+
+      # docker 镜像管理模块 ------> 加载docker镜像元数据管理服务
+      - name: image-meta-load
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: gravitation/kafka
+
+      # docker 镜像管理模块 ------> 加载docker登陆服务
+      - name: registry-login
+        uses: docker/login-action@v2
+        if: github.event_name != 'pull_request'
+        with:
+          username: ${{ secrets.ALIYUN_IMAGES_HUB_NAME }}
+          password: ${{ secrets.ALIYUN_IMAGES_HUB_PASSWORD }}
+          registry: ${{ env.REGISTRY }}
+
+      # docker 镜像管理模块 ------> 加载docker 多平台镜像构建服务
+      - name: image-buildx
+        uses: docker/setup-buildx-action@v2
+
+      # docker 镜像管理模块 ------> 构建和推送最新的镜像 ,linux/arm64
+      - name: kafka-image-push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          file: images/kafka/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ env.REGISTRY }}/gravitation/kafka:${{ env.TAG }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      # https://github.com/marketplace/actions/helm-deploy
+      - name: 'kafka'
+        uses: vimeda/helm@v1.7.0
+        with:
+          release: 'kafka'
+          namespace: 'default'
+          chart: 'bitnami/kafka'
+          repo: "https://charts.bitnami.com/bitnami"
+          repo-alias: "bitnami"
+          token: '${{ github.token }}'
+          chart-version: ${{ env.CHART_VERSION}}
+          timeout: 30m0s
+          values: |
+            image:
+              registry: registry.cn-shenzhen.aliyuncs.com
+              repository: gravitation/kafka
+              tag: ${{ env.TAG }}
+
+          value-files: "charts/kafka/sample.yaml"
+        env:
+          KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
