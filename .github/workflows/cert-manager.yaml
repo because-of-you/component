@@ -71,4 +71,4 @@ jobs:
 
       - name: Generate kubeconfig
         run: |
-          kubectl apply -k charts/casdoor/workloads
+          kubectl apply -k charts/cert-manager/workloads
