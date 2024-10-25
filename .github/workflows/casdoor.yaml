@@ -35,7 +35,7 @@ jobs:
           #          repo: 'oci://registry-1.docker.io/casbin/'
           #          repo-alias: casdoor
           token: '${{ github.token }}'
-          chart-version: v1.721.0
+          chart-version: v1.739.0
           values: |
             database:
               host: '${{ secrets.CASDOOR_DATABASE_HOST }}'
