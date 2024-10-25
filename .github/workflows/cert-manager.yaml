@@ -56,8 +56,9 @@ jobs:
           release: 'alidns-webhook'
           namespace: 'cert-manager'
           # https://github.com/bitnami/charts/blob/main/bitnami/cert-manager/CHANGELOG.md
-          chart: 'alidns-webhook'
-          repo: "https://wjiec.github.io/alidns-webhook"
+          chart: 'alidns-webhook/alidns-webhook'
+          repo: "https://wjiec.github.io"
+          repo-alias: "alidns-webhook"
           token: '${{ github.token }}'
           chart-version: 1.0.1
           values: |
