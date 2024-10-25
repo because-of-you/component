@@ -1,11 +1,6 @@
 dashboard:
   enabled: false
 
-image:
-  registry: registry.cn-shenzhen.aliyuncs.com
-  repository: gravitation/apisix
-  tag: 3.9.1-debian-12-r8
-
 controlPlane:
   resources:
     requests:
@@ -32,10 +27,6 @@ dataPlane:
       memory: 1024Mi
 
 ingressController:
-  image:
-    registry: registry.cn-shenzhen.aliyuncs.com
-    repository: gravitation/apisix-ingress-controller
-    tag: 1.8.2-debian-12-r11
   resources:
     requests:
       cpu: 10m
@@ -44,17 +35,8 @@ ingressController:
       cpu: 1000m
       memory: 512Mi
 
-waitContainer:
-  image:
-    registry: registry.cn-shenzhen.aliyuncs.com
-    repository: gravitation/os-shell
-    tag: 12-debian-12-r27
-
 etcd:
-  image:
-    registry: registry.cn-shenzhen.aliyuncs.com
-    repository: gravitation/etcd
-    tag: 3.5.15-debian-12-r4
+  enabled: true
   resources:
     limits:
       cpu: 500m
