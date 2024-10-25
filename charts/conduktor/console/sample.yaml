@@ -9,13 +9,6 @@ config:
     email: "mail@acitrus.cn"
     # password: ""
 
-  database:
-    host: "postgresql.default"
-    port: 5432
-    name: "conduktor"
-    password: "component"
-    username: "root"
-
   clusters:
     - id: 'kafka-default'
       name: 'kafka-default'
