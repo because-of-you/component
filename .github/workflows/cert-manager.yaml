@@ -44,6 +44,31 @@ jobs:
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
 
+      #      helm upgrade --install alidns-webhook alidns-webhook \
+      #      --repo https://wjiec.github.io/alidns-webhook \
+      #      --namespace cert-manager --create-namespace \
+      #      --set groupName=acme.acitrus.cn,certManager.serviceAccountName=cert-manager-controller --kubeconfig cloud-cluster.yaml
+
+      # https://github.com/marketplace/actions/helm-deploy
+      - name: 'alidns-webhook'
+        uses: vimeda/helm@v1.7.0
+        with:
+          release: 'alidns-webhook'
+          namespace: 'cert-manager'
+          # https://github.com/bitnami/charts/blob/main/bitnami/cert-manager/CHANGELOG.md
+          chart: 'https://wjiec.github.io/alidns-webhook'
+          #          repo: 'oci://registry-1.docker.io/casbin/'
+          #          repo-alias: casdoor
+          token: '${{ github.token }}'
+          chart-version: 1.0.1
+          values: |
+            groupName: "acme.acitrus.cn"
+            certManager:
+              serviceAccountName: "cert-manager-controller"
+
+        env:
+          KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
+
 #      - name: Generate kubeconfig
 #        run: |
 #          kubectl apply -k charts/casdoor/workloads
