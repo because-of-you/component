@@ -1,5 +1,5 @@
 # .github/workflows/deploy.yml
-name: Deploy
+name: casdoor-deploy
 on:
   push:
     tags:
@@ -13,8 +13,6 @@ jobs:
     runs-on: 'ubuntu-latest'
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: trunk
 
       # https://github.com/marketplace/actions/kubernetes-cli-kubectl
       - uses: tale/kubectl-action@v1
