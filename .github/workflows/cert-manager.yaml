@@ -69,6 +69,6 @@ jobs:
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
 
-#      - name: Generate kubeconfig
-#        run: |
-#          kubectl apply -k charts/casdoor/workloads
+      - name: Generate kubeconfig
+        run: |
+          kubectl apply -k charts/casdoor/workloads
