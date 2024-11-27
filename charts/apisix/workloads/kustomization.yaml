@@ -1,0 +1,3 @@
+resources:
+  - namespace/apisix.yaml
+  - configuration/apisixtls.yaml

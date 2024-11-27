@@ -1,5 +1,5 @@
 # .github/workflows/deploy.yml
-name: Deploy
+name: casdoor-deploy
 on:
   push:
     tags:

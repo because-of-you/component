@@ -1,5 +1,5 @@
 # .github/workflows/deploy.yml
-name: conduktor console deploy
+name: conduktor-console-deploy
 on:
   push:
     tags:
@@ -9,7 +9,7 @@ on:
 
 env:
   REGISTRY: registry.cn-shenzhen.aliyuncs.com
-  TAG: 1.27.1
+  TAG: 1.28.0
 
 jobs:
   deployment:
@@ -89,11 +89,18 @@ jobs:
           repo: "https://helm.conduktor.io"
           repo-alias: "conduktor"
           token: '${{ github.token }}'
+          chart-version: 1.13.0
           timeout: 30m0s
           values: |
             config:
               admin:
                 password: "${{ secrets.STRONG_PASSWORD }}"
+              database:
+                host: '${{ secrets.CASDOOR_DATABASE_HOST }}'
+                port: '${{ secrets.CASDOOR_DATABASE_PORT }}'
+                username: '${{ secrets.CASDOOR_DATABASE_USER }}'
+                password: '${{ secrets.CASDOOR_DATABASE_PASSWORD }}'
+                name: "conduktor"
             platform:
               extraEnvVars:
                 - name: CDK_SSO_OAUTH2_0_NAME

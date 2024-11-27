@@ -9,8 +9,8 @@ metadata:
   namespace: cert-manager
   name: alidns-secret
 stringData:
-  access-key-id: ""
-  access-key-secret: ""
+  access-key-id: "${ALIYUN_DNS_KEY}"
+  access-key-secret: "${ALIYUN_DNS_SECRET}"
 ---
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer

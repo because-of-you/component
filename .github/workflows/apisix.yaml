@@ -1,14 +1,11 @@
 # .github/workflows/deploy.yml
-name: conduktor-gateway-deploy
+name: apisix-deploy
 on:
   push:
     tags:
-      - conduktor-gateway-*.*.*
+      - apisix-*.*.*
     branches:
-      - conduktor-gateway-*.*.*
-
-env:
-  CHART_VERSION: 3.3.1
+      - apisix-*.*.*
 
 jobs:
   deployment:
@@ -16,23 +13,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+
       # https://github.com/marketplace/actions/kubernetes-cli-kubectl
       - uses: tale/kubectl-action@v1
         with:
           base64-kube-config: ${{ secrets.KUBECONFIG_BASED }}
 
       # https://github.com/marketplace/actions/helm-deploy
-      - name: 'gateway'
+      - name: 'apisix'
         uses: vimeda/helm@v1.7.0
         with:
-          release: 'gateway'
-          namespace: 'conduktor'
-          chart: 'conduktor/conduktor-gateway'
-          repo: "https://helm.conduktor.io"
-          repo-alias: "conduktor"
+          release: 'apisix'
+          namespace: 'gateway'
+          # https://github.com/bitnami/charts/tree/main/bitnami/apisix
+          chart: 'oci://registry-1.docker.io/bitnamicharts/apisix'
           token: '${{ github.token }}'
-          chart-version: ${{ env.CHART_VERSION }}
+          chart-version: 3.5.2
+          value-files: "charts/apisix/sample.yaml"
           timeout: 30m0s
-          value-files: "charts/conduktor/gateway/sample.yaml"
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
+
+      - name: Generate kubeconfig
+        run: |
+          kubectl apply -k charts/apisix/workloads
