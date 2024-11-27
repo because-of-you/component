@@ -13,8 +13,6 @@ jobs:
     runs-on: 'ubuntu-latest'
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: trunk
 
       # https://github.com/marketplace/actions/kubernetes-cli-kubectl
       - uses: tale/kubectl-action@v1
@@ -35,7 +33,7 @@ jobs:
           #          repo: 'oci://registry-1.docker.io/casbin/'
           #          repo-alias: casdoor
           token: '${{ github.token }}'
-          chart-version: v1.739.0
+          chart-version: v1.758.0
           values: |
             database:
               host: '${{ secrets.CASDOOR_DATABASE_HOST }}'
