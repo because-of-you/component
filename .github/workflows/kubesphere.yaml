@@ -1,0 +1,42 @@
+# .github/workflows/deploy.yml
+name: kubesphere-deploy
+on:
+  push:
+    tags:
+      - kubesphere-*.*.*
+    branches:
+      - kubesphere-*.*.*
+
+
+jobs:
+  deployment:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: actions/checkout@v4
+
+      # https://github.com/marketplace/actions/kubernetes-cli-kubectl
+      - uses: tale/kubectl-action@v1
+        with:
+          base64-kube-config: ${{ secrets.KUBECONFIG_BASED }}
+
+      # https://github.com/marketplace/actions/helm-deploy
+      - name: 'kubesphere'
+        uses: vimeda/helm@v1.7.0
+        with:
+          release: 'ks-core'
+          namespace: 'kubesphere-system'
+          chart: 'kubesphere/ks-core'
+          repo: "https://charts.kubesphere.io/main"
+          repo-alias: "kubesphere"
+          token: '${{ github.token }}'
+          chart-version: 1.1.3
+          timeout: 30m0s
+          values: |
+            console:
+              nodePort: null
+        env:
+          KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
+
+      - name: Generate kubeconfig
+        run: |
+          kubectl apply -k charts/kubesphere/workloads
