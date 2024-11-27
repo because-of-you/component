@@ -8,7 +8,7 @@ on:
       - conduktor-gateway-*.*.*
 
 env:
-  CHART_VERSION: 3.3.1
+  CHART_VERSION: 3.4.1
 
 jobs:
   deployment:
