@@ -9,7 +9,7 @@ on:
 
 env:
   REGISTRY: registry.cn-shenzhen.aliyuncs.com
-  TAG: 1.28.0
+  TAG: 1.29.0
 
 jobs:
   deployment:
@@ -89,7 +89,7 @@ jobs:
           repo: "https://helm.conduktor.io"
           repo-alias: "conduktor"
           token: '${{ github.token }}'
-          chart-version: 1.13.0
+          chart-version: 1.14.0
           timeout: 30m0s
           values: |
             config:
