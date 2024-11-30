@@ -42,6 +42,8 @@ dataPlane:
       memory: 1024Mi
 
 ingressController:
+  service:
+    type: LoadBalancer
   resources:
     requests:
       cpu: 10m
