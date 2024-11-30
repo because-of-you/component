@@ -28,7 +28,7 @@ jobs:
           # https://github.com/bitnami/charts/tree/main/bitnami/apisix
           chart: 'oci://registry-1.docker.io/bitnamicharts/apisix'
           token: '${{ github.token }}'
-          chart-version: 3.5.2
+          chart-version: 3.6.0
           value-files: "charts/apisix/sample.yaml"
           timeout: 30m0s
         env:
