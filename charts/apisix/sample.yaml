@@ -1,5 +1,5 @@
 dashboard:
-  enabled: false
+  enabled: true
 
 ingress-controller:
   enabled: true
@@ -20,6 +20,10 @@ resources:
 
 service:
   type: LoadBalancer
+  stream:
+    enabled: true
+    tcp:
+      - 9100
 
 apisix:
   ssl:
