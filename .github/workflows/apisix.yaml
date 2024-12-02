@@ -25,10 +25,12 @@ jobs:
         with:
           release: 'apisix'
           namespace: 'gateway'
-          # https://github.com/bitnami/charts/tree/main/bitnami/apisix
-          chart: 'oci://registry-1.docker.io/bitnamicharts/apisix'
+          # https://github.com/apache/apisix-helm-chart/blob/master/docs/en/latest/apisix.md
+          repo: https://charts.apiseven.com
+          repo-alias: "apisix"
+          chart: 'apisix/apisix'
           token: '${{ github.token }}'
-          chart-version: 3.5.2
+          chart-version: 2.10.0
           value-files: "charts/apisix/sample.yaml"
           timeout: 30m0s
         env:
