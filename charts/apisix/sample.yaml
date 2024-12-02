@@ -1,5 +1,5 @@
 dashboard:
-  enabled: false
+  enabled: true
 
 ingress-controller:
   enabled: true
