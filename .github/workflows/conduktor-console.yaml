@@ -9,7 +9,7 @@ on:
 
 env:
   REGISTRY: registry.cn-shenzhen.aliyuncs.com
-  TAG: 1.29.0
+  TAG: 1.29.1
 
 jobs:
   deployment:
