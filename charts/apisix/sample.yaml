@@ -22,9 +22,9 @@ service:
   type: LoadBalancer
   stream:
     enabled: true
-#    tcp:
-#      - addr: 443
-#        tls: true
+    tcp:
+      - addr: 8888
+        tls: true
 
 apisix:
   ssl:
