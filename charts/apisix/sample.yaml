@@ -1,48 +1,31 @@
 dashboard:
-  enabled: false
-
-controlPlane:
-  resources:
-    requests:
-      cpu: 10m
-      ephemeral-storage: 50Mi
-      memory: 256Mi
-    limits:
-      cpu: 1000m
-      ephemeral-storage: 2Gi
-      memory: 1024Mi
-
-dataPlane:
-  containerPorts:
-    http: 80
-    https: 443
-  resources:
-    requests:
-      cpu: 10m
-      ephemeral-storage: 50Mi
-      memory: 100Mi
-    limits:
-      cpu: 1000m
-      ephemeral-storage: 2Gi
-      memory: 1024Mi
-
-ingressController:
-  resources:
-    requests:
-      cpu: 10m
-      memory: 100Mi
-    limits:
-      cpu: 1000m
-      memory: 512Mi
-
-etcd:
   enabled: true
-  resources:
-    limits:
-      cpu: 500m
-      ephemeral-storage: 2Gi
-      memory: 500Mi
-    requests:
-      cpu: 10m
-      ephemeral-storage: 50Mi
-      memory: 256Mi
+
+ingress-controller:
+  enabled: true
+  config:
+    apisix:
+      serviceNamespace: gateway
+
+resources:
+  requests:
+    cpu: 10m
+    ephemeral-storage: 50Mi
+    memory: 100Mi
+  limits:
+    cpu: 1000m
+    ephemeral-storage: 2Gi
+    memory: 1024Mi
+
+
+service:
+  type: LoadBalancer
+  stream:
+    enabled: true
+    tcp:
+      - 9100
+
+apisix:
+  ssl:
+    enabled: true
+    containerPort: 443
