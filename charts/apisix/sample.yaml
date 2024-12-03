@@ -23,7 +23,7 @@ service:
   stream:
     enabled: true
     tcp:
-      - addr: 9100
+      - addr: 443
         tls: true
 
 apisix:
