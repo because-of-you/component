@@ -14,6 +14,16 @@ gateway:
       value: host
     - name: GATEWAY_ADVERTISED_HOST_PREFIX
       value: broker-
+    - name: GATEWAY_ADVERTISED_SNI_PORT
+      value: "9092"
+    - name: LOG4J2_IO_CONDUKTOR_PROXY_NETWORK_LEVEL
+      value: "debug"
+    - name: LOG4J2_IO_CONDUKTOR_PROXY_SERVICE_LEVEL
+      value: debug
+    - name: LOG4J2_IO_CONDUKTOR_UPSTREAM_THREAD_LEVEL
+      value: debug
+    - name: LOG4J2_IO_CONDUKTOR_PROXY_AUTHORIZATION_LEVEL
+      value: debug
 #    - name: KAFKA_SASL_MECHANISM
 #      value: PLAIN
 #    - name: KAFKA_SECURITY_PROTOCOL
