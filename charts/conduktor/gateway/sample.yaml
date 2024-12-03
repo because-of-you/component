@@ -7,23 +7,23 @@ gateway:
     GATEWAY_ADVERTISED_HOST: kafka.acitrus.cn
   extraSecretEnvVars:
     - name: GATEWAY_ADVERTISED_HOST
-      value: kafka-gageway.acitrus.cn
+      value: kafka.acitrus.cn
     - name: KAFKA_BOOTSTRAP_SERVERS
       value: kafka.default:9092
-    - name: GATEWAY_ROUTING_MECHANISM
-      value: host
-    - name: GATEWAY_ADVERTISED_HOST_PREFIX
-      value: broker-
-    - name: GATEWAY_ADVERTISED_SNI_PORT
-      value: "9092"
-    - name: LOG4J2_IO_CONDUKTOR_PROXY_NETWORK_LEVEL
-      value: "debug"
-    - name: LOG4J2_IO_CONDUKTOR_PROXY_SERVICE_LEVEL
-      value: debug
-    - name: LOG4J2_IO_CONDUKTOR_UPSTREAM_THREAD_LEVEL
-      value: debug
-    - name: LOG4J2_IO_CONDUKTOR_PROXY_AUTHORIZATION_LEVEL
-      value: debug
+#    - name: GATEWAY_ROUTING_MECHANISM
+#      value: host
+#    - name: GATEWAY_ADVERTISED_HOST_PREFIX
+#      value: broker-
+#    - name: GATEWAY_ADVERTISED_SNI_PORT
+#      value: "9092"
+#    - name: LOG4J2_IO_CONDUKTOR_PROXY_NETWORK_LEVEL
+#      value: "debug"
+#    - name: LOG4J2_IO_CONDUKTOR_PROXY_SERVICE_LEVEL
+#      value: debug
+#    - name: LOG4J2_IO_CONDUKTOR_UPSTREAM_THREAD_LEVEL
+#      value: debug
+#    - name: LOG4J2_IO_CONDUKTOR_PROXY_AUTHORIZATION_LEVEL
+#      value: debug
 #    - name: KAFKA_SASL_MECHANISM
 #      value: PLAIN
 #    - name: KAFKA_SECURITY_PROTOCOL
