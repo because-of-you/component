@@ -24,8 +24,9 @@ service:
     enabled: true
     tcp:
       - 9100
+      - 443
 
 apisix:
   ssl:
     enabled: true
-    containerPort: 443
+#    containerPort: 443
