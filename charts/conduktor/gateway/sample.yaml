@@ -7,9 +7,13 @@ gateway:
     GATEWAY_ADVERTISED_HOST: kafka.acitrus.cn
   extraSecretEnvVars:
     - name: GATEWAY_ADVERTISED_HOST
-      value: kafka.acitrus.cn
+      value: kafka-gageway.acitrus.cn
     - name: KAFKA_BOOTSTRAP_SERVERS
       value: kafka.default:9092
+    - name: GATEWAY_ROUTING_MECHANISM
+      value: host
+    - name: GATEWAY_ADVERTISED_HOST_PREFIX
+      value: broker-
 #    - name: KAFKA_SASL_MECHANISM
 #      value: PLAIN
 #    - name: KAFKA_SECURITY_PROTOCOL
