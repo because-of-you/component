@@ -1,0 +1,76 @@
+apiVersion: apisix.apache.org/v2
+kind: ApisixRoute
+metadata:
+  name: redis-route
+  namespace: default
+spec:
+  http:
+  #    - name: kubesphere-route-ui
+  #      match:
+  #        hosts:
+  #          - redis.acitrus.cn
+  #        paths:
+  #          - /*
+  #      backends:
+  #        - serviceName: 10.11.0.157
+  #          servicePort: 6443
+  #      websocket: true
+  stream:
+    - name: redis-master
+      protocol: TCP
+      match:
+        host: redis.acitrus.cn
+        ingressPort: 8888
+      backend:
+        serviceName: redis-master
+        servicePort: 6379
+#      plugins:
+#        - name: redirect
+#          enable: true
+#          config:
+#            http_to_https: true
+#        - name: kafka-logger
+#          enable: true
+#          config:
+#            kafka_topic: apisix_conduktor_log
+#            batch_max_size: 1
+#            name: "kafka logger"
+#            brokers:
+#              - host: "kafka.default"
+#                port: 9092
+#
+#        - name: real-ip
+#          enable: true
+#          config:
+#            source: "http_x_forwarded_for"
+
+#        - name: request-id
+#          enable: true
+
+#    - name: redis-master
+#      protocol: TCP
+#      match:
+#        host: k8s.acitrus.cn
+#        ingressPort: 8888
+#      backend:
+#        serviceName: redis-master
+#        servicePort: 6443
+
+#    - name: kafka-conduktor
+#      protocol: TCP
+#      match:
+#        host: kafka.acitrus.cn
+#        ingressPort: 443
+#      backend:
+#        serviceName: console
+#        servicePort: 80
+
+#  http:
+#    - backends:
+#        - serviceName: mysql
+#          servicePort: 3306
+
+##        host: redis.acitrus.cn
+#      backend:
+#        serviceName: redis-master
+#        servicePort: 6379
