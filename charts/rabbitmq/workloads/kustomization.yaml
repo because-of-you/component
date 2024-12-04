@@ -1,0 +1,2 @@
+resources:
+  - network/routes/rabbitmq.yaml
