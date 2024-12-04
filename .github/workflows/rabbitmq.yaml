@@ -27,7 +27,7 @@ jobs:
           token: '${{ github.token }}'
           chart-version: ${{ env.CHART_VERSION}}
           timeout: 30m0s
-#          value-files: "charts/rabbitmq/sample.yaml"
+          value-files: "charts/rabbitmq/sample.yaml"
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
 
