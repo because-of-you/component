@@ -9,7 +9,7 @@ spec:
       match:
         hosts:
           - kafka.acitrus.cn
-#          - kafka3.acitrus.cn
+        #          - kafka3.acitrus.cn
         paths:
           - /*
       backends:
@@ -21,3 +21,20 @@ spec:
           enable: true
           config:
             http_to_https: true
+        - name: kafka-logger
+          enable: true
+          config:
+            kafka_topic: apisix_conduktor_log
+            batch_max_size: 1
+            name: "kafka logger"
+            brokers:
+              - host: "kafka.default"
+                port: 9092
+
+        - name: real-ip
+          enable: true
+          config:
+            source: "http_x_forwarded_for"
+
+        - name: request-id
+          enable: true
