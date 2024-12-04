@@ -1,0 +1,41 @@
+# .github/workflows/deploy.yml
+name: redis-deploy
+on:
+  push:
+    tags:
+      - redis-*.*.*
+    branches:
+      - redis-*.*.*
+
+env:
+  CHART_VERSION: 20.4.0
+
+jobs:
+  deployment:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: actions/checkout@v4
+      # https://github.com/marketplace/actions/helm-deploy
+      - name: 'redis'
+        uses: vimeda/helm@v1.7.0
+        with:
+          release: 'redis'
+          namespace: 'default'
+          chart: 'bitnami/redis'
+          repo: "https://charts.bitnami.com/bitnami"
+          repo-alias: "bitnami"
+          token: '${{ github.token }}'
+          chart-version: ${{ env.CHART_VERSION}}
+          timeout: 30m0s
+          value-files: "charts/redis/sample.yaml"
+        env:
+          KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
+
+      # https://github.com/marketplace/actions/kubernetes-cli-kubectl
+      - uses: tale/kubectl-action@v1
+        with:
+          base64-kube-config: ${{ secrets.KUBECONFIG_BASED }}
+
+      - name: Generate kubeconfig
+        run: |
+          kubectl apply -k charts/redis/workloads/
