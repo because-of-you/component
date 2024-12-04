@@ -1,0 +1,26 @@
+apiVersion: apisix.apache.org/v2
+kind: ApisixRoute
+metadata:
+  name: rabbitmq-route
+  namespace: default
+spec:
+  http:
+    - name: rabbitmq-route-ui
+      match:
+        hosts:
+          - rabbitmq.acitrus.cn
+        paths:
+          - /*
+      backends:
+        - serviceName: rabbitmq
+          servicePort: 15672
+      websocket: true
+  stream:
+    - name: rabbitmq-stream
+      protocol: TCP
+      match:
+        host: rabbitmq.acitrus.cn
+        ingressPort: 8888
+      backend:
+        serviceName: rabbitmq
+        servicePort: 5672
