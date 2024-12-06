@@ -24,18 +24,18 @@ gateway:
 #      value: debug
 #    - name: LOG4J2_IO_CONDUKTOR_PROXY_AUTHORIZATION_LEVEL
 #      value: debug
-#    - name: KAFKA_SASL_MECHANISM
-#      value: PLAIN
-#    - name: KAFKA_SECURITY_PROTOCOL
-#      value: SASL_PLAINTEXT
-#    - name: KAFKA_SASL_JAAS_CONFIG
-#      value: "org.apache.kafka.common.security.plain.PlainLoginModule required username='kafka' password='QHZTQCVTN3A2JXlXaCEmaU1AYjBTZyRuSEImMmU3UE0=';"
-#    - name: KAFKA_SASL_MECHANISM
-#      value: PLAIN
-#    - name: KAFKA_SECURITY_PROTOCOL
-#      value: SASL_PLAINTEXT
-#    - name: KAFKA_SASL_JAAS_CONFIG
-#      value: "org.apache.kafka.common.security.plain.PlainLoginModule required username='kafka' password='QHZTQCVTN3A2JXlXaCEmaU1AYjBTZyRuSEImMmU3UE0=';"
+    - name: KAFKA_SASL_MECHANISM
+      value: PLAIN
+    - name: KAFKA_SECURITY_PROTOCOL
+      value: SASL_PLAINTEXT
+    - name: KAFKA_SASL_JAAS_CONFIG
+      value: "org.apache.kafka.common.security.plain.PlainLoginModule required username='kafka' password='QHZTQCVTN3A2JXlXaCEmaU1AYjBTZyRuSEImMmU3UE0=';"
+    - name: KAFKA_SASL_MECHANISM
+      value: PLAIN
+    - name: KAFKA_SECURITY_PROTOCOL
+      value: SASL_PLAINTEXT
+    - name: KAFKA_SASL_JAAS_CONFIG
+      value: "org.apache.kafka.common.security.plain.PlainLoginModule required username='kafka' password='QHZTQCVTN3A2JXlXaCEmaU1AYjBTZyRuSEImMmU3UE0=';"
 
 service:
   external:
