@@ -9,15 +9,15 @@ config:
     email: "mail@acitrus.cn"
     # password: ""
 
-#  clusters:
-#    - id: 'kafka-default'
-#      name: 'kafka-default'
-#      bootstrapServers: 'kafka.default:9092'
-#      icon: kafka
-#      properties: |
-#        security.protocol=SASL_PLAINTEXT
-#        sasl.mechanism=PLAIN
-#        sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='kafka' password='QHZTQCVTN3A2JXlXaCEmaU1AYjBTZyRuSEImMmU3UE0=';
+  clusters:
+    - id: 'kafka-default'
+      name: 'kafka-default'
+      bootstrapServers: 'kafka.default:9092'
+      icon: kafka
+      properties: |
+        security.protocol=SASL_PLAINTEXT
+        sasl.mechanism=PLAIN
+        sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='kafka' password='QHZTQCVTN3A2JXlXaCEmaU1AYjBTZyRuSEImMmU3UE0=';
 
 platform:
   image:
