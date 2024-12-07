@@ -33,6 +33,21 @@ jobs:
           token: '${{ github.token }}'
           chart-version: ${{ env.CHART_VERSION }}
           timeout: 30m0s
+
+          values: |
+            gateway:
+              extraSecretEnvVars:
+                - name: GATEWAY_ADVERTISED_HOST
+                  value: kafka.acitrus.cn
+                - name: KAFKA_BOOTSTRAP_SERVERS
+                  value: kafka.default:9092
+                - name: KAFKA_SASL_MECHANISM
+                  value: PLAIN
+                - name: KAFKA_SECURITY_PROTOCOL
+                  value: SASL_PLAINTEXT
+                - name: KAFKA_SASL_JAAS_CONFIG
+                  value: "org.apache.kafka.common.security.plain.PlainLoginModule required username='${{ secrets.KAFKA_SASL_EXTRA_USERNAME }}' password='${{ secrets.KAFKA_SASL_EXTRA_PASSWORD }}';"
+
           value-files: "charts/conduktor/gateway/sample.yaml"
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
