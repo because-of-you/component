@@ -12,9 +12,6 @@ platform:
     requests:
       cpu: 10m
       memory: 1Gi
-  extraEnvVars:
-    - name: TZ
-      value: "Asia/Shanghai"
 
 platformCortex:
   image:

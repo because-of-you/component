@@ -128,6 +128,8 @@ jobs:
             
             platform:
               extraEnvVars:
+                - name: TZ
+                  value: "Asia/Shanghai"
                 - name: CDK_SSO_OAUTH2_0_NAME
                   value: "${{ secrets.DEFAULT_AUTH_HOST }}"
                 - name: CDK_SSO_OAUTH2_0_DEFAULT
