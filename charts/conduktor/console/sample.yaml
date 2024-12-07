@@ -12,6 +12,10 @@ platform:
     requests:
       cpu: 10m
       memory: 1Gi
+  extraEnvVars:
+    - name: TZ
+      value: "Asia/Shanghai"
+
 platformCortex:
   image:
     registry: registry.cn-shenzhen.aliyuncs.com
@@ -23,3 +27,6 @@ platformCortex:
     requests:
       cpu: 10m
       memory: 100Mi
+  extraEnvVars:
+    - name: TZ
+      value: "Asia/Shanghai"
