@@ -34,3 +34,6 @@ apisix:
 etcd:
   persistence:
     size: 1Gi
+
+
+timezone: "Asia/Shanghai"
