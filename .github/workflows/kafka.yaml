@@ -74,6 +74,19 @@ jobs:
               registry: registry.cn-shenzhen.aliyuncs.com
               repository: gravitation/kafka
               tag: ${{ env.TAG }}
+            
+            # KAFKA_SASL_DEFAULT_USERNAME
+            # KAFKA_SASL_DEFAULT_PASSWORD
+            # KAFKA_SASL_EXTRA_USERNAME
+            # KAFKA_SASL_EXTRA_PASSWORD
+            sasl:
+              client:
+                users:
+                  - ${{ secrets.KAFKA_SASL_DEFAULT_USERNAME }}
+                  - ${{ secrets.KAFKA_SASL_EXTRA_USERNAME }}
+                passwords:
+                  - ${{ secrets.KAFKA_SASL_DEFAULT_PASSWORD }}
+                  - ${{ secrets.KAFKA_SASL_EXTRA_PASSWORD }}
 
           value-files: "charts/kafka/sample.yaml"
         env:
