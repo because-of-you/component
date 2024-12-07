@@ -30,3 +30,7 @@ apisix:
   ssl:
     enabled: true
     containerPort: 443
+
+etcd:
+  persistence:
+    size: 1Gi
