@@ -41,6 +41,7 @@ jobs:
                   value: kafka.acitrus.cn
                 - name: KAFKA_BOOTSTRAP_SERVERS
                   value: kafka.default:9092
+            
                 - name: KAFKA_SASL_MECHANISM
                   value: PLAIN
                 - name: KAFKA_SECURITY_PROTOCOL
