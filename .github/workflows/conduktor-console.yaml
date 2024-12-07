@@ -10,6 +10,7 @@ on:
 env:
   REGISTRY: registry.cn-shenzhen.aliyuncs.com
   TAG: 1.29.1
+  CHART_VERSION: 1.14.1
 
 jobs:
   deployment:
@@ -20,6 +21,8 @@ jobs:
       - name: modify files
         run: |
           # export TAG=${{ env.TAG }}
+          export KAFKA_SASL_DEFAULT_USERNAME='${{ secrets.KAFKA_SASL_DEFAULT_USERNAME }}'
+          export KAFKA_SASL_DEFAULT_PASSWORD='${{ secrets.KAFKA_SASL_DEFAULT_PASSWORD }}'
           
           cat images/conduktor/console/Dockerfile
           envsubst < images/conduktor/console/Dockerfile > images/conduktor/console/Dockerfile_replaced
@@ -28,6 +31,9 @@ jobs:
           cat images/conduktor/console-cortex/Dockerfile
           envsubst < images/conduktor/console-cortex/Dockerfile > images/conduktor/console-cortex/Dockerfile_replaced
           cat images/conduktor/console-cortex/Dockerfile_replaced
+          
+          envsubst < charts/conduktor/workloads/network/routes/conduktor.yaml > charts/conduktor/workloads/network/routes/conduktor.yaml_replaced
+          mv charts/conduktor/workloads/network/routes/conduktor.yaml_replaced charts/conduktor/workloads/network/routes/conduktor.yaml
 
       # docker 镜像管理模块 ------> 加载docker镜像元数据管理服务
       - name: image-meta-load
@@ -89,32 +95,52 @@ jobs:
           repo: "https://helm.conduktor.io"
           repo-alias: "conduktor"
           token: '${{ github.token }}'
-          chart-version: 1.14.0
+          chart-version: ${{ env.CHART_VERSION }}
           timeout: 30m0s
+
           values: |
             config:
+              organization:
+                name: ${{ secrets.DEFAULT_EMAIL }}
+            
               admin:
-                password: "${{ secrets.STRONG_PASSWORD }}"
+                password: "${{ secrets.DEFAULT_PASSWORD }}"
+                email: ${{ secrets.DEFAULT_EMAIL }}
+            
               database:
-                host: '${{ secrets.CASDOOR_DATABASE_HOST }}'
-                port: '${{ secrets.CASDOOR_DATABASE_PORT }}'
-                username: '${{ secrets.CASDOOR_DATABASE_USER }}'
-                password: '${{ secrets.CASDOOR_DATABASE_PASSWORD }}'
+                host: '${{ secrets.DEFAULT_DATABASE_HOST }}'
+                port: '${{ secrets.DEFAULT_DATABASE_PORT }}'
+                username: '${{ secrets.DEFAULT_DATABASE_USERNAME }}'
+                password: '${{ secrets.DEFAULT_DATABASE_PASSWORD }}'
                 name: "conduktor"
+            
+              clusters:
+                - id: 'kafka-default'
+                  name: 'kafka-default'
+                  bootstrapServers: 'kafka.default:9092'
+                  icon: kafka
+                  properties: |
+                    security.protocol=SASL_PLAINTEXT
+                    sasl.mechanism=PLAIN
+                    sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='${{ secrets.KAFKA_SASL_DEFAULT_USERNAME }}' password='${{ secrets.KAFKA_SASL_DEFAULT_PASSWORD }}';
+                
+                
+            
             platform:
               extraEnvVars:
                 - name: CDK_SSO_OAUTH2_0_NAME
-                  value: "auth.acitrus.cn"
+                  value: "${{ secrets.DEFAULT_AUTH_HOST }}"
                 - name: CDK_SSO_OAUTH2_0_DEFAULT
                   value: "true"
                 - name: CDK_SSO_OAUTH2_0_CLIENT-ID
                   value: "${{ secrets.CONDUKTOR_OAUTH2_ID }}"
                 - name: CDK_SSO_OAUTH2LOGOUT
-                  value: "false"
+                  value: "true"
                 - name: CDK_SSO_OAUTH2_0_CLIENT-SECRET
                   value: "${{ secrets.CONDUKTOR_OAUTH2_SECRET }}"
                 - name: CDK_SSO_OAUTH2_0_OPENID_ISSUER
-                  value: "https://auth.acitrus.cn"
+                  value: "https://${{ secrets.DEFAULT_AUTH_HOST }}"
+            
                 - name: RUN_MODE
                   value: "custom"
                 - name: CONSOLE_MEMORY_OPTS
@@ -123,8 +149,10 @@ jobs:
                   value: "-XX:+UseContainerSupport -Xmx512m -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
                 - name: AUTHENTICATOR_MEMORY_OPTS
                   value: "-XX:+UseContainerSupport -Xmx128m -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
+            
               image:
                 tag: ${{ env.TAG }}
+            
             platformCortex:
               image:
                 tag: ${{ env.TAG }}

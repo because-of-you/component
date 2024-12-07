@@ -9,27 +9,32 @@ spec:
       match:
         hosts:
           - kafka.acitrus.cn
-        #          - kafka3.acitrus.cn
         paths:
           - /*
       backends:
         - serviceName: console
           servicePort: 80
       websocket: true
+
       plugins:
         - name: redirect
           enable: true
           config:
             http_to_https: true
+
         - name: kafka-logger
           enable: true
+          # https://apisix.apache.org/zh/docs/apisix/plugins/kafka-logger/#%E5%B1%9E%E6%80%A7
           config:
-            kafka_topic: apisix_conduktor_log
+            kafka_topic: apisix_conduktor_route_log
             batch_max_size: 1
             name: "kafka logger"
             brokers:
               - host: "kafka.default"
                 port: 9092
+                sasl_config:
+                  user: "${KAFKA_SASL_DEFAULT_USERNAME}"
+                  password: "${KAFKA_SASL_DEFAULT_PASSWORD}"
 
         - name: real-ip
           enable: true
