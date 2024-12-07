@@ -1,6 +1,9 @@
 gateway:
   env:
     GATEWAY_ADVERTISED_HOST: kafka.acitrus.cn
+  extraSecretEnvVars:
+    - name: TZ
+      value: "Asia/Shanghai"
 #  extraSecretEnvVars:
 #    - name: GATEWAY_ADVERTISED_HOST
 #      value: kafka.acitrus.cn
