@@ -33,8 +33,8 @@ spec:
               - host: "kafka.default"
                 port: 9092
                 sasl_config:
-                  user: ${KAFKA_SASL_DEFAULT_USERNAME}
-                  password: ${KAFKA_SASL_DEFAULT_PASSWORD}
+                  user: "${KAFKA_SASL_DEFAULT_USERNAME}"
+                  password: "${KAFKA_SASL_DEFAULT_PASSWORD}"
 
         - name: real-ip
           enable: true
