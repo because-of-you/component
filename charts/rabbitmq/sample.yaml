@@ -22,5 +22,5 @@ extraConfiguration: |
   management.oauth_scopes = openid profile rabbitmq.tag:administrator
   management.oauth_provider_url = https://auth.acitrus.cn
 
-  auth_oauth2.resource_server_id = rabbitmq
-  auth_oauth2.issuer = https://auth.acitrus.cn
+#  auth_oauth2.resource_server_id = rabbitmq
+#  auth_oauth2.issuer = https://auth.acitrus.cn
