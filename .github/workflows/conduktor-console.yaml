@@ -124,6 +124,15 @@ jobs:
                     sasl.mechanism=PLAIN
                     sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='${{ secrets.KAFKA_SASL_DEFAULT_USERNAME }}' password='${{ secrets.KAFKA_SASL_DEFAULT_PASSWORD }}';
                 
+                - id: 'gateway-default'
+                  name: 'gateway-default'
+                  bootstrapServers: 'gateway-conduktor-internal.conduktor:9092'
+                  icon: kafka
+                  properties: |
+                    security.protocol=SASL_PLAINTEXT
+                    sasl.mechanism=PLAIN
+                    sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='${{ secrets.KAFKA_SASL_EXTRA_USERNAME }}' password='${{ secrets.KAFKA_SASL_EXTRA_PASSWORD }}';
+                
                 
             
             platform:
