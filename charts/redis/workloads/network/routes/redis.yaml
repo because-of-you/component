@@ -20,7 +20,7 @@ spec:
       protocol: TCP
       match:
         host: redis.acitrus.cn
-        ingressPort: 8888
+        ingressPort: 1024
       backend:
         serviceName: redis-master
         servicePort: 6379
