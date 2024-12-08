@@ -10,4 +10,12 @@ extraEnvVars:
   - name: TZ
     value: "Asia/Shanghai"
 
-plugins: "rabbitmq_management rabbitmq_peer_discovery_k8s rabbitmq_auth_backend_oauth2"
+# rabbitmq_auth_backend_oauth2
+extraPlugins: ""
+
+extraConfiguration: |
+  management.oauth_enabled = true
+  management.oauth_client_id = ef10af80f0eb791e762e
+  management.oauth_client_secret = 00dc74f0fa372e4ca229f335c8adf8e2481139a2
+  management.oauth_provider_url = https://auth.acitrus.cn
+  management.oauth_disable_basic_auth = true
