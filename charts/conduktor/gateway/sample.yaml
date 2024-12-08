@@ -1,3 +1,4 @@
+nameOverride: conduktor
 gateway:
   env:
     GATEWAY_ADVERTISED_HOST: kafka.acitrus.cn
