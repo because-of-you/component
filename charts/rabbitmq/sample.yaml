@@ -19,7 +19,7 @@ extraConfiguration: |
   management.oauth_enabled = true
   management.oauth_client_id = ef10af80f0eb791e762e
   management.oauth_client_secret = 00dc74f0fa372e4ca229f335c8adf8e2481139a2
-  management.oauth_scopes = openid profile rabbitmq.tag:administrator
+#  management.oauth_scopes = openid profile rabbitmq.tag:administrator
   management.oauth_provider_url = https://auth.acitrus.cn
 
 #  auth_oauth2.resource_server_id = rabbitmq
