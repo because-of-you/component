@@ -1,1 +1,5 @@
 architecture: standalone
+master:
+  extraEnvVars:
+    - name: TZ
+      value: "Asia/Shanghai"
