@@ -132,7 +132,12 @@ jobs:
                     security.protocol=SASL_PLAINTEXT
                     sasl.mechanism=PLAIN
                     sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='${{ secrets.KAFKA_SASL_EXTRA_USERNAME }}' password='${{ secrets.KAFKA_SASL_EXTRA_PASSWORD }}';
-                
+                  kafkaFlavor:
+                    type: "Gateway"
+                    url: "http://gateway-conduktor-internal.conduktor:8888" 
+                    user: "${{ secrets.KAFKA_SASL_EXTRA_USERNAME }}" 
+                    password: "${{ secrets.KAFKA_SASL_EXTRA_PASSWORD }}" 
+                    virtualCluster: "passthrough" 
                 
             
             platform:
