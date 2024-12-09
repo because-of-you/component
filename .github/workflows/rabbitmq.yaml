@@ -52,8 +52,8 @@ jobs:
               auth_oauth2.https.hostname_verification = wildcard
               # auth_oauth2.jwks_url = https://${{ secrets.DEFAULT_AUTH_HOST }}/.well-known/jwks
             
+              auth_oauth2.preferred_username_claims.1 = name
               # auth_oauth2.preferred_username_claims.1 = email
-              # auth_oauth2.preferred_username_claims.2 = name
             
               ssl_options.verify = verify_none
 
