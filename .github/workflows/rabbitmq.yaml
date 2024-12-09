@@ -35,7 +35,8 @@ jobs:
             extraConfiguration: |
               log.default.level = debug
             
-              auth_backends.1 = rabbit_auth_backend_oauth2
+              auth_backends.1.authn = rabbit_auth_backend_oauth2
+              auth_backends.1.authz = internal
               auth_backends.2 = internal
             
               management.oauth_disable_basic_auth = false
@@ -52,6 +53,7 @@ jobs:
               auth_oauth2.resource_server_id = 5cda14604f7aa8b2da88
               auth_oauth2.issuer = https://${{ secrets.DEFAULT_AUTH_HOST }}
               # auth_oauth2.jwks_url = https://${{ secrets.DEFAULT_AUTH_HOST }}/.well-known/jwks
+              auth_oauth2.https.hostname_verification = wildcard
 
 
 #              auth_oauth2.https.hostname_verification = wildcard
