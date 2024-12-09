@@ -9,3 +9,10 @@ resources:
 extraEnvVars:
   - name: TZ
     value: "Asia/Shanghai"
+
+# rabbitmq_auth_backend_oauth2
+extraPlugins: "rabbitmq_auth_backend_oauth2"
+
+
+#  参考文档https://rabbitmq.cn/docs/troubleshooting-oauth2
+#  https://www.rabbitmq.com/docs/oauth2#configure-issuer

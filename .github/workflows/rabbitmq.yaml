@@ -15,6 +15,15 @@ jobs:
     runs-on: 'ubuntu-latest'
     steps:
       - uses: actions/checkout@v4
+
+      - name: modify files
+        run: |
+          export KAFKA_SASL_DEFAULT_USERNAME='${{ secrets.KAFKA_SASL_DEFAULT_USERNAME }}'
+          export KAFKA_SASL_DEFAULT_PASSWORD='${{ secrets.KAFKA_SASL_DEFAULT_PASSWORD }}'
+
+          envsubst < charts/rabbitmq/workloads/network/routes/rabbitmq.yaml > charts/rabbitmq/workloads/network/routes/rabbitmq.yaml_replaced
+          mv charts/rabbitmq/workloads/network/routes/rabbitmq.yaml_replaced charts/rabbitmq/workloads/network/routes/rabbitmq.yaml
+
       # https://github.com/marketplace/actions/helm-deploy
       - name: 'rabbitmq'
         uses: vimeda/helm@v1.7.0
@@ -28,6 +37,45 @@ jobs:
           chart-version: ${{ env.CHART_VERSION}}
           timeout: 30m0s
           value-files: "charts/rabbitmq/sample.yaml"
+          values: |
+            auth:
+              username: admin
+            
+            extraConfiguration: |
+              log.default.level = info
+            
+              auth_backends.1 = internal
+              auth_backends.2.authn = rabbit_auth_backend_oauth2
+              auth_backends.2.authz = internal
+            
+              management.oauth_disable_basic_auth = false
+              management.oauth_enabled = true
+              #management.oauth_scopes = openid profile rabbitmq.*
+            
+              # management.oauth_client_id = ${{ secrets.DEFAULT_OAUTH2_ID }}
+              management.oauth_client_id = ${{ secrets.RABBITMQ_OAUTH2_ID }}
+              management.oauth_provider_url = https://${{ secrets.DEFAULT_AUTH_HOST }}
+              # management.oauth_scopes = .*
+            
+              # https://rabbitmq.cn/docs/oauth2
+              # https://www.rabbitmq.com/docs/oauth2#variables-configurable
+              # https://www.rabbitmq.com/docs/oauth2-examples
+              # https://www.rabbitmq.com/docs/access-control
+            
+              # auth_oauth2.resource_server_id = ${{ secrets.DEFAULT_OAUTH2_ID }}
+              auth_oauth2.resource_server_id = ${{ secrets.RABBITMQ_OAUTH2_ID }}
+              auth_oauth2.issuer = https://${{ secrets.DEFAULT_AUTH_HOST }}
+              # auth_oauth2.jwks_url = https://${{ secrets.DEFAULT_AUTH_HOST }}/.well-known/jwks
+              auth_oauth2.https.verify = verify_none
+              auth_oauth2.preferred_username_claims.1 = name
+
+#              auth_oauth2.https.hostname_verification = wildcard
+#              ssl_options.verify = verify_none
+#              ssl_options.fail_if_no_peer_cert = false
+#              auth_oauth2.https.hostname_verification = wildcard
+#        auth_oauth2.preferred_username_claims.1 = name
+        # auth_oauth2.preferred_username_claims.1 = email
+
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
 
