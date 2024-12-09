@@ -49,12 +49,11 @@ jobs:
             
               auth_oauth2.resource_server_id = ${{ secrets.DEFAULT_OAUTH2_ID }}
               auth_oauth2.issuer = https://${{ secrets.DEFAULT_AUTH_HOST }}
-              # auth_oauth2.jwks_url = https://${{ secrets.DEFAULT_AUTH_HOST }}/.well-known/jwks
+              auth_oauth2.jwks_url = https://${{ secrets.DEFAULT_AUTH_HOST }}/.well-known/jwks
               auth_oauth2.https.hostname_verification = wildcard
               auth_oauth2.preferred_username_claims.1 = name
               # auth_oauth2.preferred_username_claims.1 = email
               auth_oauth2.verify_aud = false
-              management.oauth_initiated_logon_type = idp_initiated
 
 #              auth_oauth2.https.hostname_verification = wildcard
 #              ssl_options.verify = verify_none
