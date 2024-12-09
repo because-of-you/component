@@ -15,6 +15,15 @@ jobs:
     runs-on: 'ubuntu-latest'
     steps:
       - uses: actions/checkout@v4
+
+      - name: modify files
+        run: |
+          export KAFKA_SASL_DEFAULT_USERNAME='${{ secrets.KAFKA_SASL_DEFAULT_USERNAME }}'
+          export KAFKA_SASL_DEFAULT_PASSWORD='${{ secrets.KAFKA_SASL_DEFAULT_PASSWORD }}'
+
+          envsubst < charts/rabbitmq/workloads/network/routes/rabbitmq.yaml > charts/rabbitmq/workloads/network/routes/rabbitmq.yaml_replaced
+          mv charts/rabbitmq/workloads/network/routes/rabbitmq.yaml_replaced charts/rabbitmq/workloads/network/routes/rabbitmq.yaml
+
       # https://github.com/marketplace/actions/helm-deploy
       - name: 'rabbitmq'
         uses: vimeda/helm@v1.7.0
@@ -48,6 +57,10 @@ jobs:
               management.oauth_provider_url = https://${{ secrets.DEFAULT_AUTH_HOST }}
               # management.oauth_scopes = .*
             
+              # https://rabbitmq.cn/docs/oauth2
+              # https://www.rabbitmq.com/docs/oauth2#variables-configurable
+              # https://www.rabbitmq.com/docs/oauth2-examples
+              # https://www.rabbitmq.com/docs/access-control
             
               # auth_oauth2.resource_server_id = ${{ secrets.DEFAULT_OAUTH2_ID }}
               auth_oauth2.resource_server_id = ${{ secrets.RABBITMQ_OAUTH2_ID }}
