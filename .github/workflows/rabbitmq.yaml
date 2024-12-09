@@ -33,11 +33,11 @@ jobs:
               username: admin
             
             extraConfiguration: |
-              log.default.level = debug
+              log.default.level = info
             
-              auth_backends.1.authn = rabbit_auth_backend_oauth2
-              auth_backends.1.authz = internal
-              auth_backends.2 = internal
+              auth_backends.1 = internal
+              auth_backends.2.authn = rabbit_auth_backend_oauth2
+              auth_backends.2.authz = internal
             
               management.oauth_disable_basic_auth = false
               management.oauth_enabled = true
