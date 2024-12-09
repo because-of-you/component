@@ -28,6 +28,32 @@ jobs:
           chart-version: ${{ env.CHART_VERSION}}
           timeout: 30m0s
           value-files: "charts/rabbitmq/sample.yaml"
+          values: |
+            auth:
+              username: ${{ secrets.DEFAULT_EMAIL }}
+            
+            extraConfiguration: |
+              log.default.level = debug
+            
+              auth_backends.1 = rabbit_auth_backend_oauth2
+              auth_backends.2 = internal
+            
+              management.oauth_disable_basic_auth = false
+              management.oauth_enabled = true
+              #management.oauth_scopes = openid profile rabbitmq.*
+            
+              management.oauth_client_id = ${{ secrets.DEFAULT_OAUTH2_ID }}
+              management.oauth_provider_url = ${{ secrets.DEFAULT_AUTH_HOST }}
+              # management.oauth_scopes = openid profile rabbitmq.tag:administrator
+            
+            
+              auth_oauth2.resource_server_id = dev
+              auth_oauth2.issuer = ${{ secrets.DEFAULT_AUTH_HOST }}
+              # auth_oauth2.jwks_url = ${{ secrets.DEFAULT_AUTH_HOST }}/.well-known/jwks
+            
+              auth_oauth2.preferred_username_claims.1 = email
+              auth_oauth2.preferred_username_claims.2 = name
+
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
 
