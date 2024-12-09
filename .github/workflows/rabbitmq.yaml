@@ -44,13 +44,13 @@ jobs:
               #management.oauth_scopes = openid profile rabbitmq.*
             
               # management.oauth_client_id = ${{ secrets.DEFAULT_OAUTH2_ID }}
-              management.oauth_client_id = 5cda14604f7aa8b2da88
+              management.oauth_client_id = ${{ secrets.RABBITMQ_OAUTH2_ID }}
               management.oauth_provider_url = https://${{ secrets.DEFAULT_AUTH_HOST }}
               # management.oauth_scopes = .*
             
             
               # auth_oauth2.resource_server_id = ${{ secrets.DEFAULT_OAUTH2_ID }}
-              auth_oauth2.resource_server_id = 5cda14604f7aa8b2da88
+              auth_oauth2.resource_server_id = ${{ secrets.RABBITMQ_OAUTH2_ID }}
               auth_oauth2.issuer = https://${{ secrets.DEFAULT_AUTH_HOST }}
               # auth_oauth2.jwks_url = https://${{ secrets.DEFAULT_AUTH_HOST }}/.well-known/jwks
               auth_oauth2.https.verify = verify_none
