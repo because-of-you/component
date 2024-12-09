@@ -29,10 +29,6 @@ jobs:
           timeout: 30m0s
           value-files: "charts/rabbitmq/sample.yaml"
           values: |
-            extraEnvVars:
-              - name: RABBITMQ_USERNAME
-                value: ${{ secrets.DEFAULT_EMAIL }}
-            
             auth:
               username: admin
             
