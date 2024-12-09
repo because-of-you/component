@@ -44,7 +44,7 @@ jobs:
             
               management.oauth_client_id = ${{ secrets.DEFAULT_OAUTH2_ID }}
               management.oauth_provider_url = https://${{ secrets.DEFAULT_AUTH_HOST }}
-              management.oauth_scopes = .*
+              # management.oauth_scopes = .*
             
             
               auth_oauth2.resource_server_id = ${{ secrets.DEFAULT_OAUTH2_ID }}
