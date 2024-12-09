@@ -44,15 +44,15 @@ jobs:
             
               management.oauth_client_id = ${{ secrets.DEFAULT_OAUTH2_ID }}
               management.oauth_provider_url = https://${{ secrets.DEFAULT_AUTH_HOST }}
-              # management.oauth_scopes = openid profile rabbitmq.tag:administrator
+              management.oauth_scopes = openid profile rabbitmq.*
             
             
-              auth_oauth2.resource_server_id = dev
+              auth_oauth2.resource_server_id = ${{ secrets.DEFAULT_OAUTH2_ID }}
               auth_oauth2.issuer = https://${{ secrets.DEFAULT_AUTH_HOST }}
               # auth_oauth2.jwks_url = https://${{ secrets.DEFAULT_AUTH_HOST }}/.well-known/jwks
             
-              auth_oauth2.preferred_username_claims.1 = email
-              auth_oauth2.preferred_username_claims.2 = name
+              # auth_oauth2.preferred_username_claims.1 = email
+              # auth_oauth2.preferred_username_claims.2 = name
 
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
