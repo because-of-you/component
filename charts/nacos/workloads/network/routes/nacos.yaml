@@ -12,7 +12,7 @@ spec:
         paths:
           - /*
       backends:
-        - serviceName: config-rnacos
+        - serviceName: rnacos
           servicePort: 8848
       websocket: true
 
