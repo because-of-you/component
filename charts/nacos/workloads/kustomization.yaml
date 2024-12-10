@@ -1,0 +1,2 @@
+resources:
+  - network/routes/nacos.yaml
