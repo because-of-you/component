@@ -35,7 +35,7 @@ jobs:
         uses: WyriHaximus/github-action-helm3@v4
         with:
           kubeconfig: '${{ secrets.KUBECONFIG }}'
-          exec: 'helm upgrade --install rnacos r-nacos/deploy/k8s/helm/ --values charts/nacos/sample.yaml'
+          exec: 'helm upgrade --install rnacos r-nacos/deploy/k8s/helm/ --values charts/nacos/sample.yaml --atomic'
 
       # https://github.com/marketplace/actions/kubernetes-cli-kubectl
       - uses: tale/kubectl-action@v1
