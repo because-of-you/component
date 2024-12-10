@@ -1,0 +1,47 @@
+# .github/workflows/deploy.yml
+name: rnacos-deploy
+on:
+  push:
+    tags:
+      - rnacos-*.*.*
+    branches:
+      - rnacos-*.*.*
+
+env:
+  CHART_VERSION: v0.6.8
+
+jobs:
+  deployment:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: actions/checkout@v4
+#        with:
+#          repository: nacos-group/r-nacos
+#          ref: ${{ env.CHART_VERSION }}
+#          path: deploy/k8s/helm
+      - name: modify files
+        run: |
+          export KAFKA_SASL_DEFAULT_USERNAME='${{ secrets.KAFKA_SASL_DEFAULT_USERNAME }}'
+          export KAFKA_SASL_DEFAULT_PASSWORD='${{ secrets.KAFKA_SASL_DEFAULT_PASSWORD }}'
+  
+          envsubst < charts/nacos/workloads/network/routes/nacos.yaml > charts/nacos/workloads/network/routes/nacos.yaml_replaced
+          mv charts/nacos/workloads/network/routes/nacos.yaml_replaced charts/nacos/workloads/network/routes/nacos.yaml
+          
+          git clone -b ${{ env.CHART_VERSION }} https://github.com/nacos-group/r-nacos.git
+          
+
+      # https://github.com/marketplace/actions/helm-3
+      - name: Helm 3
+        uses: WyriHaximus/github-action-helm3@v4
+        with:
+          kubeconfig: '${{ secrets.KUBECONFIG }}'
+          exec: 'helm upgrade --install rnacos r-nacos/deploy/k8s/helm/ --values charts/nacos/sample.yaml'
+
+      # https://github.com/marketplace/actions/kubernetes-cli-kubectl
+      - uses: tale/kubectl-action@v1
+        with:
+          base64-kube-config: ${{ secrets.KUBECONFIG_BASED }}
+
+      - name: Generate kubeconfig
+        run: |
+          kubectl apply -k charts/nacos/workloads/
