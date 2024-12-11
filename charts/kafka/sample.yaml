@@ -1,5 +1,10 @@
 heapOpts: "-XX:+UseContainerSupport -XX:InitialRAMPercentage=40.0 -XX:MaxRAMPercentage=70.0 -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
 
+# 不校验不安全镜像 ｜ 自定义镜像
+global:
+  security:
+    allowInsecureImages: true
+
 controller:
   heapOpts: "-XX:+UseContainerSupport -XX:InitialRAMPercentage=40.0 -XX:MaxRAMPercentage=70.0 -Xshareclasses:cacheDir=/tmp/javasharedresources,name=cache -Xtune:virtualized -Xquickstart"
   resources:
