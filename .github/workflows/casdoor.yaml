@@ -6,7 +6,8 @@ on:
       - casdoor-*.*.*
     branches:
       - casdoor-*.*.*
-
+env:
+  CHART_VERSION: v1.770.0
 
 jobs:
   deployment:
@@ -33,7 +34,7 @@ jobs:
           #          repo: 'oci://registry-1.docker.io/casbin/'
           #          repo-alias: casdoor
           token: '${{ github.token }}'
-          chart-version: v1.758.0
+          chart-version: ${{ env.CHART_VERSION }}
           timeout: 30m0s
           values: |
             database:
