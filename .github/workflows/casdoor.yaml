@@ -35,13 +35,13 @@ jobs:
           #          repo-alias: casdoor
           token: '${{ github.token }}'
           chart-version: ${{ env.CHART_VERSION }}
-          timeout: 30m0s
+          timeout: 5m0s
           values: |
             database:
-              host: '${{ secrets.CASDOOR_DATABASE_HOST }}'
-              port: '${{ secrets.CASDOOR_DATABASE_PORT }}'
-              user: '${{ secrets.CASDOOR_DATABASE_USER }}'
-              password: '${{ secrets.CASDOOR_DATABASE_PASSWORD }}'
+              host: '${{ secrets.DEFAULT_DATABASE_HOST }}'
+              port: '${{ secrets.DEFAULT_DATABASE_PORT }}'
+              user: '${{ secrets.DEFAULT_DATABASE_USERNAME }}'
+              password: '${{ secrets.DEFAULT_DATABASE_PASSWORD }}'
               driver: postgres
               databaseName: casdoor
           value-files: "charts/casdoor/sample.yaml"
