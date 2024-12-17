@@ -13,6 +13,15 @@ pgbouncer:
   # The maximum number of server connections to the result backend database from PgBouncer
   resultBackendPoolSize: 3
 
+# k3s
+# https://airflow.apache.org/docs/helm-chart/stable/index.html#installing-the-chart-with-argo-cd-flux-rancher-or-terraform
+createUserJob:
+  useHelmHooks: false
+  applyCustomEnv: false
+migrateDatabaseJob:
+  useHelmHooks: false
+  applyCustomEnv: false
+
 # https://stackoverflow.com/questions/78145304/deploy-airflow-with-helm-chart-pods-stuck-on-wait-for-airflow-migration
 #scheduler:
 #  waitForMigrations:
