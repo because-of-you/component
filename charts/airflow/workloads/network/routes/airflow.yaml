@@ -1,0 +1,44 @@
+#apiVersion: apisix.apache.org/v2
+#kind: ApisixRoute
+#metadata:
+#  name: casdoor-route
+#  namespace: casdoor
+#spec:
+#  http:
+#    - name: casdoor-route
+#      match:
+#        hosts:
+#          - auth.acitrus.cn
+#        paths:
+#          - /*
+#      backends:
+#        - serviceName: casdoor
+#          servicePort: 8000
+#      websocket: true
+#      plugins:
+#        - name: redirect
+#          enable: true
+#          config:
+#            http_to_https: true
+#
+#        - name: kafka-logger
+#          enable: true
+#          # https://apisix.apache.org/zh/docs/apisix/plugins/kafka-logger/#%E5%B1%9E%E6%80%A7
+#          config:
+#            kafka_topic: apisix_casdoor_route_log
+#            batch_max_size: 1
+#            name: "kafka logger"
+#            brokers:
+#              - host: "kafka.default"
+#                port: 9092
+#                sasl_config:
+#                  user: "${KAFKA_SASL_DEFAULT_USERNAME}"
+#                  password: "${KAFKA_SASL_DEFAULT_PASSWORD}"
+#
+#        - name: real-ip
+#          enable: true
+#          config:
+#            source: "http_x_forwarded_for"
+#
+#        - name: request-id
+#          enable: true

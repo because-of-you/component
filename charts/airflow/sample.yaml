@@ -1,0 +1,3 @@
+# https://airflow.apache.org/docs/helm-chart/stable/production-guide.html#database
+postgresql:
+  enabled: false

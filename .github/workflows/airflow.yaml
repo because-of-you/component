@@ -1,0 +1,50 @@
+# .github/workflows/deploy.yml
+name: airflow-deploy
+on:
+  push:
+    tags:
+      - airflow-*.*.*
+    branches:
+      - airflow-*.*.*
+env:
+  CHART_VERSION: 1.15.0
+
+jobs:
+  deployment:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: actions/checkout@v4
+
+      # https://github.com/marketplace/actions/kubernetes-cli-kubectl
+      - uses: tale/kubectl-action@v1
+        with:
+          base64-kube-config: ${{ secrets.KUBECONFIG_BASED }}
+
+      - name: Generate kubeconfig
+        run: |
+          kubectl apply -k charts/airflow/workloads
+
+      # https://github.com/marketplace/actions/helm-deploy
+      - name: 'airflow'
+        uses: vimeda/helm@v1.7.0
+        with:
+          release: 'airflow'
+          namespace: 'airflow'
+          repo: 'https://airflow.apache.org'
+          repo-alias: apache-airflow
+          token: '${{ github.token }}'
+          chart: 'apache-airflow/airflow'
+          chart-version: ${{ env.CHART_VERSION }}
+          timeout: 30m0s
+          values: |
+            data:
+              metadataConnection:
+                user: '${{ secrets.DEFAULT_DATABASE_USERNAME }}'
+                pass: '${{ secrets.DEFAULT_DATABASE_PASSWORD }}'
+                protocol: postgresql
+                host: '${{ secrets.DEFAULT_DATABASE_HOST }}'
+                port: '${{ secrets.DEFAULT_DATABASE_PORT }}'
+                db: airflow
+          value-files: "charts/airflow/sample.yaml"
+        env:
+          KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
