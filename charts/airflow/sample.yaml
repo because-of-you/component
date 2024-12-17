@@ -1,3 +1,28 @@
 # https://airflow.apache.org/docs/helm-chart/stable/production-guide.html#database
 postgresql:
   enabled: false
+
+# https://stackoverflow.com/questions/78145304/deploy-airflow-with-helm-chart-pods-stuck-on-wait-for-airflow-migration
+scheduler:
+  waitForMigrations:
+    enabled: false
+
+_rpcServer:
+  waitForMigrations:
+    enabled: false
+
+webserver:
+  waitForMigrations:
+    enabled: false
+
+workers:
+  waitForMigrations:
+    enabled: false
+
+triggerer:
+  waitForMigrations:
+    enabled: false
+
+dagProcessor:
+  waitForMigrations:
+    enabled: false
