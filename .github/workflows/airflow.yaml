@@ -44,7 +44,8 @@ jobs:
                 protocol: postgresql
                 host: '${{ secrets.DEFAULT_DATABASE_HOST }}'
                 port: ${{ secrets.DEFAULT_DATABASE_PORT }}
-                db: airflow
+                db: 'airflow'
+                sslmode: disable
           value-files: "charts/airflow/sample.yaml"
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
