@@ -1,2 +1,3 @@
 resources:
   - namespace/airflow.yaml
+  - network/routes/airflow.yaml
