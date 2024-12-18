@@ -90,7 +90,7 @@ jobs:
                         log.info("user info: {0}".format(provider))
                         if provider == "auth.acitrus.cn":
                             token = response["access_token"]
-                            me = jwt.decode(token, "secret", algorithms=["HS256", "RS256"])
+                            me = jwt.decode(token, algorithms=["HS256", "RS256"], options={"verify_signature": False})
 
                             # Extract roles from resource access
                             realm_access = me.get("realm_access", {})
