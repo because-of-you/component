@@ -74,7 +74,6 @@ jobs:
                             "access_token_url": "https://auth.acitrus.cn/api/login/oauth/access_token",
                             "authorize_url": "https://auth.acitrus.cn/login/oauth/authorize",
                             "request_token_url": None
-#                            "redirect_url": "https://airflow.acitrus.cn/oauth/callback"
                         },
                     },
                 ]
