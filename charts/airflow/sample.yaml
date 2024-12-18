@@ -22,6 +22,17 @@ migrateDatabaseJob:
   useHelmHooks: false
   applyCustomEnv: false
 
+webserver:
+  # Create initial user.
+  defaultUser:
+    enabled: true
+    role: Admin
+    username: admin
+    email: mail@acitrus.cn
+    firstName: admin
+    lastName: user
+    password: admin
+
 # https://stackoverflow.com/questions/78145304/deploy-airflow-with-helm-chart-pods-stuck-on-wait-for-airflow-migration
 #scheduler:
 #  waitForMigrations:
