@@ -53,12 +53,8 @@ jobs:
 
                 AUTH_TYPE = AUTH_OAUTH
                 AUTH_ROLES_SYNC_AT_LOGIN = True  # Checks roles on every login
-                AUTH_USER_REGISTRATION = True  # allow users who are not already in the FAB DB to register
-
-                AUTH_ROLES_MAPPING = {
-                    "Viewer": ["Viewer"],
-                    "Admin": ["Admin"],
-                }
+                # AUTH_USER_REGISTRATION = True  # allow users who are not already in the FAB DB to register
+                AUTH_USER_REGISTRATION_ROLE = "Public"
 
                 # If you wish, you can add multiple OAuth providers.
                 OAUTH_PROVIDERS = [
@@ -70,11 +66,6 @@ jobs:
                             "client_id": "${{ secrets.DEFAULT_OAUTH2_ID }}",
                             "client_secret": "${{ secrets.DEFAULT_OAUTH2_SECRET }}",
                             "api_base_url": "https://auth.acitrus.cn",
-                            'client_kwargs':{
-                                'scope': 'User.read email openid profile basic users name preferred_username upn',
-                                # 该值设置为应用程序id
-                                "resource": '${{ secrets.DEFAULT_OAUTH2_ID }}',
-                            },
                             "access_token_url": "https://auth.acitrus.cn/api/login/oauth/access_token",
                             "authorize_url": "https://auth.acitrus.cn/login/oauth/authorize",
                             "request_token_url": None
