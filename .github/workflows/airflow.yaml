@@ -47,10 +47,16 @@ jobs:
                 db: 'airflow'
             webserver:
               webserverConfig: |
-                from airflow.providers.fab.auth_manager.security_manager.override import FabAirflowSecurityManagerOverride
-                from flask_appbuilder.security.manager import AUTH_OAUTH
                 import os
+                import jwt
+                import requests
                 import logging
+                from base64 import b64decode
+                from cryptography.hazmat.primitives import serialization
+                from flask_appbuilder.security.manager import AUTH_DB, AUTH_OAUTH
+                from airflow import configuration as conf
+                from airflow.www.security import AirflowSecurityManager
+
                 log = logging.getLogger(__name__)
                 
                 AUTH_TYPE = AUTH_OAUTH
@@ -77,6 +83,7 @@ jobs:
                     },
                 ]
                 
+                # https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/webserver-authentication.html#example-using-team-based-authorization-with-keycloak
                 class CustomSecurityManager(AirflowSecurityManager):
                     def get_oauth_user_info(self, provider, response):
                         log.info("user info: {0}".format(response))
