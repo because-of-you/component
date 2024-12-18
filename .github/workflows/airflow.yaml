@@ -73,14 +73,6 @@ jobs:
                     },
                 ]
 
-
-                class CustomSecurityManager(FabAirflowSecurityManagerOverride):
-                    pass
-
-
-                # Make sure to replace this with your own implementation of AirflowSecurityManager class
-                SECURITY_MANAGER_CLASS = CustomSecurityManager
-
           value-files: "charts/airflow/sample.yaml"
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
