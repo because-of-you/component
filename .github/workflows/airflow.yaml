@@ -70,7 +70,7 @@ jobs:
                             "client_id": "${{ secrets.DEFAULT_OAUTH2_ID }}",
                             "client_secret": "${{ secrets.DEFAULT_OAUTH2_SECRET }}",
                             "api_base_url": "https://auth.acitrus.cn",
-                            "client_kwargs": {"scope": "read:user, read:org, read:name"},
+                            "client_kwargs": {"scope": "read"},
                             "access_token_url": "https://auth.acitrus.cn/api/login/oauth/access_token",
                             "authorize_url": "https://auth.acitrus.cn/login/oauth/authorize",
                             "request_token_url": None,
