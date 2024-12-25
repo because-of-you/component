@@ -1,0 +1,17 @@
+apiVersion: apisix.apache.org/v2
+kind: ApisixRoute
+metadata:
+  name: airflow-route
+  namespace: airflow
+spec:
+  http:
+    - name: airflow-route
+      match:
+        hosts:
+          - airflow.acitrus.cn
+        paths:
+          - /*
+      backends:
+        - serviceName: airflow-webserver
+          servicePort: 8080
+      websocket: true
