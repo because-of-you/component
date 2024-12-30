@@ -37,10 +37,7 @@ jobs:
         with:
           release: 'traefik'
           namespace: 'traefik'
-          # https://github.com/bitnami/charts/blob/main/bitnami/cert-manager/CHANGELOG.md
           chart: 'oci://ghcr.io/traefik/helm/traefik'
-          #          repo: 'oci://registry-1.docker.io/casbin/'
-          #          repo-alias: casdoor
           token: '${{ github.token }}'
           version: ${{ env.CHART_VERSION }}
           value-files: "charts/traefik/sample.yaml"
