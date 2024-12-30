@@ -43,7 +43,6 @@ jobs:
           #          repo-alias: casdoor
           token: '${{ github.token }}'
           version: ${{ env.CHART_VERSION }}
-          timeout: 30
           value-files: "charts/traefik/sample.yaml"
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
