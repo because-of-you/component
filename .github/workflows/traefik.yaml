@@ -33,7 +33,7 @@ jobs:
 
       # https://github.com/wfy-belief/helm_deploy
       - name: 'traefik'
-        uses: wfy-belief/helm_deploy@v3.16.4.1
+        uses: because-of-you/helm-deploy@master
         with:
           release: 'traefik'
           namespace: 'traefik'
