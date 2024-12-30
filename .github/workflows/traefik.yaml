@@ -31,7 +31,7 @@ jobs:
            version: '3.16.4' # default is latest (stable)
         id: install
 
-      # https://github.com/marketplace/actions/helm-deploy
+      # https://github.com/chrkaatz/helm
       - name: 'traefik'
         uses: chrkaatz/helm@v1.9
         with:
@@ -44,7 +44,6 @@ jobs:
           token: '${{ github.token }}'
           version: ${{ env.CHART_VERSION }}
           value-files: "charts/traefik/sample.yaml"
-          timeout: 30m0s
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
 
