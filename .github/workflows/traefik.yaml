@@ -1,0 +1,45 @@
+# .github/workflows/deploy.yml
+name: traefik-deploy
+on:
+  push:
+    tags:
+      - traefik-*.*.*
+    branches:
+      - traefik-*.*.*
+
+env:
+  CHART_VERSION: 33.2.1
+
+jobs:
+  deployment:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: actions/checkout@v4
+
+
+      # https://github.com/marketplace/actions/kubernetes-cli-kubectl
+      - uses: tale/kubectl-action@v1
+        with:
+          base64-kube-config: ${{ secrets.KUBECONFIG_BASED }}
+
+      - name: Generate kubeconfig
+        run: |
+          kubectl apply -k charts/traefik/workloads
+
+      # https://github.com/marketplace/actions/helm-deploy
+      - name: 'traefik'
+        uses: vimeda/helm@v1.7.0
+        with:
+          release: 'traefik'
+          namespace: 'traefik'
+          # https://github.com/bitnami/charts/blob/main/bitnami/cert-manager/CHANGELOG.md
+          chart: 'oci://ghcr.io/traefik/helm/traefik'
+          #          repo: 'oci://registry-1.docker.io/casbin/'
+          #          repo-alias: casdoor
+          token: '${{ github.token }}'
+          chart-version: ${{ env.CHART_VERSION }}
+          value-files: "charts/traefik/sample.yaml"
+          timeout: 30m0s
+        env:
+          KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
+
