@@ -33,6 +33,7 @@ jobs:
 
       # https://github.com/because-of-you/helm-deploy
       - name: 'traefik'
+        # 镜像
         uses: because-of-you/helm-deploy@master
         with:
           release: 'traefik'
