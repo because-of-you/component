@@ -31,9 +31,9 @@ jobs:
            version: '3.16.4' # default is latest (stable)
         id: install
 
-      # https://github.com/chrkaatz/helm
+      # https://github.com/wfy-belief/helm_deploy
       - name: 'traefik'
-        uses: chrkaatz/helm@v1.9
+        uses: wfy-belief/helm_deploy@v3.16.4.1
         with:
           release: 'traefik'
           namespace: 'traefik'
@@ -43,6 +43,7 @@ jobs:
           #          repo-alias: casdoor
           token: '${{ github.token }}'
           version: ${{ env.CHART_VERSION }}
+          timeout: 30m0s
           value-files: "charts/traefik/sample.yaml"
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
