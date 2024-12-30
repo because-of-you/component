@@ -31,7 +31,7 @@ jobs:
            version: '3.16.4' # default is latest (stable)
         id: install
 
-      # https://github.com/wfy-belief/helm_deploy
+      # https://github.com/because-of-you/helm-deploy
       - name: 'traefik'
         uses: because-of-you/helm-deploy@master
         with:
