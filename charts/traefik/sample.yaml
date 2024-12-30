@@ -43,3 +43,9 @@ certificatesResolvers:
       dnsChallenge:
         provider: alidns
         delayBeforeCheck: 0
+
+persistence:
+  # -- Enable persistence using Persistent Volume Claims
+  # ref: http://kubernetes.io/docs/user-guide/persistent-volumes/.
+  # It can be used to store TLS certificates along with `certificatesResolvers.<name>.acme.storage`  option
+  enabled: true
