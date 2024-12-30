@@ -42,6 +42,7 @@ jobs:
           token: '${{ github.token }}'
           version: ${{ env.CHART_VERSION }}
           value-files: "charts/traefik/sample.yaml"
+          timeout: 30m0s
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
 
