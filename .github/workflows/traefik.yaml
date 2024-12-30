@@ -33,7 +33,7 @@ jobs:
 
       # https://github.com/marketplace/actions/helm-deploy
       - name: 'traefik'
-        uses: vimeda/helm@v1.7.0
+        uses: chrkaatz/helm@v1.9
         with:
           release: 'traefik'
           namespace: 'traefik'
@@ -42,7 +42,7 @@ jobs:
           #          repo: 'oci://registry-1.docker.io/casbin/'
           #          repo-alias: casdoor
           token: '${{ github.token }}'
-          chart-version: ${{ env.CHART_VERSION }}
+          version: ${{ env.CHART_VERSION }}
           value-files: "charts/traefik/sample.yaml"
           timeout: 30m0s
         env:
