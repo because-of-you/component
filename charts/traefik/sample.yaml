@@ -1,16 +1,6 @@
 # https://blog.csdn.net/sinat_32188225/article/details/124117638
-env:
-  - name: ALICLOUD_ACCESS_KEY
-    valueFrom:
-      secretKeyRef:
-        name: alidns
-        key: ALICLOUD_ACCESS_KEY
-
-  - name: ALICLOUD_SECRET_KEY
-    valueFrom:
-      secretKeyRef:
-        name: alidns
-        key: ALICLOUD_SECRET_KEY
+envFrom:
+  - name: alidns
 
 ports:
   websecure:
