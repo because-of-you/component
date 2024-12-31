@@ -1,6 +1,6 @@
 # https://blog.csdn.net/sinat_32188225/article/details/124117638
 envFrom:
-  - name: alidns
+  - secretRef: alidns
 
 ports:
   websecure:
