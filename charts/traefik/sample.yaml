@@ -22,7 +22,7 @@ ports:
       ## TCP & UDP (Http3). There is a workaround in this chart using dual Service.
       ## https://github.com/kubernetes/kubernetes/issues/47249#issuecomment-587960741
       enabled: true
-#      advertisedPort: 443  # @schema type:[integer, null]; minimum:0
+      advertisedPort: 443  # @schema type:[integer, null]; minimum:0
     tls:
       enabled: true
       options: ""
