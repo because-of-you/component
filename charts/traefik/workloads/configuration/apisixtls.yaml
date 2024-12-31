@@ -1,0 +1,10 @@
+apiVersion: apisix.apache.org/v2
+kind: ApisixTls
+metadata:
+  name: cert-acitrus-cn
+spec:
+  hosts:
+    - "*.acitrus.cn"
+  secret:
+    name: cert-acitrus-cn-tls
+    namespace: default
