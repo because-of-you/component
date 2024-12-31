@@ -39,6 +39,7 @@ ports:
 certificatesResolvers:
   leresolver:
     acme:
+      storage: /data/acme.json
       email: "mail@acitrus.cn"
       dnsChallenge:
         provider: alidns
