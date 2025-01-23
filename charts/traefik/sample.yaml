@@ -55,5 +55,10 @@ deployment:
 
 ingressRoute:
   dashboard:
-    # -- Create an IngressRoute for the dashboard
+    enabled: true
+
+providers: # @schema additionalProperties: false
+  kubernetesCRD:
+    # -- Allows IngressRoute to reference resources in namespace other than theirs
+    allowCrossNamespace: true
     enabled: true
