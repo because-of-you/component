@@ -1,0 +1,279 @@
+# Default values for lldap.
+
+# -- Number of lldap replicas.
+# Do not increase this above 1 if you are using the SQLite backend.
+replicaCount: 1
+
+image:
+  # -- image repository
+  repository: lldap/lldap
+  # -- image pull policy
+  pullPolicy: IfNotPresent
+  # -- image tag
+  # @default -- chart.appVersion
+  tag: ""
+
+imagePullSecrets: [ ]
+nameOverride: ""
+fullnameOverride: ""
+
+lldap:
+  # -- Base DN for LDAP.
+  # This is usually your domain name, and is used as a namespace for your users. The choice is
+  # arbitrary, but will be needed to configure the LDAP integration with other services. The sample
+  # value is for "example.com", but you can extend it with as many "dc" as you want, and you don't
+  # actually need to own the domain name.
+  baseDN: "dc=example,dc=com"
+
+  # -- Random secret for JWT signature.
+  # This secret should be random, and should be shared with application servers that need to
+  # consume the JWTs. Changing this secret will invalidate all user sessions and require them
+  # to re-login. You can generate it with (on linux):
+  # LC_ALL=C tr -dc 'A-Za-z0-9!#%&'\''()*+,-./:;<=>?@[\]^_{|}~' </dev/urandom | head -c 32; echo ''
+  jwtSecret: REPLACE_WITH_RANDOM
+
+  # -- Admin username.
+  # For the LDAP interface, a value of "admin" here will create the LDAP user
+  # "cn=admin,ou=people,dc=example,dc=com" (with the base DN above). For the administration
+  # interface, this is the username.
+  ldapUserDN: "admin"
+
+  # -- Admin password.
+  # Password for the admin account, both for the LDAP bind and for the administration interface.
+  # It is only used when initially creating the admin user. It should be minimum 8 characters long.
+  # Note: you can create another admin user for user administration, this is just the default one.
+  ldapUserPass: REPLACE_WITH_RANDOM
+
+  # -- Seed to generate the server private key. This can be any random string, the recommendation
+  # is that it's at least 12 characters long.
+  keySeed: REPLACE_WITH_RANDOM
+
+  uid: 1000
+  gid: 1000
+  tz: "Etc/UTC"
+
+  # -- Tune the logging to be more verbose
+  verbose: false
+
+  # -- Options to configure SMTP parameters, to send password reset emails.
+  # @default -- see below
+  smtp:
+    # -- Whether to enabled password reset via email, from LLDAP.
+    enablePasswordReset: false
+    # -- The SMTP server.
+    server: "smtp.gmail.com"
+    # -- The SMTP port.
+    port: 587
+    # -- How the connection is encrypted, either "NONE" (no encryption), "TLS" or "STARTTLS".
+    smtpEncryption: "TLS"
+    # -- The SMTP user, usually your email address.
+    user: "sender@gmail.com"
+    # -- The SMTP password.
+    password: "password"
+    # -- The header field: how the sender appears in the email. The first
+    # is a free-form name, followed by an email between <>. Optional.
+    from: "LLDAP Admin <sender@gmail.com>"
+    # -- Same for reply-to, optional.
+    replyTo: "Do not reply <noreply@localhost>"
+
+  # -- Options to configure LDAPS
+  # @default -- see below
+  ldaps:
+    # -- Whether to enable LDAPS.
+    enabled: "false"
+    # -- Certificate file.
+    certFile: "/data/cert.pem"
+    # -- Certificate key file.
+    keyFile: "/data/key.pem"
+
+  # --- define extra volumes and mounts for the ldap
+  extraVolumes: [ ]
+  extraVolumeMounts: [ ]
+
+  # -- Ignored attributes.
+  # Some services will request attributes that are not present in LLDAP. When it is the case, LLDAP
+  # will warn about the attribute being unknown. If you want to ignore the attribute and the
+  # service works without, you can add it to this list to silence the warning.
+  # ignored_user_attributes = [ "sAMAccountName" ]
+  # ignored_group_attributes = [ "mail", "userPrincipalName" ]
+
+serviceAccount:
+  # -- Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: false
+  # -- Annotations to add to the service account
+  annotations: { }
+  # -- The name of the service account to use.
+  # @default -- a name is generated using the fullname template
+  name: ""
+
+podAnnotations: { }
+podLabels: { }
+deploymentAnnotations: { }
+deploymentLabels: { }
+
+podSecurityContext: { }
+# fsGroup: 2000
+
+securityContext: { }
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+# runAsUser: 1000
+
+# -- Configures service settings for the chart.
+# @default -- See values.yaml
+service:
+  http:
+    type: ClusterIP
+    port: 17170
+  ldap:
+    type: ClusterIP
+    port: 3890
+  ldaps:
+    type: ClusterIP
+    port: 6360
+
+# -- Enable and configure ingress settings for the chart under this key.
+# @default -- See values.yaml
+ingress:
+  enabled: false
+  className: ""
+  annotations: { }
+    # kubernetes.io/ingress.class: nginx
+  # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: [ ]
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+# -- Persistence is only required if you are using the SQLite database (default).
+# You can disable persistence if you select MariaDB or PostgreSQL.
+# @default -- see below
+persistence:
+  enabled: false
+  size: 100Mi
+  accessMode: ReadWriteOnce
+  ## If defined, storageClassName: <storageClass>
+  ## If set to "-", storageClassName: "", which disables dynamic provisioning
+  ## If undefined (the default) or set to null, no storageClassName spec is
+  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+  ##   GKE, AWS & OpenStack)
+  ##
+  # storageClass: "-"
+
+resources: { }
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+#   memory: 128Mi
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+
+nodeSelector: { }
+
+tolerations: [ ]
+
+affinity: { }
+
+# -- Enable and configure postgresql database subchart under this key.
+#    For more options see [postgresql chart documentation](https://github.com/bitnami/charts/tree/master/bitnami/postgresql)
+# @default -- https://github.com/bitnami/charts/blob/master/bitnami/postgresql/values.yaml
+postgresql:
+  enabled: false
+  auth:
+    postgresPassword: lldapadminpw
+    username: lldap
+    password: lldap
+    database: lldap
+  primary:
+    persistence:
+      enabled: false
+      # storageClass: ""
+      size: 1Gi
+    resources: { }
+
+
+# --- Enable and configure external postgresql database
+externalPostgresql:
+  enabled: false
+  auth:
+    host: ""
+    port: 5432
+    username: ""
+    password: ""
+    database: lldap
+
+
+# -- Enable and configure mariadb database subchart under this key.
+#    For more options see [mariadb chart documentation](https://github.com/bitnami/charts/tree/master/bitnami/mariadb)
+# @default -- https://github.com/bitnami/charts/blob/master/bitnami/mariadb/values.yaml
+mariadb:
+  enabled: false
+  architecture: standalone
+  auth:
+    database: lldap
+    username: lldap
+    password: lldap
+    rootPassword: lldapadminpw
+  primary:
+    resources: { }
+    persistence:
+      enabled: false
+      size: 1Gi
+      # storageClass: ""
+
+
+# -- Enable and configure external mariadb database
+externalMariadb:
+  enabled: false
+  auth:
+    host: ""
+    port: 3306
+    username: ""
+    password: ""
+    database: lldap
+
+
+# -- Bootstrap (i.e. create) users and groups automatically.
+# It is safe to run the bootstrap multiple times, however the one-shot
+# Kubernetes job will be created on the first deployment, and the job
+# will not be executed on subsequent deployments unless the job is deleted.
+# @default -- see below
+bootstrap:
+  enabled: false
+  # -- Remove redundant users and groups which are not in the config below
+  cleanup: false
+  groups:
+    - group1
+    - group2
+  users:
+    - id: "username"
+      email: "username@example.com"
+      password: "changeme"
+      displayName: "Display Name"
+      firstName: "First"
+      lastName: "Last"
+      avatar_url: "https://i.imgur.com/nbCxk3z.jpg"
+      gravatar_avatar: "false"
+      weserv_avatar: "false"
+      groups:
+        - group1
+        - group2
