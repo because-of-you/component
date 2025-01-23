@@ -48,7 +48,7 @@ jobs:
               enabled: true
               auth:
                 host: '${{ secrets.DEFAULT_DATABASE_HOST }}'
-                port: '${{ secrets.DEFAULT_DATABASE_PORT }}'
+                port: ${{ secrets.DEFAULT_DATABASE_PORT }}
                 username: '${{ secrets.DEFAULT_DATABASE_USERNAME }}'
                 password: '${{ secrets.DEFAULT_DATABASE_PASSWORD }}'
                 database: lldap
