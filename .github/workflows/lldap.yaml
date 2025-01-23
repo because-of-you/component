@@ -58,5 +58,5 @@ jobs:
 
       - name: Generate kubeconfig
         run: |
-          kubectl apply -k charts/lldap/workloads
+          kubectl apply -k charts/lldap/kustomization
 
