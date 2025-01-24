@@ -52,6 +52,31 @@ jobs:
                 username: '${{ secrets.DEFAULT_DATABASE_USERNAME }}'
                 password: '${{ secrets.DEFAULT_DATABASE_PASSWORD }}'
                 database: lldap
+            
+            # -- Bootstrap (i.e. create) users and groups automatically.
+            # It is safe to run the bootstrap multiple times, however the one-shot
+            # Kubernetes job will be created on the first deployment, and the job
+            # will not be executed on subsequent deployments unless the job is deleted.
+            # @default -- see below
+            bootstrap:
+              enabled: true
+              # -- Remove redundant users and groups which are not in the config below
+              cleanup: false
+              groups:
+                - test
+              users:
+                - id: "wfy"
+                  email: "mail@acitrus.cn"
+                  password: "z6rZGJp6jUpGyypGCpVH"
+                  displayName: "王飞宇"
+                  firstName: "飞宇"
+                  lastName: "王"
+                  avatar_url: "https://avatars.githubusercontent.com/u/58450591?v=4"
+                  gravatar_avatar: "false"
+                  weserv_avatar: "false"
+                  groups:
+                    - lldap_admin
+                    - test
           timeout: 10m0s
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
