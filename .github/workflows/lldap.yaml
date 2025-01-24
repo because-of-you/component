@@ -61,7 +61,7 @@ jobs:
             bootstrap:
               enabled: true
               # -- Remove redundant users and groups which are not in the config below
-              cleanup: false
+              cleanup: true
               groups:
                 - test
               users:
