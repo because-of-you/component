@@ -1,0 +1,87 @@
+# .github/workflows/deploy.yml
+name: iam-deploy
+on:
+  push:
+    tags:
+      - iam-*.*.*
+    branches:
+      - iam-*.*.*
+
+env:
+  CHART_VERSION: 0.6.1
+
+jobs:
+  deployment:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: actions/checkout@v4
+
+
+      # https://github.com/marketplace/actions/kubernetes-cli-kubectl
+      - uses: tale/kubectl-action@v1
+        with:
+          base64-kube-config: ${{ secrets.KUBECONFIG_BASED }}
+
+
+
+      - uses: azure/setup-helm@v4.2.0
+        with:
+          version: '3.16.4' # default is latest (stable)
+        id: install
+
+      # https://github.com/because-of-you/helm-deploy
+      - name: 'lldap'
+        # 镜像
+        uses: because-of-you/helm-deploy@master
+        with:
+          release: 'iam'
+          namespace: 'default'
+          chart: 'djjudas21/lldap'
+          repo: "https://djjudas21.github.io/charts/"
+          repo-alias: "djjudas21"
+          token: '${{ github.token }}'
+          version: ${{ env.CHART_VERSION }}
+          value-files: "charts/lldap/sample.yaml"
+          values: |
+            # --- Enable and configure external postgresql database
+            externalPostgresql:
+              enabled: true
+              auth:
+                host: '${{ secrets.DEFAULT_DATABASE_HOST }}'
+                port: ${{ secrets.DEFAULT_DATABASE_PORT }}
+                username: '${{ secrets.DEFAULT_DATABASE_USERNAME }}'
+                password: '${{ secrets.DEFAULT_DATABASE_PASSWORD }}'
+                database: lldap
+            
+            # -- Bootstrap (i.e. create) users and groups automatically.
+            # It is safe to run the bootstrap multiple times, however the one-shot
+            # Kubernetes job will be created on the first deployment, and the job
+            # will not be executed on subsequent deployments unless the job is deleted.
+            # @default -- see below
+            bootstrap:
+              enabled: true
+              # -- Remove redundant users and groups which are not in the config below
+              cleanup: false
+              groups:
+                - test
+              users:
+                - id: "wfy"
+                  email: "mail@acitrus.cn"
+                  password: "z6rZGJp6jUpGyypGCpVH"
+                  displayName: "王飞宇"
+                  firstName: "飞宇"
+                  lastName: "王"
+                  avatar_url: ""
+                  gravatar_avatar: "false"
+                  weserv_avatar: "false"
+                  groups:
+                    - lldap_admin
+                    - test
+          timeout: 10m0s
+        env:
+          KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
+
+      - name: Generate kubeconfig
+        run: |
+          kubectl apply -k charts/lldap/kustomization
+
