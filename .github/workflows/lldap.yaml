@@ -61,9 +61,10 @@ jobs:
             bootstrap:
               enabled: true
               # -- Remove redundant users and groups which are not in the config below
-              cleanup: false
+              cleanup: true
               groups:
-                - test
+                - public_readonly
+                - public_read_write
               users:
                 - id: "wfy"
                   email: "mail@acitrus.cn"
@@ -76,7 +77,19 @@ jobs:
                   weserv_avatar: "false"
                   groups:
                     - lldap_admin
-                    - test
+                    - public_readonly
+                    - public_read_write
+                - id: "reader"
+                  email: "reader@acitrus.cn"
+                  password: "qQKMdVrLmbuYXu1eGxTC"
+                  displayName: "reader"
+                  firstName: "reader"
+                  lastName: "reader"
+                  avatar_url: ""
+                  gravatar_avatar: "false"
+                  weserv_avatar: "false"
+                  groups:
+                    - lldap_strict_readonly
           timeout: 10m0s
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
