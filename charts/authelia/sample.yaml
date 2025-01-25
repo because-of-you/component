@@ -139,8 +139,13 @@ configMap:
     rules:
       - domain: 'home.acitrus.cn'
         subject:
-          - 'group:admins'
-          - 'group:test'
+          - 'group:public_readonly'
+        policy: 'one_factor'
+        methods:
+          - 'GET'
+      - domain: 'home.acitrus.cn'
+        subject:
+          - 'group:public_read_write'
         policy: 'one_factor'
 
 persistence:
