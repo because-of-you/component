@@ -121,8 +121,7 @@ configMap:
       value: 'X6awd^.ZGwcfEacfcGy!HQ!)H043T2CbqG3kVH]C!#.0%>F8bM>Z@rGQg,tce2rKp~j-5knK=)F~}t4H+zZqQ?x}Qnn!aMan^q6>'
 
     cookies:
-      - domain: 'acitrus.cn'
-        subdomain: 'http'
+      - domain: 'http.acitrus.cn'
         authelia_url: 'https://auth.acitrus.cn'
         name: 'authelia_session'
         # same_site: 'lax'
