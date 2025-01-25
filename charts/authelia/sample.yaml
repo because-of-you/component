@@ -154,6 +154,8 @@ configMap:
         methods:
           - 'GET'
       - domain: 'http.acitrus.cn'
+        methods:
+          - 'POST'
         subject:
           - 'group:public_read_write'
         policy: 'one_factor'
