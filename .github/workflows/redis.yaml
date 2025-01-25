@@ -42,4 +42,4 @@ jobs:
 
       - name: Generate kubeconfig
         run: |
-          kubectl apply -k charts/redis/workloads/
+          kubectl apply -k charts/redis/kustomization/
