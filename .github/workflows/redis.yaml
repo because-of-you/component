@@ -8,7 +8,7 @@ on:
       - redis-*.*.*
 
 env:
-  CHART_VERSION: 20.4.0
+  CHART_VERSION: 20.6.1
 
 jobs:
   deployment:
@@ -28,6 +28,10 @@ jobs:
           chart-version: ${{ env.CHART_VERSION}}
           timeout: 30m0s
           value-files: "charts/redis/sample.yaml"
+          values: |
+            global:
+              redis:
+                password: "${{ secrets.DEFAULT_PASSWORD }}"
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
 
