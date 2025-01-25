@@ -1,9 +1,9 @@
 fullnameOverride: "rnacos"
+replicaCount: 1
 
 image:
   repository: qingpan/rnacos
   pullPolicy: IfNotPresent
-  tag: v0.6.8
 
 persistence:
   size: 2Gi
