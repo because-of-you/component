@@ -150,8 +150,6 @@ configMap:
     # It must be either 'bypass', 'one_factor', 'two_factor' or 'deny'.
     rules:
       - domain: 'http.acitrus.cn'
-        methods:
-          - 'POST'
         subject:
           - 'group:public_read_write'
         policy: 'one_factor'
