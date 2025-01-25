@@ -147,13 +147,16 @@ configMap:
     rules:
       # nacos
       - domain: 'nacos.acitrus.cn'
-        policy: 'bypass'
-        methods:
-          - 'GET'
-      - domain: 'nacos.acitrus.cn'
         subject:
           - 'group:rnacos_admin'
         policy: 'one_factor'
+        methods:
+          - POST
+          - PUT
+      - domain: 'nacos.acitrus.cn'
+        policy: 'bypass'
+        methods:
+          - 'GET'
       # home
       - domain: 'home.acitrus.cn'
         subject:
