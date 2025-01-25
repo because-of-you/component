@@ -125,10 +125,10 @@ configMap:
         subdomain: 'auth'
         authelia_url: 'https://auth.acitrus.cn'
         name: 'authelia_session'
-        same_site: 'lax'
-        inactivity: '5m'
-        expiration: '1h'
-        remember_me: '1d'
+        # same_site: 'lax'
+        # inactivity: '5m'
+        # expiration: '1h'
+        # remember_me: '1d'
 
   storage:
     encryption_key:
