@@ -41,7 +41,7 @@ spec:
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
-  name: http.acitrus.cn
+  name: http.example.com
   namespace: default
   labels:
     app.kubernetes.io/name: httpbin
@@ -52,16 +52,11 @@ spec:
   routes:
     # https://doc.traefik.io/traefik/middlewares/overview/
     - kind: Rule
-      match: Host(`http.acitrus.cn`)
+      match: Host(`http.example.com`)
       services:
         - kind: Service
           name: httpbin
           port: 80
-          sticky:
-            cookie:
-              httpOnly: true
-              secure: true
-              sameSite: none
       middlewares:
         - name: http-to-https
         - name: 'forwardauth-authelia' # name of your middleware, as defined in your middleware.yml
