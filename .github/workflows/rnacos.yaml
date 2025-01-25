@@ -8,7 +8,7 @@ on:
       - rnacos-*.*.*
 
 env:
-  CHART_VERSION: v0.6.8
+  CHART_VERSION: v0.6.11
 
 jobs:
   deployment:
@@ -44,4 +44,4 @@ jobs:
 
       - name: Generate kubeconfig
         run: |
-          kubectl apply -k charts/nacos/workloads/
+          kubectl apply -k charts/nacos/kustomization/
