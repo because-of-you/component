@@ -27,6 +27,11 @@ spec:
         - kind: Service
           name: rnacos
           port: 8848
+          sticky:
+            cookie:
+              httpOnly: true
+              secure: true
+              sameSite: none
       middlewares:
         - name: http-to-https
         - name: 'forwardauth-authelia' # name of your middleware, as defined in your middleware.yml
