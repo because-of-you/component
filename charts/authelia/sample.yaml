@@ -153,7 +153,7 @@ configMap:
       - domain: 'nacos.acitrus.cn'
         subject:
           - 'group:public_read_write'
-        policy: 'two_factor'
+        policy: 'one_factor'
       # home
       - domain: 'home.acitrus.cn'
         subject:
