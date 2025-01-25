@@ -63,7 +63,8 @@ jobs:
               # -- Remove redundant users and groups which are not in the config below
               cleanup: true
               groups:
-                - test
+                - public_readonly
+                - public_read_write
               users:
                 - id: "wfy"
                   email: "mail@acitrus.cn"
@@ -76,7 +77,8 @@ jobs:
                   weserv_avatar: "false"
                   groups:
                     - lldap_admin
-                    - test
+                    - public_readonly
+                    - public_read_write
                 - id: "reader"
                   email: "reader@acitrus.cn"
                   password: "qQKMdVrLmbuYXu1eGxTC"
