@@ -148,7 +148,7 @@ configMap:
       # nacos
       - domain: 'nacos.acitrus.cn'
         subject:
-          - 'group:rnacos_admin'
+          - 'group:public_read_write'
         policy: 'one_factor'
       - domain: 'nacos.acitrus.cn'
         policy: 'bypass'
