@@ -16,7 +16,7 @@ pod:
 configMap:
   log:
     ## Level of verbosity for logs: info, debug, trace.
-    level: 'debug'
+    level: 'trace'
 
   authentication_backend:
     ldap:
