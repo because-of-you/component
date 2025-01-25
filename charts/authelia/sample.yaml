@@ -150,9 +150,6 @@ configMap:
         subject:
           - 'group:rnacos_admin'
         policy: 'one_factor'
-        methods:
-          - POST
-          - PUT
       - domain: 'nacos.acitrus.cn'
         policy: 'bypass'
         methods:
