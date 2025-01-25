@@ -1,0 +1,61 @@
+# .github/workflows/deploy.yml
+name: authelia-deploy
+on:
+  push:
+    tags:
+      - authelia-*.*.*
+    branches:
+      - authelia-*.*.*
+
+env:
+  CHART_VERSION: 0.9.14
+
+jobs:
+  deployment:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: actions/checkout@v4
+
+
+      # https://github.com/marketplace/actions/kubernetes-cli-kubectl
+      - uses: tale/kubectl-action@v1
+        with:
+          base64-kube-config: ${{ secrets.KUBECONFIG_BASED }}
+
+#      - name: Generate kubeconfig
+#        run: |
+#          kubectl apply -k charts/authelia/workloads
+
+      - uses: azure/setup-helm@v4.2.0
+        with:
+           version: '3.16.4' # default is latest (stable)
+        id: install
+
+      # https://github.com/because-of-you/helm-deploy
+      - name: 'authelia'
+        # 镜像
+        uses: because-of-you/helm-deploy@master
+        with:
+          release: 'authelia'
+          namespace: 'default'
+          chart: 'authelia/authelia'
+          repo: "https://charts.authelia.com"
+          repo-alias: "authelia"
+          token: '${{ github.token }}'
+          version: ${{ env.CHART_VERSION }}
+          value-files: "charts/authelia/sample.yaml"
+          values: |
+            configMap:
+              storage:
+                postgres:
+                  enabled: true
+                  address: 'tcp://${{ secrets.DEFAULT_DATABASE_HOST }}:${{ secrets.DEFAULT_DATABASE_PORT }}'
+                  database: 'authelia'
+                  schema: 'public'
+                  username: '${{ secrets.DEFAULT_DATABASE_USERNAME }}'
+                  password:
+                    value: '${{ secrets.DEFAULT_DATABASE_PASSWORD }}'
+          timeout: 30m0s
+        env:
+          KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
+
