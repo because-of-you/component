@@ -9,10 +9,6 @@ ingress:
       - web
       - websecure
 
-pod:
-  # Must be Deployment, DaemonSet, or StatefulSet.
-  kind: 'StatefulSet'
-
 configMap:
   authentication_backend:
     ldap:
@@ -147,6 +143,3 @@ configMap:
         subject:
           - 'group:public_read_write'
         policy: 'one_factor'
-
-persistence:
-  enabled: true
