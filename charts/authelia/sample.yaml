@@ -146,11 +146,11 @@ configMap:
     # It must be either 'bypass', 'one_factor', 'two_factor' or 'deny'.
     rules:
       # nacos
-      - domain: 'home.acitrus.cn'
+      - domain: 'nacos.acitrus.cn'
         policy: 'bypass'
         methods:
           - 'GET'
-      - domain: 'home.acitrus.cn'
+      - domain: 'nacos.acitrus.cn'
         subject:
           - 'group:rnacos_admin'
         policy: 'one_factor'
