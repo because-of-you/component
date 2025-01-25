@@ -137,10 +137,10 @@ configMap:
     secret:
       enabled: true
     rules:
-      domain: 'home.acitrus.cn'
-      subject:
-        - 'group:admins'
-      policy: 'one_factor'
+      - domain: 'home.acitrus.cn'
+        subject:
+          - 'group:admins'
+        policy: 'one_factor'
 
 persistence:
   enabled: true
