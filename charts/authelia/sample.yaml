@@ -153,9 +153,6 @@ configMap:
       - domain: 'nacos.acitrus.cn'
         subject:
           - 'group:public_read_write'
-        methods:
-          - 'POST'
-          - 'PUT'
         policy: 'one_factor'
       # home
       - domain: 'home.acitrus.cn'
