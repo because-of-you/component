@@ -140,6 +140,7 @@ configMap:
       - domain: 'home.acitrus.cn'
         subject:
           - 'group:admins'
+          - 'group:test'
         policy: 'one_factor'
 
 persistence:
