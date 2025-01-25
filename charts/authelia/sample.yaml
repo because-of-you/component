@@ -9,6 +9,10 @@ ingress:
       - web
       - websecure
 
+pod:
+  # Must be Deployment, DaemonSet, or StatefulSet.
+  kind: 'Deployment'
+
 configMap:
   authentication_backend:
     ldap:
