@@ -133,5 +133,14 @@ configMap:
       enabled: true
       filename: '/config/notification.txt'
 
+  access_control:
+    secret:
+      enabled: true
+    rules:
+      domain: 'home.acitrus.cn'
+      subject:
+        - 'group:admins'
+      policy: 'one_factor'
+
 persistence:
   enabled: true
