@@ -46,6 +46,10 @@ jobs:
           value-files: "charts/authelia/sample.yaml"
           values: |
             configMap:
+              session:
+                redis:
+                  password:
+                    value: '${{ secrets.DEFAULT_PASSWORD}}'
               storage:
                 postgres:
                   enabled: true

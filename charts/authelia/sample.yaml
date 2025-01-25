@@ -110,6 +110,12 @@ configMap:
         group_name: 'cn'
 
   session:
+    redis:
+      enabled: true
+      enabledSecret: true
+      host: 'redis-master.default'
+      port: 6379
+
     encryption_key:
       ## The value of a generated secret when using the ~ secret_name.
       value: 'X6awd^.ZGwcfEacfcGy!HQ!)H043T2CbqG3kVH]C!#.0%>F8bM>Z@rGQg,tce2rKp~j-5knK=)F~}t4H+zZqQ?x}Qnn!aMan^q6>'
@@ -119,10 +125,10 @@ configMap:
         subdomain: 'auth'
         authelia_url: 'https://auth.acitrus.cn'
         name: 'authelia_session'
-        same_site: 'lax'
-        inactivity: '5m'
-        expiration: '1h'
-        remember_me: '1d'
+        # same_site: 'lax'
+        # inactivity: '5m'
+        # expiration: '1h'
+        # remember_me: '1d'
 
   storage:
     encryption_key:
