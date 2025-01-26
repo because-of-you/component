@@ -14,6 +14,10 @@ pod:
   kind: 'Deployment'
 
 configMap:
+  log:
+    ## Level of verbosity for logs: info, debug, trace.
+    level: 'trace'
+
   authentication_backend:
     ldap:
 
@@ -142,7 +146,29 @@ configMap:
   access_control:
     secret:
       enabled: true
+
+    # It must be either 'bypass', 'one_factor', 'two_factor' or 'deny'.
     rules:
+#      - domain: 'http.acitrus.cn'
+#        policy: 'bypass'
+#        methods:
+#          - 'GET'
+#
+#      - domain: 'http.acitrus.cn'
+#        subject:
+#          - 'group:public_read_write'
+#        policy: 'one_factor'
+
+      # nacos
+      - domain: 'nacos.acitrus.cn'
+        policy: 'bypass'
+        methods:
+          - 'GET'
+      - domain: 'nacos.acitrus.cn'
+        subject:
+          - 'group:public_read_write'
+        policy: 'one_factor'
+      # home
       - domain: 'home.acitrus.cn'
         subject:
           - 'group:public_readonly'
