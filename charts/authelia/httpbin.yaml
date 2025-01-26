@@ -41,7 +41,7 @@ spec:
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
-  name: http.example.com
+  name: http.acitrus.cn
   namespace: default
   labels:
     app.kubernetes.io/name: httpbin
@@ -52,7 +52,7 @@ spec:
   routes:
     # https://doc.traefik.io/traefik/middlewares/overview/
     - kind: Rule
-      match: Host(`http.example.com`)
+      match: Host(`http.acitrus.cn`)
       services:
         - kind: Service
           name: httpbin
