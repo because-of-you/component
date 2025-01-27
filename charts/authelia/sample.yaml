@@ -23,9 +23,9 @@ configMap:
         - algorithm: 'RS256'
           use: 'sig'
           key: |
-            -----BEGIN RSA PRIVATE KEY-----
-            ...
-            -----END RSA PRIVATE KEY-----
+            abc
+            123
+
       clients:
         - client_id: 'unique-client-identifier'
           client_name: 'My Application'
