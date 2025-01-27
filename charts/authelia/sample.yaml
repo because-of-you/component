@@ -22,7 +22,11 @@ configMap:
       jwks:
         - algorithm: 'RS256'
           use: 'sig'
-          key: {{ secret "/config/secrets/oidc/jwks/rsa.2048.key" | mindent 10 "|" | msquote }}
+          key:
+            value: |
+              abc
+              123
+            path: '/secrets/oidc.jwk.RS256.pem'
 
   log:
     ## Level of verbosity for logs: info, debug, trace.
@@ -159,15 +163,15 @@ configMap:
 
     # It must be either 'bypass', 'one_factor', 'two_factor' or 'deny'.
     rules:
-#      - domain: 'http.acitrus.cn'
-#        policy: 'bypass'
-#        methods:
-#          - 'GET'
-#
-#      - domain: 'http.acitrus.cn'
-#        subject:
-#          - 'group:public_read_write'
-#        policy: 'one_factor'
+      #      - domain: 'http.acitrus.cn'
+      #        policy: 'bypass'
+      #        methods:
+      #          - 'GET'
+      #
+      #      - domain: 'http.acitrus.cn'
+      #        subject:
+      #          - 'group:public_read_write'
+      #        policy: 'one_factor'
 
       # nacos
       - domain: 'nacos.acitrus.cn'
