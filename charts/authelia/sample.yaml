@@ -17,7 +17,7 @@ configMap:
 
   log:
     ## Level of verbosity for logs: info, debug, trace.
-    level: 'trace'
+    level: 'info'
 
   authentication_backend:
     ldap:
@@ -221,10 +221,9 @@ configMap:
               -----END PRIVATE KEY-----
 
       clients:
-        - client_id: 'unique-client-identifier'
-          client_name: 'My Application'
-          client_secret: '$pbkdf2-sha512$310000$c8p78n7pUMln0jzvd4aK4Q$JNRBzwAo0ek5qKn50cFzzvE9RXV88h1wJn5KGiHrD0YKtZaR/nCb2CJPOsKaPK0hjf.9yHxzQGZziziccp6Yng'  # The digest of 'insecure_secret'.
+        - client_id: 'kafka'
+          client_name: 'kafka'
+          client_secret: '6BN2aQGGw.-M_q-H@2A3ak0YA#Q:wiz6cUeX%9DinL+si+J^>wTonhm^ZEXv@7wm7^3UC3w>xqH!u?si.0Nkwh?fk3AJT3r0C.)1'  # The digest of 'insecure_secret'.
           redirect_uris:
-            - 'https://oidc.acitrus.cn:8080/oauth2/callback'
-          audience:
-            - 'https://app.acitrus.cn'
+            - 'https://kafka.acitrus.cn/oauth/callback/auth.acitrus.cn'
+          authorization_policy: 'one_factor'
