@@ -189,35 +189,36 @@ configMap:
       jwks:
         - key_id: ''
           use: 'sig'
-          key: |
-            -----BEGIN PRIVATE KEY-----
-            MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQClUDFLPoUl4i0z
-            kPPNQGf7xUNiQ/+YZ9z7TX7LBpEoCwvfYIIm8w6ZkswaYYY4KYlnqBsnMx5Y6ZpL
-            QhuLWjD48pxKWp15TqjdgLmbA3orHRR6pZT0I6y9qr2Xs4IafEZcJ0BUR8T158io
-            hzMNnvDmtpGmhXXPI/ViZS7dIYLfGhay4YVRWniooHIuAHQNAO8bqIJYiLtkXj56
-            B8/n+C+TInSjnU77KosPfxGrlDdtTzn6qh69JTlXCyfd1nQWVSYJphlHzfRoYOaS
-            vG3ecGfCLezKcI6tzfucehSXkLyTn1XteeBeQMW4od+UcG2ckXrj2Od9TTbd7yDl
-            Nn305itjAgMBAAECggEAKNwZ2v3Afj0ZrAmzYPN+4BmBTrv85GgjlA+y+66LWUjl
-            rdgWQ1dHMAk7HnglayNFHZRM5dL6OMLAisJzuW1Y9mdM3wnnq1CYZ2tGNPzWiOp+
-            odPkbbWVoCmgA+twCGjYITXobgxxL9CS5ajJIyA6beQJOw34sPKz15anzytVxBuy
-            dt5jXfxgaIJDY6TXwXfn0o5RjFXi+ioKDIfHQjG4nWuvdORHOKoqmRO1hq4RSlbm
-            5841uYIKYUraVSbXX05J8UC5+FtnMtSRpJVQMAfwDIhbJaesFgm3phLksWp7WJfK
-            1Z3Yrxs2TnpE/seeYdK0k8Ts4iThJW8Ee3hB4so6UQKBgQDPYS7mG/BT8aBpGtQg
-            kgnxQvKWN4kwRwRiik2Ok3irCW7rvNuL6pa51bWMUaJapReoVuIlDkt9EuyefLyn
-            8R6c+AK4jcRnEW6ZcfLs/zziYTu2YW5wpSoYsDRbQmhShChjDP+vOIWTlpyYybZ4
-            k1VgxCAhpYXP9rIq1esxPlyGMwKBgQDMEjUwtaTVPx/l1WZaEM6nxWFUhvlf/COH
-            nQtLDs2XmF7Z8VeAoDynify/arAEDGZsdzRPkOfht1WMU6ALJz/K6EzjJbgrO6gi
-            Q/GT8Rjj3vHKeBqYA1lWGO8A6WNZ1iQ/dtM+DVLeF6z9AKfPy4blTr0Jl98efBW6
-            rz/2bkO2EQKBgGeRZ3SwW1PxBmW3al1h0elVwAVZcwBTV1NHMviTmd4Bdg3xYcv8
-            uo3Qtzx+wJB4htohmgtbmkO6ocV9ElLlTp6iFenJk17OC+hCSkomJmgAm2u4OQm0
-            0tNFnMA+6A7dxbXCFieSGNPekhKUGrcZDbin+kwTeEKmN9DAyRbsyBSVAoGABpxU
-            YsaPl2TbGKvoC+TdfOvU8lMJAwX89Kius/i/yjhiYjcCOaV3MYozyNOg7hCkxMC7
-            zhQInvQ8bjZLSfE0jNMnongXVjcxhCKlUcCOqNsRBBkN63y4SSS3oVTuJfvc4r1r
-            rGfsFku4C94YkY+rSARb9VKZJLiqT4jbzpTV1rECgYEAj8eV+pnbDr+vmemxSo3T
-            hBcsKeL/hd3l2I73IFZGWRUEjSCii5arEv8upShBuMMGMmDG8bNzUeDn3Wb96QuN
-            aVN7R/R57QMbYpA1giIS/C59Y+zJL2Sf1Y52SZdrYL2F+/E5Ae985/Lwt+1EWNGh
-            L9CTmFsn4TyhOwzc2VdjIY4=
-            -----END PRIVATE KEY-----
+          key:
+            value: |
+              -----BEGIN PRIVATE KEY-----
+              MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQClUDFLPoUl4i0z
+              kPPNQGf7xUNiQ/+YZ9z7TX7LBpEoCwvfYIIm8w6ZkswaYYY4KYlnqBsnMx5Y6ZpL
+              QhuLWjD48pxKWp15TqjdgLmbA3orHRR6pZT0I6y9qr2Xs4IafEZcJ0BUR8T158io
+              hzMNnvDmtpGmhXXPI/ViZS7dIYLfGhay4YVRWniooHIuAHQNAO8bqIJYiLtkXj56
+              B8/n+C+TInSjnU77KosPfxGrlDdtTzn6qh69JTlXCyfd1nQWVSYJphlHzfRoYOaS
+              vG3ecGfCLezKcI6tzfucehSXkLyTn1XteeBeQMW4od+UcG2ckXrj2Od9TTbd7yDl
+              Nn305itjAgMBAAECggEAKNwZ2v3Afj0ZrAmzYPN+4BmBTrv85GgjlA+y+66LWUjl
+              rdgWQ1dHMAk7HnglayNFHZRM5dL6OMLAisJzuW1Y9mdM3wnnq1CYZ2tGNPzWiOp+
+              odPkbbWVoCmgA+twCGjYITXobgxxL9CS5ajJIyA6beQJOw34sPKz15anzytVxBuy
+              dt5jXfxgaIJDY6TXwXfn0o5RjFXi+ioKDIfHQjG4nWuvdORHOKoqmRO1hq4RSlbm
+              5841uYIKYUraVSbXX05J8UC5+FtnMtSRpJVQMAfwDIhbJaesFgm3phLksWp7WJfK
+              1Z3Yrxs2TnpE/seeYdK0k8Ts4iThJW8Ee3hB4so6UQKBgQDPYS7mG/BT8aBpGtQg
+              kgnxQvKWN4kwRwRiik2Ok3irCW7rvNuL6pa51bWMUaJapReoVuIlDkt9EuyefLyn
+              8R6c+AK4jcRnEW6ZcfLs/zziYTu2YW5wpSoYsDRbQmhShChjDP+vOIWTlpyYybZ4
+              k1VgxCAhpYXP9rIq1esxPlyGMwKBgQDMEjUwtaTVPx/l1WZaEM6nxWFUhvlf/COH
+              nQtLDs2XmF7Z8VeAoDynify/arAEDGZsdzRPkOfht1WMU6ALJz/K6EzjJbgrO6gi
+              Q/GT8Rjj3vHKeBqYA1lWGO8A6WNZ1iQ/dtM+DVLeF6z9AKfPy4blTr0Jl98efBW6
+              rz/2bkO2EQKBgGeRZ3SwW1PxBmW3al1h0elVwAVZcwBTV1NHMviTmd4Bdg3xYcv8
+              uo3Qtzx+wJB4htohmgtbmkO6ocV9ElLlTp6iFenJk17OC+hCSkomJmgAm2u4OQm0
+              0tNFnMA+6A7dxbXCFieSGNPekhKUGrcZDbin+kwTeEKmN9DAyRbsyBSVAoGABpxU
+              YsaPl2TbGKvoC+TdfOvU8lMJAwX89Kius/i/yjhiYjcCOaV3MYozyNOg7hCkxMC7
+              zhQInvQ8bjZLSfE0jNMnongXVjcxhCKlUcCOqNsRBBkN63y4SSS3oVTuJfvc4r1r
+              rGfsFku4C94YkY+rSARb9VKZJLiqT4jbzpTV1rECgYEAj8eV+pnbDr+vmemxSo3T
+              hBcsKeL/hd3l2I73IFZGWRUEjSCii5arEv8upShBuMMGMmDG8bNzUeDn3Wb96QuN
+              aVN7R/R57QMbYpA1giIS/C59Y+zJL2Sf1Y52SZdrYL2F+/E5Ae985/Lwt+1EWNGh
+              L9CTmFsn4TyhOwzc2VdjIY4=
+              -----END PRIVATE KEY-----
 
       clients:
         - client_id: 'unique-client-identifier'
