@@ -18,7 +18,7 @@ configMap:
     oidc:
       ## Enables this in the config map. Currently in beta stage.
       ## See https://www.authelia.com/r/openid-connect/
-      enabled: true
+      enabled: false
       jwks:
         - key_id: ''
           algorithm: 'RS256'
