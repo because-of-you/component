@@ -22,11 +22,10 @@ configMap:
       jwks:
         - algorithm: 'RS256'
           use: 'sig'
-          key:
-            value: |
-              abc
-              123
-            path: '/secrets/oidc.jwk.RS256.pem'
+          key: |
+            -----BEGIN RSA PRIVATE KEY-----
+            ...
+            -----END RSA PRIVATE KEY-----
       clients:
         - client_id: 'unique-client-identifier'
           client_name: 'My Application'
