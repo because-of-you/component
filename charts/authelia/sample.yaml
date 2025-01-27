@@ -20,11 +20,16 @@ configMap:
       ## See https://www.authelia.com/r/openid-connect/
       enabled: true
       jwks:
-        - algorithm: 'RS256'
+        - key_id: ''
+          algorithm: 'RS256'
           use: 'sig'
-          key: |
-            abc
-            123
+          key:
+            value: |
+              abc
+              123
+            path: '/secrets/oidc.jwk.RS256.pem'
+          certificate_chain:
+            path: '/secrets.oidc.jwk.RS256.crt'
 
       clients:
         - client_id: 'unique-client-identifier'
