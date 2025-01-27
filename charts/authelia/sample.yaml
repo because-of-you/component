@@ -223,7 +223,7 @@ configMap:
       clients:
         - client_id: 'kafka'
           client_name: 'kafka'
-          client_secret: '$plaintext$6BN2aQGGw.-M_q-H@2A3ak0YA#Q:wiz6cUeX%9DinL+si+J^>wTonhm^ZEXv@7wm7^3UC3w>xqH!u?si.0Nkwh?fk3AJT3r0C.)1'  # The digest of 'insecure_secret'.
+          client_secret: '$plaintext$123456789'  # The digest of 'insecure_secret'.
           redirect_uris:
             - 'https://kafka.acitrus.cn/oauth/callback/auth.acitrus.cn'
           authorization_policy: 'one_factor'
