@@ -189,8 +189,8 @@ configMap:
 
 
       clients:
-        - client_id: 'kafka'
-          client_name: 'kafka'
+        - client_id: '58XXRbiqcdfaeq8DaPP91zYVTw2of4LqVrKdzirQiJDKoANfZDFgtduTYWbtqxE2'
+          client_name: 'KAFKA UI'
           # https://www.authelia.com/integration/openid-connect/frequently-asked-questions/#client-secret
           # T1Q1DYTK40unEDECju5Tir.UBOx4o0awLoBa8SZhpBudos.yZ.IHNNs3pP-6Hb05
           # $pbkdf2-sha512$310000$Tf2HocbXV4zIcqTb0SKsmg$0N7GXKDMWYq2Rd4ns3GPAlEk2jrd532GzjNy0gzM9NHBUG43WVEhz.FseMjwZdodqco93hYYWIxkQA4KxasSCA
