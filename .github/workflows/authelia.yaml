@@ -9,7 +9,7 @@ on:
 
 env:
   CHART_VERSION: 0.9.14
-  # KAFKA_RSA_PRIVATE_PEM: 1
+  KAFKA_RSA_PRIVATE_PEM: 1
 
 jobs:
   deployment:
@@ -30,7 +30,8 @@ jobs:
       - name: Generate RSA
         id: rsa
         run: |
-          openssl req -x509 -nodes -newkey rsa:4096 -keyout private.pem -out public.crt -sha256 -days 365 -subj '/CN=kafka.acitrus.cn'
+          openssl req -x509 -nodes -newkey rsa:4096 -keyout private.pem -out public.crt -sha256 -days 365 -subj '/CN=acitrus.cn'
+          $KAFKA_RSA_PRIVATE_PEM=$(cat private.pem)
 
       # https://github.com/because-of-you/helm-deploy
       - name: 'authelia'
@@ -70,5 +71,4 @@ jobs:
           timeout: 5m0s
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
-          KAFKA_RSA_PRIVATE_PEM: 'cat private.pem'
 
