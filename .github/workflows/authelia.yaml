@@ -9,6 +9,7 @@ on:
 
 env:
   CHART_VERSION: 0.9.14
+  KAFKA_RSA_PRIVATE_PEM: 1
 
 jobs:
   deployment:
@@ -22,13 +23,14 @@ jobs:
         with:
           base64-kube-config: ${{ secrets.KUBECONFIG_BASED }}
 
-#      - name: Generate kubeconfig
-#        run: |
-#          kubectl apply -k charts/authelia/workloads
+      - name: Generate RSA
+        run: |
+          openssl req -x509 -nodes -newkey rsa:4096 -keyout private.pem -out public.crt -sha256 -days 365 -subj '/CN=kafka.acitrus.cn'
+          export KAFKA_RSA_PRIVATE_PEM=$(cat private.pem)
 
       - uses: azure/setup-helm@v4.2.0
         with:
-           version: '3.16.4' # default is latest (stable)
+          version: '3.16.4' # default is latest (stable)
         id: install
 
       # https://github.com/because-of-you/helm-deploy
@@ -59,6 +61,13 @@ jobs:
                   username: '${{ secrets.DEFAULT_DATABASE_USERNAME }}'
                   password:
                     value: '${{ secrets.DEFAULT_DATABASE_PASSWORD }}'
+              identity_providers:
+                oidc:
+                  jwks:
+                    - key_id: 'kafka.acitrus.cn'
+                      # https://www.authelia.com/configuration/identity-providers/openid-connect/provider/#key
+                      key:
+                        value: "${{ env.KAFKA_RSA_PRIVATE_PEM }}"
           timeout: 30m0s
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
