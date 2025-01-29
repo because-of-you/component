@@ -35,6 +35,8 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: show RSA
+        env:
+          KAFKA_RSA_PRIVATE_PEM: ${{ steps.step_one.outputs.KAFKA_RSA_PRIVATE_PEM }}
         run: echo ${{ env.KAFKA_RSA_PRIVATE_PEM }}
 
       - uses: azure/setup-helm@v4.2.0
