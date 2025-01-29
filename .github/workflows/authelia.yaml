@@ -22,24 +22,6 @@ jobs:
         with:
           base64-kube-config: ${{ secrets.KUBECONFIG_BASED }}
 
-      - name: Generate RSA
-        id: rsa
-        run: |
-          openssl req -x509 -nodes -newkey rsa:4096 -keyout private.pem -out public.crt -sha256 -days 365 -subj '/CN=kafka.acitrus.cn'
-          export KAFKA_RSA_PRIVATE_PEM=$(cat private.pem)
-          echo "KAFKA_RSA_PRIVATE_PEM=$KAFKA_RSA_PRIVATE_PEM" >> "$GITHUB_ENV"
-
-        # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#example-of-a-multiline-string
-      - name: Set the value in bash
-        id: env
-        run: |
-          # echo "KAFKA_RSA_PRIVATE_PEM=$(cat private.pem)" >> "$GITHUB_ENV"
-
-      - name: show RSA
-        run: |
-          echo ${{ steps.rsa.outputs.KAFKA_RSA_PRIVATE_PEM }}
-          echo ${{ steps.env.outputs.KAFKA_RSA_PRIVATE_PEM }}
-
       - uses: azure/setup-helm@v4.2.0
         with:
           version: '3.16.4' # default is latest (stable)
@@ -49,6 +31,8 @@ jobs:
       - name: 'authelia'
         # 镜像
         uses: because-of-you/helm-deploy@master
+        run: |
+          openssl req -x509 -nodes -newkey rsa:4096 -keyout private.pem -out public.crt -sha256 -days 365 -subj '/CN=kafka.acitrus.cn'
         with:
           release: 'authelia'
           namespace: 'default'
@@ -83,4 +67,5 @@ jobs:
           timeout: 5m0s
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
+          KAFKA_RSA_PRIVATE_PEM: 'cat private.pem'
 
