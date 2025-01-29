@@ -9,8 +9,8 @@ on:
 
 env:
   REGISTRY: registry.cn-shenzhen.aliyuncs.com
-  TAG: 1.29.2
-  CHART_VERSION: 1.14.2
+  TAG: 1.30.0
+  CHART_VERSION: 1.15.1
 
 jobs:
   deployment:
@@ -135,11 +135,11 @@ jobs:
                 - name: CDK_SSO_OAUTH2_0_DEFAULT
                   value: "true"
                 - name: CDK_SSO_OAUTH2_0_CLIENT-ID
-                  value: "${{ secrets.CONDUKTOR_OAUTH2_ID }}"
+                  value: "58XXRbiqcdfaeq8DaPP91zYVTw2of4LqVrKdzirQiJDKoANfZDFgtduTYWbtqxE2"
                 - name: CDK_SSO_OAUTH2LOGOUT
                   value: "true"
                 - name: CDK_SSO_OAUTH2_0_CLIENT-SECRET
-                  value: "${{ secrets.CONDUKTOR_OAUTH2_SECRET }}"
+                  value: "T1Q1DYTK40unEDECju5Tir.UBOx4o0awLoBa8SZhpBudos.yZ.IHNNs3pP-6Hb05"
                 - name: CDK_SSO_OAUTH2_0_OPENID_ISSUER
                   value: "https://${{ secrets.DEFAULT_AUTH_HOST }}"
             
