@@ -31,8 +31,8 @@ jobs:
         # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#example-of-a-multiline-string
       - name: Set the value in bash
         id: env
-        run: |
-          echo "KAFKA_RSA_PRIVATE_PEM=$(cat private.pem)" >> "$GITHUB_ENV"
+#        run: |
+#          echo "KAFKA_RSA_PRIVATE_PEM=$(cat private.pem)" >> "$GITHUB_ENV"
 
       - name: show RSA
         run: |
