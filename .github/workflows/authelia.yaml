@@ -9,14 +9,13 @@ on:
 
 env:
   CHART_VERSION: 0.9.14
-  KAFKA_RSA_PRIVATE_PEM: 1
+  # KAFKA_RSA_PRIVATE_PEM: 1
 
 jobs:
   deployment:
     runs-on: 'ubuntu-latest'
     steps:
       - uses: actions/checkout@v4
-
 
       # https://github.com/marketplace/actions/kubernetes-cli-kubectl
       - uses: tale/kubectl-action@v1
@@ -27,6 +26,9 @@ jobs:
         run: |
           openssl req -x509 -nodes -newkey rsa:4096 -keyout private.pem -out public.crt -sha256 -days 365 -subj '/CN=kafka.acitrus.cn'
           export KAFKA_RSA_PRIVATE_PEM=$(cat private.pem)
+
+      - name: show RSA
+        run: echo ${{ env.KAFKA_RSA_PRIVATE_PEM }}
 
       - uses: azure/setup-helm@v4.2.0
         with:
