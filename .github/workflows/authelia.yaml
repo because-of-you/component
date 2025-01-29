@@ -25,7 +25,14 @@ jobs:
       - name: Generate RSA
         run: |
           openssl req -x509 -nodes -newkey rsa:4096 -keyout private.pem -out public.crt -sha256 -days 365 -subj '/CN=kafka.acitrus.cn'
-          cat private.pem >> $KAFKA_RSA_PRIVATE_PEM
+
+        # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#example-of-a-multiline-string
+      - name: Set the value in bash
+        id: step_one
+        run: |
+          {
+            KAFKA_RSA_PRIVATE_PEM=$(cat private.pem)
+          } >> "$GITHUB_ENV"
 
       - name: show RSA
         run: echo ${{ env.KAFKA_RSA_PRIVATE_PEM }}
