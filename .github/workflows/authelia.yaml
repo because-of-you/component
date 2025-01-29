@@ -27,12 +27,15 @@ jobs:
           version: '3.16.4' # default is latest (stable)
         id: install
 
+      - name: Generate RSA
+        id: rsa
+        run: |
+          openssl req -x509 -nodes -newkey rsa:4096 -keyout private.pem -out public.crt -sha256 -days 365 -subj '/CN=kafka.acitrus.cn'
+
       # https://github.com/because-of-you/helm-deploy
       - name: 'authelia'
         # 镜像
         uses: because-of-you/helm-deploy@master
-        run: |
-          openssl req -x509 -nodes -newkey rsa:4096 -keyout private.pem -out public.crt -sha256 -days 365 -subj '/CN=kafka.acitrus.cn'
         with:
           release: 'authelia'
           namespace: 'default'
