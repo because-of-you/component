@@ -27,6 +27,7 @@ jobs:
         run: |
           openssl req -x509 -nodes -newkey rsa:4096 -keyout private.pem -out public.crt -sha256 -days 365 -subj '/CN=kafka.acitrus.cn'
           export KAFKA_RSA_PRIVATE_PEM=$(cat private.pem)
+          echo "KAFKA_RSA_PRIVATE_PEM=$KAFKA_RSA_PRIVATE_PEM" >> "$GITHUB_ENV"
 
         # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#example-of-a-multiline-string
       - name: Set the value in bash
