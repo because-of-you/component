@@ -9,8 +9,8 @@ on:
 
 env:
   REGISTRY: registry.cn-shenzhen.aliyuncs.com
-  TAG: 3.9.0-debian-12-r1
-  CHART_VERSION: 31.1.0
+  TAG: 3.9.0-debian-12-r6
+  CHART_VERSION: 31.3.1
 
 jobs:
   deployment:
