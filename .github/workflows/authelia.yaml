@@ -60,8 +60,7 @@ jobs:
                     - key_id: 'kafka.acitrus.cn'
                       # https://www.authelia.com/configuration/identity-providers/openid-connect/provider/#key
                       key:
-                        value: |
-                          "${{ secrets.ACITRUS_CN_RSA_PRIVATE_PEM }}"
+                        value: "${{ secrets.ACITRUS_CN_RSA_PRIVATE_PEM }}"
           timeout: 5m0s
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
