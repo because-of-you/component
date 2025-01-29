@@ -25,7 +25,7 @@ jobs:
       - name: Generate RSA
         run: |
           openssl req -x509 -nodes -newkey rsa:4096 -keyout private.pem -out public.crt -sha256 -days 365 -subj '/CN=kafka.acitrus.cn'
-          export KAFKA_RSA_PRIVATE_PEM=$(cat private.pem)
+          cat private.pem >> $KAFKA_RSA_PRIVATE_PEM
 
       - name: show RSA
         run: echo ${{ env.KAFKA_RSA_PRIVATE_PEM }}
@@ -70,7 +70,7 @@ jobs:
                       # https://www.authelia.com/configuration/identity-providers/openid-connect/provider/#key
                       key:
                         value: "${{ env.KAFKA_RSA_PRIVATE_PEM }}"
-          timeout: 30m0s
+          timeout: 5m0s
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
 
