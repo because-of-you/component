@@ -9,8 +9,8 @@ on:
 
 env:
   REGISTRY: registry.cn-shenzhen.aliyuncs.com
-  TAG: 1.30.0
-  CHART_VERSION: 1.15.1
+  TAG: 1.29.2
+  CHART_VERSION: 1.14.2
 
 jobs:
   deployment:
