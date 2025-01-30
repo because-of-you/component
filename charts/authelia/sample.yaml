@@ -150,6 +150,12 @@ configMap:
 
     # It must be either 'bypass', 'one_factor', 'two_factor' or 'deny'.
     rules:
+      # kafka ui
+      - domain: 'kafka.acitrus.cn'
+        policy: 'bypass'
+        methods:
+          - 'GET'
+
       #      - domain: 'http.acitrus.cn'
       #        policy: 'bypass'
       #        methods:
