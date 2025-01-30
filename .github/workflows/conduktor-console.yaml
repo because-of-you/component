@@ -137,7 +137,7 @@ jobs:
                 - name: CDK_SSO_OAUTH2_0_GROUPSCLAIM
                   value: "groups"
                 - name: CDK_SSO_OAUTH2_0_SCOPES
-                  value: "profile email groups"
+                  value: "openid profile email groups"
                 - name: CDK_SSO_OAUTH2_0_DEFAULT
                   value: "true"
                 - name: CDK_SSO_OAUTH2_0_CLIENT-ID
