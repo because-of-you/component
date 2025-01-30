@@ -153,8 +153,6 @@ configMap:
       # kafka ui
       - domain: 'kafka.acitrus.cn'
         policy: 'bypass'
-        methods:
-          - 'GET'
 
       #      - domain: 'http.acitrus.cn'
       #        policy: 'bypass'
