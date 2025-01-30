@@ -132,6 +132,8 @@ jobs:
                   value: "Asia/Shanghai"
                 - name: CDK_SSO_OAUTH2_0_NAME
                   value: "${{ secrets.DEFAULT_AUTH_HOST }}"
+                - name: CDK_SSO_OAUTH2_0_ALLOWUNSIGNEDIDTOKENS
+                  value: "true"
                 - name: CDK_SSO_OAUTH2_0_DEFAULT
                   value: "true"
                 - name: CDK_SSO_OAUTH2_0_CLIENT-ID
