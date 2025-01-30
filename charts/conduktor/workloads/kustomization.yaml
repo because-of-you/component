@@ -1,3 +1,3 @@
 resources:
   - namespace/conduktor.yaml
-  - network/routes/conduktor.yaml
+#  - network/routes/conduktor.yaml
