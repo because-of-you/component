@@ -57,7 +57,7 @@ jobs:
               identity_providers:
                 oidc:
                   jwks:
-                    - key_id: 'kafka.acitrus.cn'
+                    - key_id: ''
                       # https://www.authelia.com/configuration/identity-providers/openid-connect/provider/#key
                       key:
                         value: |
