@@ -157,7 +157,7 @@ configMap:
           - 'GET'
 
       - domain: 'kafka.acitrus.cn'
-        policy: 'bypass'
+        policy: 'one_factor'
         subject:
           - 'group:public_read_write'
 
