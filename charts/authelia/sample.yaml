@@ -159,6 +159,7 @@ configMap:
       - domain: 'kafka.acitrus.cn'
         policy: 'one_factor'
         subject:
+          - 'group:public_readonly'
           - 'group:public_read_write'
 
       # nacos
