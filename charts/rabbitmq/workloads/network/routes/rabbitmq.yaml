@@ -1,54 +1,33 @@
-apiVersion: apisix.apache.org/v2
-kind: ApisixRoute
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
 metadata:
-  name: rabbitmq-route
-  namespace: default
+  name: rabbitmq.acitrus.cn
+  labels:
+    app.kubernetes.io/name: homepage
+  annotations:
+    gethomepage.dev/href: "https://rabbitmq.acitrus.cn"
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/description: 首页
+    gethomepage.dev/group: Other
+    gethomepage.dev/icon: https://cdn.jsdelivr.net/gh/selfhst/icons/png/homepage.png
+    gethomepage.dev/name: rabbitmq
+    #    gethomepage.dev/widget.type: "emby"
+    #    gethomepage.dev/widget.url: "https://home.acitrus.cn"
+    gethomepage.dev/pod-selector: "app.kubernetes.io/name=rabbitmq"
 spec:
-  http:
-    - name: rabbitmq-route-ui
-      match:
-        hosts:
-          - rabbitmq.acitrus.cn
-        paths:
-          - /*
-      backends:
-        - serviceName: rabbitmq
-          servicePort: 15672
-      websocket: true
-      plugins:
-        - name: redirect
-          enable: true
-          config:
-            http_to_https: true
-
-        - name: kafka-logger
-          enable: true
-          # https://apisix.apache.org/zh/docs/apisix/plugins/kafka-logger/#%E5%B1%9E%E6%80%A7
-          config:
-            kafka_topic: apisix_rabbitmq_route_log
-            batch_max_size: 1
-            name: "kafka logger"
-            brokers:
-              - host: "kafka.default"
-                port: 9092
-                sasl_config:
-                  user: "${KAFKA_SASL_DEFAULT_USERNAME}"
-                  password: "${KAFKA_SASL_DEFAULT_PASSWORD}"
-
-        - name: real-ip
-          enable: true
-          config:
-            source: "http_x_forwarded_for"
-
-        - name: request-id
-          enable: true
-
-  stream:
-    - name: rabbitmq-stream
-      protocol: TCP
-      match:
-        host: rabbitmq.acitrus.cn
-        ingressPort: 1024
-      backend:
-        serviceName: rabbitmq
-        servicePort: 5672
+  entryPoints:
+    - web
+    - websecure
+  routes:
+    # https://doc.traefik.io/traefik/middlewares/overview/
+    - kind: Rule
+      match: Host(`rabbitmq.acitrus.cn`)
+      services:
+        - kind: Service
+          name: rabbitmq
+          port: 15672
+      middlewares:
+        - name: http-to-https
+          namespace: 'default'
+        - name: 'forwardauth-authelia' # name of your middleware, as defined in your middleware.yml
+          namespace: 'default'

@@ -8,7 +8,7 @@ on:
       - rabbitmq-*.*.*
 
 env:
-  CHART_VERSION: 15.0.7
+  CHART_VERSION: 15.2.4
 
 jobs:
   deployment:
@@ -45,12 +45,13 @@ jobs:
               log.default.level = info
             
               auth_backends.1 = internal
-              auth_backends.2.authn = rabbit_auth_backend_oauth2
-              auth_backends.2.authz = internal
+              auth_backends.2 = rabbit_auth_backend_oauth2
+              # auth_backends.2.authn = rabbit_auth_backend_oauth2
+              # auth_backends.2.authz = internal
             
               management.oauth_disable_basic_auth = false
               management.oauth_enabled = true
-              #management.oauth_scopes = openid profile rabbitmq.*
+              # management.oauth_scopes = openid profile rabbitmq.*
             
               # management.oauth_client_id = ${{ secrets.DEFAULT_OAUTH2_ID }}
               management.oauth_client_id = ${{ secrets.RABBITMQ_OAUTH2_ID }}
@@ -63,7 +64,7 @@ jobs:
               # https://www.rabbitmq.com/docs/access-control
             
               # auth_oauth2.resource_server_id = ${{ secrets.DEFAULT_OAUTH2_ID }}
-              auth_oauth2.resource_server_id = ${{ secrets.RABBITMQ_OAUTH2_ID }}
+              # auth_oauth2.resource_server_id = ${{ secrets.RABBITMQ_OAUTH2_ID }}
               auth_oauth2.issuer = https://${{ secrets.DEFAULT_AUTH_HOST }}
               # auth_oauth2.jwks_url = https://${{ secrets.DEFAULT_AUTH_HOST }}/.well-known/jwks
               auth_oauth2.https.verify = verify_none
