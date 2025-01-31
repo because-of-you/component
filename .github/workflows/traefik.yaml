@@ -8,7 +8,7 @@ on:
       - traefik-*.*.*
 
 env:
-  CHART_VERSION: 33.2.1
+  CHART_VERSION: 34.2.0
 
 jobs:
   deployment:
@@ -38,6 +38,7 @@ jobs:
         with:
           release: 'traefik'
           namespace: 'traefik'
+          # https://github.com/traefik/traefik-helm-chart
           chart: 'oci://ghcr.io/traefik/helm/traefik'
           token: '${{ github.token }}'
           version: ${{ env.CHART_VERSION }}
