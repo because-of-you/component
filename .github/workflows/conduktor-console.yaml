@@ -132,6 +132,7 @@ jobs:
                   value: "Asia/Shanghai"
                 - name: CDK_SSO_OAUTH2_0_NAME
                   value: "${{ secrets.DEFAULT_AUTH_HOST }}"
+                # https://docs.conduktor.io/platform/get-started/configuration/env-variables/#oauth2-properties
                 - name: CDK_SSO_OAUTH2_0_ALLOWUNSIGNEDIDTOKENS
                   value: "true"
                 - name: CDK_SSO_OAUTH2_0_DEFAULT
