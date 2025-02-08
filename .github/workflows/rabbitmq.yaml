@@ -60,9 +60,9 @@ jobs:
               
               # 用户搜索配置
               auth_ldap.logger = false
-              auth_ldap.vhost_access_query = {constant, true}
-              auth_ldap.resource_access_query = {constant, true}
-              auth_ldap.topic_access_query = {constant, true}
+              # auth_ldap.vhost_access_query = {constant, true}
+              # auth_ldap.resource_access_query = {constant, true}
+              # auth_ldap.topic_access_query = {constant, true}
             
               
               # -----------
