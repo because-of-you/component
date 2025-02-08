@@ -219,3 +219,4 @@ configMap:
           audience:
             - 'rabbitmq'
           authorization_policy: 'one_factor'
+          token_endpoint_auth_method: 'client_secret_post'
