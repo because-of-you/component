@@ -42,7 +42,7 @@ jobs:
               username: admin
             
             extraConfiguration: |
-              log.default.level = debug
+              log.default.level = trace
             
               # 启用 OAuth2 认证后端
               auth_backends.1 = internal
