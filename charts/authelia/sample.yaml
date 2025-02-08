@@ -177,7 +177,7 @@ configMap:
         policy: 'bypass'
         methods:
           - 'GET'
-          -
+
       # https://nacos.acitrus.cn/nacos/v1/auth/users/login
       - domain: 'nacos.acitrus.cn'
         policy: 'bypass'
