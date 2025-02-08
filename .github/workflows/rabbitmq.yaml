@@ -53,7 +53,7 @@ jobs:
               management.oauth_disable_basic_auth = false
               
               # OAuth2 服务器配置
-              # auth_oauth2.resource_server_id = rabbitmq
+              auth_oauth2.resource_server_id = rabbitmq
               auth_oauth2.issuer = https://auth.acitrus.cn
               auth_oauth2.jwks_url= https://auth.acitrus.cn/jwks.jso
               
