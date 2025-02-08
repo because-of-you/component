@@ -198,3 +198,15 @@ configMap:
           redirect_uris:
             - 'https://kafka.acitrus.cn/oauth/callback/auth.acitrus.cn'
           authorization_policy: 'one_factor'
+
+        # docker run -d authelia/authelia:latest authelia --config /config/configuration.yml --config.experimental.filters template
+        - client_id: '5dc253dcd7d5f9259e97bf16df231076770988650baf61bae5955bb6dcec2795'
+          client_name: 'rabbitmq'
+          # https://www.authelia.com/integration/openid-connect/frequently-asked-questions/#client-secret
+          # docker run --rm authelia/authelia:latest authelia crypto hash generate pbkdf2 --variant sha512 --random --random.length 64 --random.charset rfc3986
+          # Random Password: fgYds_r59DSEDCwDkIhLA2UFq8LL.6GRolOtal7ID4Lx6b5qmR3I5MjH1jzM0BMc
+          # Digest: $pbkdf2-sha512$310000$enJKA2Vw2a3yEblPYCXN1A$PYGRA2GJu/pEsvsiemVkudKBYphq4iqFG4a0G0Xvpsu4zehkA6QfLnQxGyktUe2p3dxqL5Up5uHEso.JIPm.qQ
+          client_secret: '$pbkdf2-sha512$310000$enJKA2Vw2a3yEblPYCXN1A$PYGRA2GJu/pEsvsiemVkudKBYphq4iqFG4a0G0Xvpsu4zehkA6QfLnQxGyktUe2p3dxqL5Up5uHEso.JIPm.qQ'  # The digest of 'insecure_secret'.
+          redirect_uris:
+            - 'https://rabbitmq.acitrus.cn/*'
+          authorization_policy: 'one_factor'

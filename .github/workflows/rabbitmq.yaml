@@ -59,8 +59,8 @@ jobs:
               
               # 管理界面 OAuth2 配置
               management.oauth_enabled= true
-              management.oauth_client_id = rabbitmq
-              management.oauth_client_secret= rabbitmq
+              management.oauth_client_id = 5dc253dcd7d5f9259e97bf16df231076770988650baf61bae5955bb6dcec2795
+              management.oauth_client_secret= fgYds_r59DSEDCwDkIhLA2UFq8LL.6GRolOtal7ID4Lx6b5qmR3I5MjH1jzM0BMc
               management.oauth_scopes = openid profile email
               auth_oauth2.authorization_endpoint = https://auth.acitrus.cn/api/oidc/authorization
               auth_oauth2.token_endpoint = https://auth.acitrus.cn/api/oidc/token
