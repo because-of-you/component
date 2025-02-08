@@ -45,7 +45,12 @@ jobs:
               log.default.level = debug
             
               # 启用 OAuth2 认证后端
-              auth_backends.1 = oauth2
+              auth_backends.1 = internal
+              auth_backends.2 = rabbit_auth_backend_oauth2
+              # auth_backends.2.authn = rabbit_auth_backend_oauth2
+              # auth_backends.2.authz = internal
+            
+              management.oauth_disable_basic_auth = false
               
               # OAuth2 服务器配置
               auth_oauth2.resource_server_id = rabbitmq
