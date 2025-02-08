@@ -55,7 +55,7 @@ jobs:
               # 如果 LDAP 服务器需要绑定用户进行查询
               # auth_ldap.dn_lookup_bind.user_dn = uid=reader,ou=people,dc=acitrus,dc=cn
               auth_ldap.user_dn_pattern = uid=${username},ou=people,dc=acitrus,dc=cn
-              auth_ldap.dn_lookup_bind.password = password
+              auth_ldap.dn_lookup_bind.password = qQKMdVrLmbuYXu1eGxTC
               
               
               # 用户搜索配置
