@@ -8,6 +8,13 @@ ingress:
     entryPoints:
       - web
       - websecure
+    middlewares:
+      chains:
+        auth:
+          # List of Middlewares to apply before the forwardAuth Middleware in the authentication chain.
+          before:
+            - name: 'public-cors'
+              namespace: 'default'
 
 pod:
   # Must be Deployment, DaemonSet, or StatefulSet.
