@@ -49,7 +49,7 @@ jobs:
               
               # LDAP 服务器配置
               auth_ldap.servers.1 = iam-ldap.default
-              auth_ldap.port = 389
+              auth_ldap.port = 3890
               # auth_ldap.user_dn_pattern = uid=${username},ou=people,dc=acitrus,dc=cn
 
               # 如果 LDAP 服务器需要绑定用户进行查询
@@ -59,7 +59,7 @@ jobs:
               
               
               # 用户搜索配置
-              auth_ldap.logger = false
+              auth_ldap.logger = true
               # auth_ldap.vhost_access_query = {constant, true}
               # auth_ldap.resource_access_query = {constant, true}
               # auth_ldap.topic_access_query = {constant, true}
