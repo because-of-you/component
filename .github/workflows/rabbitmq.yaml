@@ -65,9 +65,10 @@ jobs:
               auth_oauth2.authorization_endpoint = https://auth.acitrus.cn/api/oidc/authorization
               auth_oauth2.token_endpoint = https://auth.acitrus.cn/api/oidc/token
               # management.oauth2.userinfo_endpoint = https://auth.acitrus.cn/api/oidc/userinfo
-              auth_oauth2.preferred_username_claims.1 = name
-              auth_oauth2.preferred_username_claims.2 = preferred_username
-              auth_oauth2.preferred_username_claims.3 = email
+              auth_oauth2.preferred_username_claims.1 = user_name
+              auth_oauth2.preferred_username_claims.2 = name
+              auth_oauth2.preferred_username_claims.3 = preferred_username
+              auth_oauth2.preferred_username_claims.4 = email
             
               # 权限映射规则
               # auth_oauth2.vhost_access_query = {username, [{string, ${username}}]}
