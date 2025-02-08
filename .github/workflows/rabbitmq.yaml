@@ -42,24 +42,24 @@ jobs:
               username: admin
             
             extraConfiguration: |
-              log.default.level = debug
+              log.default.level = info
               # 使用 LDAP 作为认证后端
-              auth_backends.1 = ldap
-              auth_backends.2 = internal
+              # auth_backends.1 = ldap
+              # auth_backends.2 = internal
               
               # LDAP 服务器配置
-              auth_ldap.servers.1 = iam-ldap.default
-              auth_ldap.port = 3890
+              # auth_ldap.servers.1 = iam-ldap.default
+              # auth_ldap.port = 3890
               # auth_ldap.user_dn_pattern = uid=${username},ou=people,dc=acitrus,dc=cn
 
               # 如果 LDAP 服务器需要绑定用户进行查询
               # auth_ldap.dn_lookup_bind.user_dn = uid=reader,ou=people,dc=acitrus,dc=cn
-              auth_ldap.user_dn_pattern = uid=${username},ou=people,dc=acitrus,dc=cn
-              auth_ldap.dn_lookup_bind.password = qQKMdVrLmbuYXu1eGxTC
+              # auth_ldap.user_dn_pattern = uid=${username},ou=people,dc=acitrus,dc=cn
+              # auth_ldap.dn_lookup_bind.password = qQKMdVrLmbuYXu1eGxTC
               
               
               # 用户搜索配置
-              auth_ldap.logger = true
+              # auth_ldap.logger = true
               # auth_ldap.vhost_access_query = {constant, true}
               # auth_ldap.resource_access_query = {constant, true}
               # auth_ldap.topic_access_query = {constant, true}
