@@ -10,7 +10,7 @@ ingress:
       - websecure
     middlewares:
       chains:
-        auth:
+        ingressRoute:
           # List of Middlewares to apply before the forwardAuth Middleware in the authentication chain.
           before:
             - name: 'public-cors'
