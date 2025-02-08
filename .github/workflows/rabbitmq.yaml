@@ -51,9 +51,6 @@ jobs:
               auth_oauth2.resource_server_id = rabbitmq
               auth_oauth2.issuer = https://auth.acitrus.cn
               auth_oauth2.audience = rabbitmq-client
-              auth_oauth2.key_config = [
-                {keys, "https://auth.acitrus.cn/jwks.json"}
-              ]
               
               # 管理界面 OAuth2 配置
               management.oauth2.enabled = true
