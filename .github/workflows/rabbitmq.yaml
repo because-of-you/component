@@ -42,40 +42,37 @@ jobs:
               username: admin
             
             extraConfiguration: |
-              log.default.level = info
+              log.default.level = debug
             
-              auth_backends.1 = internal
-              auth_backends.2 = rabbit_auth_backend_oauth2
-              # auth_backends.2.authn = rabbit_auth_backend_oauth2
-              # auth_backends.2.authz = internal
+              # 启用 OAuth2 认证后端
+              auth_backends.1 = oauth2
+              
+              # OAuth2 服务器配置
+              auth_oauth2.resource_server_id = rabbitmq
+              auth_oauth2.issuer = https://auth.acitrus.cn
+              auth_oauth2.audience = rabbitmq-client
+              auth_oauth2.key_config = [
+                {keys, "https://auth.acitrus.cn/jwks.json"}
+              ]
+              
+              # 管理界面 OAuth2 配置
+              management.oauth2.enabled = true
+              management.oauth2.client_id = your-client-id
+              management.oauth2.client_secret = your-client-secret
+              management.oauth2.scope = openid profile email
+              management.oauth2.authorization_endpoint = https://auth.acitrus.cn/api/oidc/authorization
+              management.oauth2.token_endpoint = https://auth.acitrus.cn/api/oidc/token
+              management.oauth2.userinfo_endpoint = https://auth.acitrus.cn/api/oidc/userinfo
             
-              management.oauth_disable_basic_auth = false
-              management.oauth_enabled = true
-              # management.oauth_scopes = openid profile rabbitmq.*
-            
-              # management.oauth_client_id = ${{ secrets.DEFAULT_OAUTH2_ID }}
-              management.oauth_client_id = ${{ secrets.RABBITMQ_OAUTH2_ID }}
-              management.oauth_provider_url = https://${{ secrets.DEFAULT_AUTH_HOST }}
-              # management.oauth_scopes = .*
-            
-              # https://rabbitmq.cn/docs/oauth2
-              # https://www.rabbitmq.com/docs/oauth2#variables-configurable
-              # https://www.rabbitmq.com/docs/oauth2-examples
-              # https://www.rabbitmq.com/docs/access-control
-            
-              # auth_oauth2.resource_server_id = ${{ secrets.DEFAULT_OAUTH2_ID }}
-              # auth_oauth2.resource_server_id = ${{ secrets.RABBITMQ_OAUTH2_ID }}
-              auth_oauth2.issuer = https://${{ secrets.DEFAULT_AUTH_HOST }}
-              # auth_oauth2.jwks_url = https://${{ secrets.DEFAULT_AUTH_HOST }}/.well-known/jwks
-              auth_oauth2.https.verify = verify_none
-              auth_oauth2.preferred_username_claims.1 = name
-
-#              auth_oauth2.https.hostname_verification = wildcard
-#              ssl_options.verify = verify_none
-#              ssl_options.fail_if_no_peer_cert = false
-#              auth_oauth2.https.hostname_verification = wildcard
-#        auth_oauth2.preferred_username_claims.1 = name
-        # auth_oauth2.preferred_username_claims.1 = email
+              # 权限映射规则
+              auth_oauth2.vhost_access_query = {username, [{string, ${username}}]}
+              auth_oauth2.resource_access_query = {username, [{string, ${username}}]}
+              auth_oauth2.topic_access_query = {username, [{string, ${username}}]}
+              
+              # 用户信息映射（可选）
+              management.oauth2.userinfo_claims = preferred_username
+              management.oauth2.userinfo_username_key = preferred_username
+              management.oauth2.userinfo_roles_key = roles
 
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
