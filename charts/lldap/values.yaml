@@ -121,7 +121,7 @@ securityContext: { }
   #   drop:
   #   - ALL
   # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
+# runAsNonRoot: true
 # runAsUser: 1000
 
 # -- Configures service settings for the chart.
@@ -143,7 +143,7 @@ ingress:
   enabled: false
   className: ""
   annotations: { }
-    # kubernetes.io/ingress.class: nginx
+  # kubernetes.io/ingress.class: nginx
   # kubernetes.io/tls-acme: "true"
   hosts:
     - host: chart-example.local
@@ -175,7 +175,7 @@ resources: { }
   #   cpu: 100m
   #   memory: 128Mi
   # requests:
-  #   cpu: 100m
+#   cpu: 100m
 #   memory: 128Mi
 
 livenessProbe:
@@ -258,22 +258,21 @@ externalMariadb:
 # will not be executed on subsequent deployments unless the job is deleted.
 # @default -- see below
 bootstrap:
-  enabled: false
+  enabled: true
   # -- Remove redundant users and groups which are not in the config below
   cleanup: false
   groups:
-    - group1
-    - group2
+    - test
   users:
-    - id: "username"
-      email: "username@example.com"
+    - id: "wfy"
+      email: "mail@acitrus.cn"
       password: "changeme"
-      displayName: "Display Name"
-      firstName: "First"
-      lastName: "Last"
-      avatar_url: "https://i.imgur.com/nbCxk3z.jpg"
+      displayName: "王飞宇"
+      firstName: "飞宇"
+      lastName: "王"
+      avatar_url: "https://avatars.githubusercontent.com/u/58450591?v=4"
       gravatar_avatar: "false"
       weserv_avatar: "false"
       groups:
-        - group1
-        - group2
+        - lldap_admin
+        - test
