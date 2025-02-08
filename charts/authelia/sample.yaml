@@ -216,4 +216,6 @@ configMap:
           client_secret: '$pbkdf2-sha512$310000$enJKA2Vw2a3yEblPYCXN1A$PYGRA2GJu/pEsvsiemVkudKBYphq4iqFG4a0G0Xvpsu4zehkA6QfLnQxGyktUe2p3dxqL5Up5uHEso.JIPm.qQ'  # The digest of 'insecure_secret'.
           redirect_uris:
             - 'https://rabbitmq.acitrus.cn/js/oidc-oauth/login-callback.html'
+          audience:
+            - 'rabbitmq'
           authorization_policy: 'one_factor'
