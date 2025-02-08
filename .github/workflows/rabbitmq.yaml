@@ -55,7 +55,7 @@ jobs:
               # OAuth2 服务器配置
               auth_oauth2.resource_server_id = rabbitmq
               auth_oauth2.issuer = https://auth.acitrus.cn
-              auth_oauth2.jwks_url= https://auth.acitrus.cn/jwks.jso
+              auth_oauth2.jwks_url= https://auth.acitrus.cn/jwks.json
               
               # 管理界面 OAuth2 配置
               management.oauth_enabled= true
