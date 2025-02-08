@@ -17,7 +17,7 @@ configMap:
 
   log:
     ## Level of verbosity for logs: info, debug, trace.
-    level: 'info'
+    level: 'trace'
 
   authentication_backend:
     ldap:
