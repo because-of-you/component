@@ -50,26 +50,24 @@ jobs:
               # OAuth2 服务器配置
               auth_oauth2.resource_server_id = rabbitmq
               auth_oauth2.issuer = https://auth.acitrus.cn
-              auth_oauth2.audience = rabbitmq-client
+              auth_oauth2.jwks_url= https://auth.acitrus.cn/jwks.jso
               
               # 管理界面 OAuth2 配置
-              management.oauth2.enabled = true
-              management.oauth2.client_id = your-client-id
-              management.oauth2.client_secret = your-client-secret
-              management.oauth2.scope = openid profile email
-              management.oauth2.authorization_endpoint = https://auth.acitrus.cn/api/oidc/authorization
-              management.oauth2.token_endpoint = https://auth.acitrus.cn/api/oidc/token
-              management.oauth2.userinfo_endpoint = https://auth.acitrus.cn/api/oidc/userinfo
+              management.oauth_enabled= true
+              management.oauth_client_id = your-client-id
+              management.oauth_client_secret= your-client-secret
+              management.oauth_scopes = openid profile email
+              auth_oauth2.authorization_endpoint = https://auth.acitrus.cn/api/oidc/authorization
+              auth_oauth2.token_endpoint = https://auth.acitrus.cn/api/oidc/token
+              # management.oauth2.userinfo_endpoint = https://auth.acitrus.cn/api/oidc/userinfo
             
               # 权限映射规则
-              auth_oauth2.vhost_access_query = {username, [{string, ${username}}]}
-              auth_oauth2.resource_access_query = {username, [{string, ${username}}]}
-              auth_oauth2.topic_access_query = {username, [{string, ${username}}]}
+              # auth_oauth2.vhost_access_query = {username, [{string, ${username}}]}
+              # auth_oauth2.resource_access_query = {username, [{string, ${username}}]}
+              # auth_oauth2.topic_access_query = {username, [{string, ${username}}]}
               
               # 用户信息映射（可选）
-              management.oauth2.userinfo_claims = preferred_username
-              management.oauth2.userinfo_username_key = preferred_username
-              management.oauth2.userinfo_roles_key = roles
+              
 
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
