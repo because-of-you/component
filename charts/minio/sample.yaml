@@ -8,7 +8,8 @@ extraEnvVars:
   - name: MINIO_IDENTITY_OPENID_REDIRECT_URI
     value: https://minio.acitrus.cn/oauth_callback
   - name: MINIO_IDENTITY_OPENID_ROLE_POLICY
-    value: '{"groups":{"lldap_admin":"consoleAdmin","public_read_write":"readwrite","public_readonly":"readonly"}}'
+    # value: '{"groups":{"lldap_admin":"consoleAdmin","public_read_write":"readwrite","public_readonly":"readonly"}}'
+    value: 'consoleAdmin'
 #  - name: MINIO_IDENTITY_OPENID_CLAIM_NAME
 #    value: groups
   - name: MINIO_IDENTITY_OPENID_DISPLAY_NAME
