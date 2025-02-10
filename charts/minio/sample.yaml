@@ -13,6 +13,17 @@ extraEnvVars:
     value: groups
   - name: MINIO_IDENTITY_OPENID_DISPLAY_NAME
     value: "auth.acitrus.cn"
+  - name: MINIO_IDENTITY_LDAP_SERVER_ADDR
+    value: "iam-ldap:3890"
+  - name: MINIO_IDENTITY_LDAP_LOOKUP_BIND_DN
+    value: "uid=reader,ou=people,dc=acitrus,dc=cn"
+  - name: MINIO_IDENTITY_LDAP_LOOKUP_BIND_PASSWORD
+    value: "qQKMdVrLmbuYXu1eGxTC"
+  - name: MINIO_IDENTITY_LDAP_USER_DN_SEARCH_BASE_DN
+    value: "OU=people,DC=acitrus,DC=cn"
+  - name: MINIO_IDENTITY_LDAP_USER_DN_SEARCH_FILTER
+    value: "(&({username_attribute}={input})(objectClass=person))"
+
 provisioning:
   enabled: true
   policies:
