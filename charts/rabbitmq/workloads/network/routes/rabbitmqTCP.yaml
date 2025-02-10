@@ -19,8 +19,21 @@ spec:
           # nativeLB: true              # [14]
           # nodePortLB: true            # [15]
           # tls: false                  # [16]
+    - match: HostSNI(`mq.acitrus.cn`)           # [3]
+      # priority: 10                  # [4]
+      services: # [7]
+        - name: rabbitmq                   # [8]
+          port: 5672                  # [9]
+          # weight: 10                  # [10]
+          # proxyProtocol: # [11]
+          #   version: 1                # [12]
+          # serversTransport: transport # [13]
+          # nativeLB: true              # [14]
+          # nodePortLB: true            # [15]
+          # tls: false                  # [16]
   tls:
     domains:
       - main: acitrus.cn
         sans:
           - rabbitmq.acitrus.cn
+          - mq.acitrus.cn
