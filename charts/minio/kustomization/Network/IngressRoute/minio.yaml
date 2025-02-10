@@ -1,0 +1,33 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: minio.acitrus.cn
+  namespace: default
+  labels:
+    app.kubernetes.io/name: homepage
+  annotations:
+    gethomepage.dev/href: "https://minio.acitrus.cn"
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/description: 首页
+    gethomepage.dev/group: Other
+    gethomepage.dev/icon: https://cdn.jsdelivr.net/gh/selfhst/icons/png/homepage.png
+    gethomepage.dev/name: minio
+    #    gethomepage.dev/widget.type: "emby"
+    #    gethomepage.dev/widget.url: "https://home.acitrus.cn"
+    gethomepage.dev/pod-selector: "app.kubernetes.io/name=homepage"
+spec:
+  entryPoints:
+    - web
+    - websecure
+  routes:
+    # https://doc.traefik.io/traefik/middlewares/overview/
+    - kind: Rule
+      match: Host(`minio.acitrus.cn`)
+      services:
+        - kind: Service
+          name: minio
+          port: 9001
+      middlewares:
+        - name: http-to-https
+#        - name: 'forwardauth-authelia' # name of your middleware, as defined in your middleware.yml
+#          namespace: 'authelia'

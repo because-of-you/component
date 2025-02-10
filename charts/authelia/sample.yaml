@@ -228,3 +228,14 @@ configMap:
         # https://www.authelia.com/integration/openid-connect/frequently-asked-questions/#client-secret
         # docker run --rm authelia/authelia:latest authelia crypto hash generate pbkdf2 --variant sha512 --random --random.length 64 --random.charset rfc3986
 
+        - client_id: 'minio'
+          client_name: 'MinIO'
+          client_secret: '$pbkdf2-sha512$310000$CwyT/Rq2mpVlG67Izlkgsw$Vw9rDtwX5DPz.9vnkwi1UAnIAwTeTdGwmgRoArIquhhuzEgeVEZwb79bAgXLTJ94wRPJl5hdwBuNqPPApt3Zdw'  # The digest of 'insecure_secret'.
+          public: false
+          redirect_uris:
+            - 'https://minio.acitrus.cn/oauth_callback'
+          scopes:
+            - 'openid'
+            - 'profile'
+            - 'email'
+            - 'groups'
