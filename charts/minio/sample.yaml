@@ -14,6 +14,7 @@ extraEnvVars:
   - name: MINIO_IDENTITY_OPENID_DISPLAY_NAME
     value: "auth.acitrus.cn"
 provisioning:
+  enabled: true
   policies:
     # https://min.io/docs/minio/linux/administration/identity-access-management/policy-based-access-control.html#id3
     - name: public_read_write
