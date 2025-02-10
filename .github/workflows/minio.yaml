@@ -30,6 +30,11 @@ jobs:
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
 
+      # https://github.com/marketplace/actions/kubernetes-cli-kubectl
+      - uses: tale/kubectl-action@v1
+        with:
+          base64-kube-config: ${{ secrets.KUBECONFIG_BASED }}
+
       - name: Generate kubeconfig
         run: |
           kubectl apply -k charts/minio/kustomization
