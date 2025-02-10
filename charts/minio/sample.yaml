@@ -23,3 +23,5 @@ provisioning:
             - "arn:aws:s3:::my-bucket/${jwt:preferred_username}/*"
           actions:
             - "s3:*"
+            - "admin:*"
+          effect: "Allow"
