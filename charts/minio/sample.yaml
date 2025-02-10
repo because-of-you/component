@@ -31,7 +31,7 @@ extraEnvVars:
   - name: MINIO_IDENTITY_LDAP_GROUP_SEARCH_BASE_DN
     value: "OU=people,DC=acitrus,DC=cn"
   - name: MINIO_IDENTITY_LDAP_GROUP_SEARCH_FILTER
-    value: "(&(objectclass=groupOfNames)(memberUid=%s))"
+    value: "(memberUid=%s)"
   - name: MINNIO_LOG_LEVEL
     value: DEBUG
 
