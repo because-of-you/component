@@ -5,7 +5,7 @@ metadata:
 
 spec:
   entryPoints: # [1]
-    - websecure
+    - gravitation
   routes: # [2]
     - match: HostSNI(`redis.acitrus.cn`)           # [3]
       # priority: 10                  # [4]

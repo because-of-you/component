@@ -8,7 +8,7 @@ on:
       - redis-*.*.*
 
 env:
-  CHART_VERSION: 20.6.1
+  CHART_VERSION: 20.6.2
 
 jobs:
   deployment:
