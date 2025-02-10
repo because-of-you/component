@@ -23,6 +23,8 @@ extraEnvVars:
     value: "OU=people,DC=acitrus,DC=cn"
   - name: MINIO_IDENTITY_LDAP_USER_DN_SEARCH_FILTER
     value: "(&({username_attribute}={input})(objectClass=person))"
+  - name: MINIO_IDENTITY_LDAP_TLS_SKIP_VERIFY
+    value: on
   - name: MINNIO_LOG_LEVEL
     value: DEBUG
 
