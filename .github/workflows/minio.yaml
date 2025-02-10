@@ -38,3 +38,8 @@ jobs:
       - name: Generate kubeconfig
         run: |
           kubectl apply -k charts/minio/kustomization
+          # mc admin policy attach minio consoleAdmin user="uid=wfy,ou=people,dc=acitrus,dc=cn"
+          # mc admin policy attach minio consoleAdmin user="cn=lldap_admin,ou=people,dc=acitrus,dc=cn"
+          # 	
+          # 	
+          # mc idp ldap policy attach local consoleAdmin --group 'cn=lldap_admin,ou=people,dc=acitrus,dc=cn'
