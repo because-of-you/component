@@ -1,0 +1,11 @@
+extraEnvVars:
+  - name: MINIO_IDENTITY_OPENID_CONFIG_URL
+    value: https://auth.acitrus.cn/.well-known/openid-configuration
+  - name: MINIO_IDENTITY_OPENID_CLIENT_ID
+    value: minio
+  - name: MINIO_IDENTITY_OPENID_CLIENT_SECRET
+    value: MinIO
+  - name: MINIO_IDENTITY_OPENID_REDIRECT_URI
+    value: https://minio.acitrus.cn/oauth_callback
+  - name: MINIO_IDENTITY_OPENID_ROLE_POLICY
+    value: '{"groups":{"lldap_admin":"consoleAdmin","public_read_write":"readwrite","public_readonly":"readonly"}}'
