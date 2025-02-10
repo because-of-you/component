@@ -6,7 +6,6 @@ on:
       - authelia-*.*.*
     branches:
       - authelia-*.*.*
-      - rabbitmq-*.*.*
 
 env:
   CHART_VERSION: 0.9.14

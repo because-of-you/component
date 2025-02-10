@@ -8,7 +8,7 @@ on:
       - rabbitmq-*.*.*
 
 env:
-  CHART_VERSION: 15.2.4
+  CHART_VERSION: 15.2.5
 
 jobs:
   deployment:
