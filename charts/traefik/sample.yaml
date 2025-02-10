@@ -4,6 +4,12 @@ envFrom:
       name: alidns
 
 ports:
+  gravitation:
+    port: 1024
+    expose: true
+    exposedPort: 1024
+    protocol: TCP
+
   websecure:
     http3:
       ## -- Enable HTTP/3 on the entrypoint
