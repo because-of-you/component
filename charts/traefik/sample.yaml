@@ -6,7 +6,8 @@ envFrom:
 ports:
   gravitation:
     port: 1024
-    expose: true
+    expose:
+      default: true
     exposedPort: 1024
     protocol: TCP
 
