@@ -1,2 +1,3 @@
 resources:
   - network/routes/rabbitmq.yaml
+  - network/routes/rabbitmqTCP.yaml

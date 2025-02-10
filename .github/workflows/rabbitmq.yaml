@@ -8,7 +8,7 @@ on:
       - rabbitmq-*.*.*
 
 env:
-  CHART_VERSION: 15.0.7
+  CHART_VERSION: 15.2.5
 
 jobs:
   deployment:
@@ -43,38 +43,62 @@ jobs:
             
             extraConfiguration: |
               log.default.level = info
-            
-              auth_backends.1 = internal
-              auth_backends.2.authn = rabbit_auth_backend_oauth2
-              auth_backends.2.authz = internal
-            
-              management.oauth_disable_basic_auth = false
-              management.oauth_enabled = true
-              #management.oauth_scopes = openid profile rabbitmq.*
-            
-              # management.oauth_client_id = ${{ secrets.DEFAULT_OAUTH2_ID }}
-              management.oauth_client_id = ${{ secrets.RABBITMQ_OAUTH2_ID }}
-              management.oauth_provider_url = https://${{ secrets.DEFAULT_AUTH_HOST }}
-              # management.oauth_scopes = .*
-            
-              # https://rabbitmq.cn/docs/oauth2
-              # https://www.rabbitmq.com/docs/oauth2#variables-configurable
-              # https://www.rabbitmq.com/docs/oauth2-examples
-              # https://www.rabbitmq.com/docs/access-control
-            
-              # auth_oauth2.resource_server_id = ${{ secrets.DEFAULT_OAUTH2_ID }}
-              auth_oauth2.resource_server_id = ${{ secrets.RABBITMQ_OAUTH2_ID }}
-              auth_oauth2.issuer = https://${{ secrets.DEFAULT_AUTH_HOST }}
-              # auth_oauth2.jwks_url = https://${{ secrets.DEFAULT_AUTH_HOST }}/.well-known/jwks
-              auth_oauth2.https.verify = verify_none
-              auth_oauth2.preferred_username_claims.1 = name
+              # 使用 LDAP 作为认证后端
+              # auth_backends.1 = ldap
+              # auth_backends.2 = internal
+              
+              # LDAP 服务器配置
+              # auth_ldap.servers.1 = iam-ldap.default
+              # auth_ldap.port = 3890
+              # auth_ldap.user_dn_pattern = uid=${username},ou=people,dc=acitrus,dc=cn
 
-#              auth_oauth2.https.hostname_verification = wildcard
-#              ssl_options.verify = verify_none
-#              ssl_options.fail_if_no_peer_cert = false
-#              auth_oauth2.https.hostname_verification = wildcard
-#        auth_oauth2.preferred_username_claims.1 = name
-        # auth_oauth2.preferred_username_claims.1 = email
+              # 如果 LDAP 服务器需要绑定用户进行查询
+              # auth_ldap.dn_lookup_bind.user_dn = uid=reader,ou=people,dc=acitrus,dc=cn
+              # auth_ldap.user_dn_pattern = uid=${username},ou=people,dc=acitrus,dc=cn
+              # auth_ldap.dn_lookup_bind.password = qQKMdVrLmbuYXu1eGxTC
+              
+              
+              # 用户搜索配置
+              # auth_ldap.logger = true
+              # auth_ldap.vhost_access_query = {constant, true}
+              # auth_ldap.resource_access_query = {constant, true}
+              # auth_ldap.topic_access_query = {constant, true}
+            
+              
+              # -----------
+              # 启用 OAuth2 认证后端
+              # auth_backends.1 = internal
+              # auth_backends.2 = rabbit_auth_backend_oauth2
+              # auth_backends.2.authn = rabbit_auth_backend_oauth2
+              # auth_backends.2.authz = internal
+            
+              # management.oauth_disable_basic_auth = false
+              
+              # OAuth2 服务器配置
+              # auth_oauth2.resource_server_id = rabbitmq
+              # auth_oauth2.issuer = https://auth.acitrus.cn
+              # auth_oauth2.jwks_url= https://auth.acitrus.cn/jwks.json
+              
+              # 管理界面 OAuth2 配置
+              # management.oauth_enabled= true
+              # management.oauth_client_id = 5dc253dcd7d5f9259e97bf16df231076770988650baf61bae5955bb6dcec2795
+              # management.oauth_client_secret= fgYds_r59DSEDCwDkIhLA2UFq8LL.6GRolOtal7ID4Lx6b5qmR3I5MjH1jzM0BMc
+              # management.oauth_scopes = openid profile email
+              # auth_oauth2.authorization_endpoint = https://auth.acitrus.cn/api/oidc/authorization
+              # auth_oauth2.token_endpoint = https://auth.acitrus.cn/api/oidc/token
+              # management.oauth2.userinfo_endpoint = https://auth.acitrus.cn/api/oidc/userinfo
+              # auth_oauth2.preferred_username_claims.1 = user_name
+              # auth_oauth2.preferred_username_claims.2 = name
+              # auth_oauth2.preferred_username_claims.3 = preferred_username
+              # auth_oauth2.preferred_username_claims.4 = email
+            
+              # 权限映射规则
+              # auth_oauth2.vhost_access_query = {username, [{string, ${username}}]}
+              # auth_oauth2.resource_access_query = {username, [{string, ${username}}]}
+              # auth_oauth2.topic_access_query = {username, [{string, ${username}}]}
+              
+              # 用户信息映射（可选）
+              
 
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'

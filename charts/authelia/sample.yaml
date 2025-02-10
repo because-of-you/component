@@ -8,6 +8,13 @@ ingress:
     entryPoints:
       - web
       - websecure
+    middlewares:
+      chains:
+        ingressRoute:
+          # List of Middlewares to apply before the forwardAuth Middleware in the authentication chain.
+          before:
+            - name: 'public-cors'
+              namespace: 'default'
 
 pod:
   # Must be Deployment, DaemonSet, or StatefulSet.
@@ -17,7 +24,7 @@ configMap:
 
   log:
     ## Level of verbosity for logs: info, debug, trace.
-    level: 'info'
+    level: 'trace'
 
   authentication_backend:
     ldap:
@@ -170,6 +177,13 @@ configMap:
         policy: 'bypass'
         methods:
           - 'GET'
+
+      # https://nacos.acitrus.cn/nacos/v1/auth/users/login
+      - domain: 'nacos.acitrus.cn'
+        policy: 'bypass'
+        resources:
+          - "/nacos/v1/auth/users/login"
+
       - domain: 'nacos.acitrus.cn'
         subject:
           - 'group:public_read_write'
@@ -195,6 +209,10 @@ configMap:
       # https://www.authelia.com/configuration/identity-providers/openid-connect/provider/#authorization_policies
       authorization_policies: { }
 
+      cors:
+        allowed_origins:
+          - "https://rabbitmq.acitrus.cn"
+
       clients:
         - client_id: '58XXRbiqcdfaeq8DaPP91zYVTw2of4LqVrKdzirQiJDKoANfZDFgtduTYWbtqxE2'
           client_name: 'KAFKA UI'
@@ -205,3 +223,8 @@ configMap:
           redirect_uris:
             - 'https://kafka.acitrus.cn/oauth/callback/auth.acitrus.cn'
           authorization_policy: 'one_factor'
+
+        # docker run -d authelia/authelia:latest authelia --config /config/configuration.yml --config.experimental.filters template
+        # https://www.authelia.com/integration/openid-connect/frequently-asked-questions/#client-secret
+        # docker run --rm authelia/authelia:latest authelia crypto hash generate pbkdf2 --variant sha512 --random --random.length 64 --random.charset rfc3986
+
