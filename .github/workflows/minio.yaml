@@ -29,3 +29,7 @@ jobs:
           value-files: "charts/minio/sample.yaml"
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
+
+      - name: Generate kubeconfig
+        run: |
+          kubectl apply -k charts/minio/kustomization
