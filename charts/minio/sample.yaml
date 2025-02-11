@@ -29,7 +29,7 @@ extraEnvVars:
   - name: MINIO_IDENTITY_LDAP_SERVER_INSECURE
     value: "on"
   - name: MINIO_IDENTITY_LDAP_GROUP_SEARCH_BASE_DN
-    value: "OU=people,DC=acitrus,DC=cn"
+    value: "ou=groups,DC=acitrus,DC=cn"
   - name: MINIO_IDENTITY_LDAP_GROUP_SEARCH_FILTER
     value: "(cn=%s)"
   - name: MINNIO_LOG_LEVEL
