@@ -41,5 +41,6 @@ jobs:
           # mc admin policy attach minio consoleAdmin user="uid=wfy,ou=people,dc=acitrus,dc=cn"
           # mc admin policy attach minio consoleAdmin user="cn=lldap_admin,ou=people,dc=acitrus,dc=cn"
           # 	
-          # 	
-          # mc idp ldap policy detach local consoleAdmin --group 'cn=lldap_admin,ou=groups,dc=acitrus,dc=cn'
+          # ldapsearch -x -H ldap://10.42.1.33:3890 -b "ou=groups,dc=acitrus,dc=cn" -D "uid=reader,ou=people,dc=acitrus,dc=cn" -w "qQK
+          #MdVrLmbuYXu1eGxTC" "(cn=lldap_admin)"
+          # mc idp ldap policy attach local consoleAdmin --group 'cn=lldap_admin,ou=groups,dc=acitrus,dc=cn'
