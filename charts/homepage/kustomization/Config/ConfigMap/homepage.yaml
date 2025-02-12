@@ -9,6 +9,8 @@ data:
   kubernetes.yaml: |
     mode: cluster
   settings.yaml: |
+    title: "导航页"
+    hideVersion: true
     showStats: true
     layout:
       - Public:
