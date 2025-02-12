@@ -3,6 +3,14 @@ image:
 
 ingress:
   enabled: true
+  annotations:
+    gethomepage.dev/href: "https://auth.acitrus.cn"
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/description: authelia
+    gethomepage.dev/group: Gateway
+    gethomepage.dev/name: authelia
+    gethomepage.dev/ping: https://auth.acitrus.cn
+    gethomepage.dev/pod-selector: "app.kubernetes.io/name=authelia"
   traefikCRD:
     enabled: true
     entryPoints:
