@@ -9,10 +9,16 @@ metadata:
     gethomepage.dev/href: "https://minio.acitrus.cn"
     gethomepage.dev/enabled: "true"
     gethomepage.dev/description: Minio | 内置 LDAP 用户 | auth 单点登录
-    gethomepage.dev/group: Public
-    gethomepage.dev/showStats: "true"
+    gethomepage.dev/group: Storage
+    # gethomepage.dev/showStats: "true"
     gethomepage.dev/name: minio
     gethomepage.dev/pod-selector: "app.kubernetes.io/name=minio"
+    gethomepage.dev/ping: https://minio.acitrus.cn
+#    gethomepage.dev/weight: '1'
+#    gethomepage.dev/widget.type: speedtest
+#    gethomepage.dev/widget.url: http://speedtest.speedtest.svc.cluster.local
+
+
 spec:
   entryPoints:
     - web

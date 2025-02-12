@@ -8,7 +8,8 @@ metadata:
 data:
   kubernetes.yaml: |
     mode: cluster
-  settings.yaml: ""
+  settings.yaml: |
+    showStats: true
   #settings.yaml: |
   #  providers:
   #    longhorn:
@@ -91,15 +92,22 @@ data:
                     params: # optional - additional params for the service
                       showName: true # optional - show name before event title in event line - defaults to false
     
-    - My Second Group:
-        - My Second Service:
-            href: http://localhost/
-            description: Homepage is the best
+    - Storage:
+        - Kafka:
+    #        href: https://kafka.acitrus.cn
+            app: "kafka"
+    #        podSelector: "app.kubernetes.io/instance=kafka"
+            namespace: "default"
+            name: Kafka
+            # container: "kafka"
+            description: kafka基础组件
+            ping: https://kafka.acitrus.cn
 
     - My Third Group:
         - My Third Service:
             href: http://localhost/
             description: Homepage is 😎
+            
   widgets.yaml: |
     #    - kubernetes:
     #        cluster:
