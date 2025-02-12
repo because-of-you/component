@@ -10,6 +10,22 @@ data:
     mode: cluster
   settings.yaml: |
     showStats: true
+    layout:
+      - Public:
+          style: row
+          columns: 3
+      - calendar:
+      - Gateway:
+      - Storage:
+      - BK1:
+          style: row
+          columns: 2
+          Developer:
+            style: row
+            columns: 2
+          Company:
+            style: row
+            columns: 2
   #settings.yaml: |
   #  providers:
   #    longhorn:
@@ -65,8 +81,20 @@ data:
         - Github:
             - abbr: GH
               href: https://github.com/
+        - Github:
+            - abbr: GH
+              href: https://github.com/
+    - Company:
+        - Gitlab:
+            - abbr: GL
+              href: https://gitlab.mypaas.com.cn/
+              # 
+        - Jenkins:
+            - abbr: JK
+              href: https://jenkins.mypaas.com/
+
   services.yaml: |
-    - Public:
+    - calendar:
         - calendar:
             # href: http://localhost/
             # description: Homepage is awesome
@@ -102,11 +130,6 @@ data:
             # container: "kafka"
             description: kafka基础组件
             ping: https://kafka.acitrus.cn
-
-    - My Third Group:
-        - My Third Service:
-            href: http://localhost/
-            description: Homepage is 😎
             
   widgets.yaml: |
     #    - kubernetes:
