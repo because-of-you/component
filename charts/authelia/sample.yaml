@@ -9,7 +9,7 @@ ingress:
     gethomepage.dev/description: authelia
     gethomepage.dev/group: Gateway
     gethomepage.dev/name: authelia
-    "gethomepage.dev/ping": "authelia.default:9001"
+    "gethomepage.dev/ping": "auth.acitrus.cn"
     gethomepage.dev/pod-selector: "app.kubernetes.io/name=authelia"
   traefikCRD:
     enabled: true
