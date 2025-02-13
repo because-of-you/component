@@ -22,7 +22,7 @@ jobs:
         run: |
           # export TAG=${{ env.TAG }}
 
-          cat images/kafka/Dockerfile
+          cat images/zookeeper/Dockerfile
           envsubst < images/zookeeper/Dockerfile > images/zookeeper/Dockerfile_replaced
           mv images/zookeeper/Dockerfile_replaced images/zookeeper/Dockerfile
       
@@ -47,12 +47,12 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       # docker 镜像管理模块 ------> 构建和推送最新的镜像 ,linux/arm64
-      - name: kafka-image-push
+      - name: zookeeper-image-push
         uses: docker/build-push-action@v4
         with:
           context: .
           platforms: linux/amd64,linux/arm64
-          file: images/kafka/Dockerfile
+          file: images/zookeeper/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ env.REGISTRY }}/gravitation/zookeeper:${{ env.TAG }}
           labels: ${{ steps.meta.outputs.labels }}
