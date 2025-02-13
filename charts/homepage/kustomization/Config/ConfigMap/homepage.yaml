@@ -8,7 +8,27 @@ metadata:
 data:
   kubernetes.yaml: |
     mode: cluster
-  settings.yaml: ""
+  settings.yaml: |
+    title: "导航页"
+    hideVersion: true
+    showStats: true
+    theme: dark
+    layout:
+      - Public:
+          style: row
+          columns: 3
+      - calendar:
+      - Gateway:
+      - Storage:
+      - BK1:
+          style: row
+          columns: 2
+          Developer:
+            style: row
+            columns: 2
+          Company:
+            style: row
+            columns: 2
   #settings.yaml: |
   #  providers:
   #    longhorn:
@@ -64,8 +84,20 @@ data:
         - Github:
             - abbr: GH
               href: https://github.com/
+        - Github:
+            - abbr: GH
+              href: https://github.com/
+    - Company:
+        - Gitlab:
+            - abbr: GL
+              href: https://gitlab.mypaas.com.cn/
+              # 
+        - Jenkins:
+            - abbr: JK
+              href: https://jenkins.mypaas.com/
+
   services.yaml: |
-    - Public:
+    - calendar:
         - calendar:
             # href: http://localhost/
             # description: Homepage is awesome
@@ -91,15 +123,17 @@ data:
                     params: # optional - additional params for the service
                       showName: true # optional - show name before event title in event line - defaults to false
     
-    - My Second Group:
-        - My Second Service:
-            href: http://localhost/
-            description: Homepage is the best
-
-    - My Third Group:
-        - My Third Service:
-            href: http://localhost/
-            description: Homepage is 😎
+    - Storage:
+        - Kafka:
+    #        href: https://kafka.acitrus.cn
+            app: "kafka"
+    #        podSelector: "app.kubernetes.io/instance=kafka"
+            namespace: "default"
+            name: Kafka
+            # container: "kafka"
+            description: kafka基础组件
+            ping: https://kafka.acitrus.cn
+            
   widgets.yaml: |
     #    - kubernetes:
     #        cluster:

@@ -1,0 +1,37 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: minio.acitrus.cn
+  namespace: default
+  labels:
+    app.kubernetes.io/name: homepage
+  annotations:
+    gethomepage.dev/href: "https://minio.acitrus.cn"
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/description: Minio | 内置 LDAP 用户 | auth 单点登录
+    gethomepage.dev/group: Storage
+    # gethomepage.dev/showStats: "true"
+    gethomepage.dev/name: minio
+    gethomepage.dev/pod-selector: "app.kubernetes.io/name=minio"
+    gethomepage.dev/ping: https://minio.acitrus.cn
+#    gethomepage.dev/weight: '1'
+#    gethomepage.dev/widget.type: speedtest
+#    gethomepage.dev/widget.url: http://speedtest.speedtest.svc.cluster.local
+
+
+spec:
+  entryPoints:
+    - web
+    - websecure
+  routes:
+    # https://doc.traefik.io/traefik/middlewares/overview/
+    - kind: Rule
+      match: Host(`minio.acitrus.cn`)
+      services:
+        - kind: Service
+          name: minio
+          port: 9001
+      middlewares:
+        - name: http-to-https
+#        - name: 'forwardauth-authelia' # name of your middleware, as defined in your middleware.yml
+#          namespace: 'authelia'

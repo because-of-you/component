@@ -7,12 +7,10 @@ metadata:
   annotations:
     gethomepage.dev/href: "https://rabbitmq.acitrus.cn"
     gethomepage.dev/enabled: "true"
-    gethomepage.dev/description: 首页
-    gethomepage.dev/group: Other
-    gethomepage.dev/icon: https://cdn.jsdelivr.net/gh/selfhst/icons/png/homepage.png
+    gethomepage.dev/description: rabbitmq
+    gethomepage.dev/group: Storage
     gethomepage.dev/name: rabbitmq
-    #    gethomepage.dev/widget.type: "emby"
-    #    gethomepage.dev/widget.url: "https://home.acitrus.cn"
+    gethomepage.dev/ping: "https://rabbitmq.acitrus.cn"
     gethomepage.dev/pod-selector: "app.kubernetes.io/name=rabbitmq"
 spec:
   entryPoints:

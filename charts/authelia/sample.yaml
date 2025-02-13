@@ -3,6 +3,14 @@ image:
 
 ingress:
   enabled: true
+  annotations:
+    gethomepage.dev/href: "https://auth.acitrus.cn"
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/description: authelia
+    gethomepage.dev/group: Gateway
+    gethomepage.dev/name: authelia
+    "gethomepage.dev/ping": "auth.acitrus.cn"
+    gethomepage.dev/pod-selector: "app.kubernetes.io/name=authelia"
   traefikCRD:
     enabled: true
     entryPoints:
@@ -24,7 +32,7 @@ configMap:
 
   log:
     ## Level of verbosity for logs: info, debug, trace.
-    level: 'trace'
+    level: 'debug'
 
   authentication_backend:
     ldap:
@@ -190,9 +198,7 @@ configMap:
         policy: 'one_factor'
       # home
       - domain: 'home.acitrus.cn'
-        subject:
-          - 'group:public_readonly'
-        policy: 'one_factor'
+        policy: 'bypass'
         methods:
           - 'GET'
       - domain: 'home.acitrus.cn'
@@ -228,3 +234,16 @@ configMap:
         # https://www.authelia.com/integration/openid-connect/frequently-asked-questions/#client-secret
         # docker run --rm authelia/authelia:latest authelia crypto hash generate pbkdf2 --variant sha512 --random --random.length 64 --random.charset rfc3986
 
+        - client_id: 'minio'
+          client_name: 'MinIO'
+          client_secret: '$pbkdf2-sha512$310000$CwyT/Rq2mpVlG67Izlkgsw$Vw9rDtwX5DPz.9vnkwi1UAnIAwTeTdGwmgRoArIquhhuzEgeVEZwb79bAgXLTJ94wRPJl5hdwBuNqPPApt3Zdw'  # The digest of 'insecure_secret'.
+          public: false
+          redirect_uris:
+            - 'https://minio.acitrus.cn/oauth_callback'
+          scopes:
+            - 'openid'
+            - 'profile'
+            - 'email'
+            - 'groups'
+            - 'offline_access'
+          authorization_policy: 'one_factor'

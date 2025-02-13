@@ -8,12 +8,10 @@ metadata:
   annotations:
     gethomepage.dev/href: "https://nacos.acitrus.cn"
     gethomepage.dev/enabled: "true"
-    gethomepage.dev/description: nacos
-    gethomepage.dev/group: Other
-    # gethomepage.dev/icon: https://cdn.jsdelivr.net/gh/selfhst/icons/png/homepage.png
+    gethomepage.dev/description: "r-nacos是一个用rust实现的nacos服务"
+    gethomepage.dev/group: Public
     gethomepage.dev/name: nacos
-    #    gethomepage.dev/widget.type: "emby"
-    #    gethomepage.dev/widget.url: "https://home.acitrus.cn"
+    gethomepage.dev/ping: "nacos.acitrus.cn"
     gethomepage.dev/pod-selector: "app.kubernetes.io/name=rnacos"
 spec:
   entryPoints:

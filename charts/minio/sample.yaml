@@ -1,0 +1,55 @@
+extraEnvVars:
+  - name: MINIO_IDENTITY_OPENID_CONFIG_URL
+    value: https://auth.acitrus.cn/.well-known/openid-configuration
+  - name: MINIO_IDENTITY_OPENID_CLIENT_ID
+    value: minio
+  - name: MINIO_IDENTITY_OPENID_CLIENT_SECRET
+    value: IeuNPrAVzd1hPRv.ZzCgSHAsqltWSXVov4Z.jM0qGYQX4M~zpPZ.YWYlAswAQB.S
+  - name: MINIO_IDENTITY_OPENID_REDIRECT_URI
+    value: https://minio.acitrus.cn/oauth_callback
+  - name: MINIO_IDENTITY_OPENID_ROLE_POLICY
+    # value: '{"groups":{"lldap_admin":"consoleAdmin","public_read_write":"readwrite","public_readonly":"readonly"}}'
+    value: 'consoleAdmin'
+  #  - name: MINIO_IDENTITY_OPENID_CLAIM_NAME
+  #    value: groups
+  - name: MINIO_IDENTITY_OPENID_DISPLAY_NAME
+    value: "auth.acitrus.cn"
+  - name: MINIO_IDENTITY_LDAP_SERVER_ADDR
+    value: "iam-ldap.default:3890"
+  - name: MINIO_IDENTITY_LDAP_LOOKUP_BIND_DN
+    value: "uid=reader,ou=people,dc=acitrus,dc=cn"
+  - name: MINIO_IDENTITY_LDAP_LOOKUP_BIND_PASSWORD
+    value: "qQKMdVrLmbuYXu1eGxTC"
+  - name: MINIO_IDENTITY_LDAP_USER_DN_SEARCH_BASE_DN
+    value: "OU=people,DC=acitrus,DC=cn"
+  - name: MINIO_IDENTITY_LDAP_USER_DN_SEARCH_FILTER
+    value: "(uid=%s)"
+  - name: MINIO_IDENTITY_LDAP_TLS_SKIP_VERIFY
+    value: "on"
+  - name: MINIO_IDENTITY_LDAP_SERVER_INSECURE
+    value: "on"
+  - name: MINIO_IDENTITY_LDAP_GROUP_SEARCH_BASE_DN
+    value: "ou=groups,DC=acitrus,DC=cn"
+  - name: MINIO_IDENTITY_LDAP_GROUP_SEARCH_FILTER
+    value: "(member=%d)"
+  - name: MINNIO_LOG_LEVEL
+    value: DEBUG
+
+provisioning:
+  enabled: true
+  policies:
+    # https://min.io/docs/minio/linux/administration/identity-access-management/policy-based-access-control.html#id3
+    - name: public_read_write
+      statements:
+        - resources:
+            - "arn:aws:s3:::my-bucket/${jwt:preferred_username}/*"
+          actions:
+            - "s3:*"
+          effect: "Allow"
+resources:
+  requests:
+    cpu: 20m
+    memory: 512Mi
+  limits:
+    cpu: 2000m
+    memory: 2048Mi

@@ -8,13 +8,17 @@ metadata:
   annotations:
     gethomepage.dev/href: "https://kafka.acitrus.cn"
     gethomepage.dev/enabled: "true"
-    gethomepage.dev/description: 首页
-    gethomepage.dev/group: Other
-    gethomepage.dev/icon: https://cdn.jsdelivr.net/gh/selfhst/icons/png/homepage.png
-    gethomepage.dev/name: kafka
-    #    gethomepage.dev/widget.type: "emby"
-    #    gethomepage.dev/widget.url: "https://home.acitrus.cn"
-    gethomepage.dev/pod-selector: "app.kubernetes.io/name=kafka"
+    gethomepage.dev/description: 一款现代化的 kafka ui | auth单点登录
+    gethomepage.dev/group: Public
+    # gethomepage.dev/icon: https://cdn.jsdelivr.net/gh/selfhst/icons/png/homepage.png
+    gethomepage.dev/name: Kafka UI
+    gethomepage.dev/ping: kafka.acitrus.cn
+    gethomepage.dev/namespace: conduktor
+    gethomepage.dev/pod-selector: >-
+      app.kubernetes.io/instance in (
+          gateway,
+          console
+      )
 spec:
   entryPoints:
     - web
