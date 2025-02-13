@@ -71,6 +71,7 @@ jobs:
           values: |
             image:
               registry: ${{ env.REGISTRY }}
+              repository: gravitation/zookeeper
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBECONFIG }}'
 
