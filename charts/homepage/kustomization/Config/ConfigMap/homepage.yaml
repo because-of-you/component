@@ -20,6 +20,9 @@ data:
       - calendar:
       - Gateway:
       - Storage:
+      - Scheduler:
+          style: row
+          columns: 3
       - BK1:
           style: row
           columns: 2
@@ -133,7 +136,16 @@ data:
             # container: "kafka"
             description: kafka基础组件
             ping: https://kafka.acitrus.cn
-            
+    - Scheduler:
+        - Zookeeper:
+    #        href: https://kafka.acitrus.cn
+            app: "zookeeper"
+    #        podSelector: "app.kubernetes.io/instance=kafka"
+            namespace: "default"
+            name: Zookeeper
+            # container: "kafka"
+            description: zookeeper基础组件
+
   widgets.yaml: |
     #    - kubernetes:
     #        cluster:
