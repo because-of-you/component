@@ -168,6 +168,8 @@ configMap:
       # traefik dashboard ui
       - domain: 'traefik.acitrus.cn'
         policy: 'bypass'
+        resources:
+          - "api/overview"
         methods:
           - 'GET'
 
