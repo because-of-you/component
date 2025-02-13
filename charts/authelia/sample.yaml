@@ -198,9 +198,7 @@ configMap:
         policy: 'one_factor'
       # home
       - domain: 'home.acitrus.cn'
-        subject:
-          - 'group:public_readonly'
-        policy: 'one_factor'
+        policy: 'bypass'
         methods:
           - 'GET'
       - domain: 'home.acitrus.cn'

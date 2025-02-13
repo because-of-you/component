@@ -12,6 +12,7 @@ data:
     title: "导航页"
     hideVersion: true
     showStats: true
+    theme: dark
     layout:
       - Public:
           style: row
