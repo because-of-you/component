@@ -80,6 +80,7 @@ ingressRoute:
       - web
     middlewares:
       - name: http-to-https
+        namespace: 'default'
       - name: 'forwardauth-authelia' # name of your middleware, as defined in your middleware.yml
         namespace: 'default'
 
