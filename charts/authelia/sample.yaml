@@ -165,6 +165,19 @@ configMap:
 
     # It must be either 'bypass', 'one_factor', 'two_factor' or 'deny'.
     rules:
+      # traefik dashboard ui
+      - domain: 'traefik.acitrus.cn'
+        policy: 'bypass'
+        resources:
+          - "api/overview"
+        methods:
+          - 'GET'
+
+      - domain: 'traefik.acitrus.cn'
+        policy: 'one_factor'
+        subject:
+          - "group:lldap_admin"
+
       - domain: 'rabbitmq.acitrus.cn'
         policy: 'bypass'
 

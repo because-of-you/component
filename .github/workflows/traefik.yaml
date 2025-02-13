@@ -6,10 +6,9 @@ on:
       - traefik-*.*.*
     branches:
       - traefik-*.*.*
-      - rabbitmq-*.*.*
 
 env:
-  CHART_VERSION: 34.2.0
+  CHART_VERSION: 34.3.0
 
 jobs:
   deployment:

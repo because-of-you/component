@@ -63,6 +63,26 @@ deployment:
 ingressRoute:
   dashboard:
     enabled: true
+    annotations:
+      gethomepage.dev/href: "https://traefik.acitrus.cn"
+      gethomepage.dev/enabled: "true"
+      gethomepage.dev/description: "traefik dashboard"
+      gethomepage.dev/group: Gateway
+      gethomepage.dev/name: traefik
+      gethomepage.dev/namespace: traefik
+      gethomepage.dev/ping: "traefik.acitrus.cn"
+      gethomepage.dev/pod-selector: "app.kubernetes.io/name=traefik"
+      gethomepage.dev/widget.type: "traefik"
+      gethomepage.dev/widget.url: "https://traefik.acitrus.cn"
+    matchRule: Host(`traefik.acitrus.cn`)
+    entryPoints:
+      - websecure
+      - web
+    middlewares:
+      - name: http-to-https
+        namespace: 'default'
+      - name: 'forwardauth-authelia' # name of your middleware, as defined in your middleware.yml
+        namespace: 'default'
 
 providers: # @schema additionalProperties: false
   kubernetesCRD:
