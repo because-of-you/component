@@ -62,8 +62,7 @@ jobs:
             const environment = envMatch ? envMatch[1] : 'development';
             
             // 生成部署名称
-            const timestamp = Date.now();
-            const deploymentName = `${componentType}-${environment}-${timestamp}`;
+            const deploymentName = `${componentType}-${environment}`;
             
             console.log(`📦 组件类型: ${componentType}`);
             console.log(`🏷️ 部署名称: ${deploymentName}`);
@@ -163,7 +162,7 @@ jobs:
               '',
               '---',
               `_Created at ${new Date().toISOString()}_`,
-              `_Config ID: ${config.issue_number}-${Date.now()}_`
+              `_Config ID: ${config.issue_number}_`
             ].join('\n');
             
             // 创建评论

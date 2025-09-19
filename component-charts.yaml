@@ -1,0 +1,43 @@
+# Component to Helm Chart Mapping Configuration
+# 组件类型到 Helm Chart 的映射配置
+
+components:
+  redis:
+    chart: oci://registry-1.docker.io/bitnamicharts/redis
+    description: Redis 内存数据库
+    
+  mysql:
+    chart: oci://registry-1.docker.io/bitnamicharts/mysql
+    description: MySQL 关系型数据库
+    
+  postgresql:
+    chart: oci://registry-1.docker.io/bitnamicharts/postgresql
+    description: PostgreSQL 关系型数据库
+    
+  mongodb:
+    chart: oci://registry-1.docker.io/bitnamicharts/mongodb
+    description: MongoDB 文档数据库
+    
+  kafka:
+    chart: oci://registry-1.docker.io/bitnamicharts/kafka
+    description: Apache Kafka 消息队列
+    
+  elasticsearch:
+    chart: oci://registry-1.docker.io/bitnamicharts/elasticsearch
+    description: Elasticsearch 搜索引擎
+    
+  rabbitmq:
+    chart: oci://registry-1.docker.io/bitnamicharts/rabbitmq
+    description: RabbitMQ 消息队列
+    
+  nginx:
+    chart: oci://registry-1.docker.io/bitnamicharts/nginx
+    description: NGINX Web 服务器
+    
+  mariadb:
+    chart: oci://registry-1.docker.io/bitnamicharts/mariadb
+    description: MariaDB 关系型数据库
+    
+  minio:
+    chart: oci://registry-1.docker.io/bitnamicharts/minio
+    description: MinIO 对象存储
