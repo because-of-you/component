@@ -22,7 +22,7 @@ body:
       options:
         - redis
         - postgres
-        - redis
+        - kafka
         - mysql
         - mongodb
         - rabbitmq
