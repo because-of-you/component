@@ -212,105 +212,17 @@ jobs:
           echo "✅ 配置准备完成"
       
       # ========================================
-      # 6. 触发配置验证（仅更新配置或部署前验证）
+      # 6. 触发部署工作流
       # ========================================
-      - name: 🔍 Trigger validation
+      - name: 🚀 Trigger deployment workflow
         if: steps.parse.outputs.update_only_checked == 'true' || steps.parse.outputs.deploy_checked == 'true'
-        id: validation_trigger
         uses: actions/github-script@v6
         with:
           script: |
-            console.log('🔍 触发配置验证（dry-run）');
+            const isDeployment = '${{ steps.parse.outputs.deploy_checked }}' === 'true';
+            const action = isDeployment ? '部署' : '验证';
             
-            const response = await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'deploy-helm-chart.yml',
-              ref: context.ref,
-              inputs: {
-                deployment_name: '${{ steps.parse.outputs.deployment_name }}',
-                namespace: '${{ steps.parse.outputs.namespace }}',
-                component_type: '${{ steps.parse.outputs.component_type }}',
-                values_content: '${{ steps.prepare_config.outputs.VALUES_BASE64 }}',
-                issue_number: '${{ steps.parse.outputs.issue_number }}',
-                dry_run_only: 'true'
-              }
-            });
-            
-            console.log('✅ 已触发配置验证工作流');
-            
-            // 等待验证工作流开始
-            console.log('⏳ 等待验证工作流启动...');
-            await new Promise(resolve => setTimeout(resolve, 5000));
-            
-            // 获取最新的工作流运行
-            const runs = await github.rest.actions.listWorkflowRuns({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'deploy-helm-chart.yml',
-              per_page: 1
-            });
-            
-            if (runs.data.workflow_runs.length > 0) {
-              const runId = runs.data.workflow_runs[0].id;
-              console.log(`📊 验证工作流 ID: ${runId}`);
-              core.setOutput('validation_run_id', runId);
-              
-              // 等待验证完成（最多等待5分钟）
-              const maxAttempts = 30;
-              let attempts = 0;
-              let status = 'in_progress';
-              let conclusion = null;
-              
-              while (status === 'in_progress' && attempts < maxAttempts) {
-                await new Promise(resolve => setTimeout(resolve, 10000));
-                
-                const run = await github.rest.actions.getWorkflowRun({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  run_id: runId
-                });
-                
-                status = run.data.status;
-                conclusion = run.data.conclusion;
-                console.log(`⏳ 验证状态: ${status} (尝试 ${attempts + 1}/${maxAttempts})`);
-                attempts++;
-              }
-              console.log(`验证结果: ${conclusion}`);
-              core.setOutput('validation_conclusion', conclusion);
-              
-              if (conclusion !== 'success' && '${{ steps.parse.outputs.deploy_checked }}' === 'true') {
-                console.log('❌ 验证失败，取消部署');
-                
-                // 添加失败评论
-                await github.rest.issues.createComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: ${{ steps.parse.outputs.issue_number }},
-                  body: `❌ **配置验证失败**\n\n部署已取消。请检查配置并修复错误。\n\n[查看验证日志](${{ github.server_url }}/${{ github.repository }}/actions/runs/${runId})`
-                });
-                
-                core.setFailed('配置验证失败，无法继续部署');
-              } else if (conclusion === 'success' && '${{ steps.parse.outputs.update_only_checked }}' === 'true') {
-                // 仅更新配置时的成功通知
-                await github.rest.issues.createComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: ${{ steps.parse.outputs.issue_number }},
-                  body: `✅ **配置验证成功**\n\n配置已通过验证，可以安全部署。\n\n如需部署，请勾选"确认部署"选项。`
-                });
-              }
-            }
-      
-      # ========================================
-      # 7. 触发测试部署（验证通过后）
-      # ========================================
-      - name: 🧪 Trigger test deployment
-        if: steps.parse.outputs.deploy_checked == 'true' && steps.validation_trigger.outputs.validation_conclusion == 'success'
-        uses: actions/github-script@v6
-        with:
-          script: |
-            console.log('🧪 验证通过，开始生成部署命令');
+            console.log(`🚀 触发${action}工作流`);
             
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
@@ -323,22 +235,25 @@ jobs:
                 component_type: '${{ steps.parse.outputs.component_type }}',
                 values_content: '${{ steps.prepare_config.outputs.VALUES_BASE64 }}',
                 issue_number: '${{ steps.parse.outputs.issue_number }}',
-                dry_run_only: 'false'
+                dry_run_only: isDeployment ? 'false' : 'true'
               }
             });
             
-            console.log('✅ 已触发命令生成工作流');
+            console.log(`✅ 已触发${action}工作流`);
             
-            // 添加评论通知
+            const message = isDeployment 
+              ? '🚀 **正在处理部署请求**\n\n系统将先验证配置，验证通过后生成部署命令。'
+              : '🔍 **正在验证配置**\n\n请稍候...';
+            
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: ${{ steps.parse.outputs.issue_number }},
-              body: '🔍 **配置验证通过**\n\n正在生成部署命令，请稍候...\n\n[查看进度](${{ github.server_url }}/${{ github.repository }}/actions)'
+              body: `${message}\n\n[查看进度](${{ github.server_url }}/${{ github.repository }}/actions)`
             });
       
       # ========================================
-      # 8. 上传配置到 deployment-configs 分支
+      # 7. 上传配置到 deployment-configs 分支
       # ========================================
       - name: 📤 Upload configuration to deployment-configs
         if: steps.parse.outputs.deploy_checked == 'true'
@@ -496,7 +411,7 @@ jobs:
             }
       
       # ========================================
-      # 9. 更新部署状态
+      # 8. 更新部署状态
       # ========================================  
       - name: 📢 Update deployment status
         if: steps.parse.outputs.deploy_checked == 'true'

@@ -60,9 +60,6 @@ on:
         required: true
         type: boolean
         default: true
-    secrets:
-      KUBECONFIG:
-        required: false
 
 jobs:
   validate-and-deploy:
@@ -82,22 +79,6 @@ jobs:
         uses: azure/setup-helm@v3
         with:
           version: 'latest'
-      
-      - name: 🔧 Setup kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: 'latest'
-      
-      - name: 🔑 Configure kubeconfig
-        if: ${{ secrets.KUBECONFIG != '' }}
-        run: |
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBECONFIG }}" | base64 -d > ~/.kube/config
-          chmod 600 ~/.kube/config
-          
-          # 测试连接
-          echo "🔍 测试 Kubernetes 连接..."
-          kubectl cluster-info
       
       # ========================================
       # 2. 准备配置文件
@@ -359,6 +340,46 @@ jobs:
                   `请检查配置文件并修复错误。\n` +
                   `[查看详细日志](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
                 labels = ['validation-failed'];
+                
+                // 验证失败时，尝试重置预览评论中的复选框
+                try {
+                  // 获取 Issue 的所有评论
+                  const comments = await github.rest.issues.listComments({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: parseInt(issueNumber)
+                  });
+                  
+                  // 查找 bot 的部署预览评论
+                  const botComment = comments.data.find(c => 
+                    c.user.login === 'github-actions[bot]' && 
+                    c.body.includes('🚀 部署配置预览')
+                  );
+                  
+                  if (botComment) {
+                    let newBody = botComment.body;
+                    // 重置复选框
+                    newBody = newBody.replace(/- \[x\] ✅ \*\*确认部署\*\*/gi, '- [ ] ✅ **确认部署**');
+                    newBody = newBody.replace(/- \[x\] 🔄 \*\*仅更新配置\*\*/gi, '- [ ] 🔄 **仅更新配置**');
+                    
+                    // 添加验证失败标记
+                    if (!newBody.includes('❌ 验证失败')) {
+                      newBody = newBody.replace(/(_Updated at.*_|$)/, '\n\n❌ **验证失败** - 请修复配置错误后重试\n$1');
+                    }
+                    
+                    // 更新评论
+                    await github.rest.issues.updateComment({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      comment_id: botComment.id,
+                      body: newBody
+                    });
+                    
+                    console.log('✅ 已重置预览评论中的复选框');
+                  }
+                } catch (error) {
+                  console.log('重置复选框失败:', error.message);
+                }
               }
             } else {
               if (deploymentStatus === 'success') {
