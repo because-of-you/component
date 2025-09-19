@@ -172,44 +172,32 @@ jobs:
             });
       
       # ========================================
-      # 5. 执行部署（确认部署被勾选）
+      # 5. 准备部署配置并调用部署工作流
       # ========================================
-      - name: 🚀 Execute deployment
-        if: steps.parse.outputs.deploy_checked == 'true'
+      - name: 📝 Prepare deployment configuration
+        if: steps.parse.outputs.deploy_checked == 'true' || steps.parse.outputs.update_only_checked == 'true'
+        id: prepare_config
         run: |
           echo "========================================="
-          echo "🚀 开始执行部署"
+          echo "📝 准备部署配置"
           echo "========================================="
           
-          COMPONENT_TYPE="${{ steps.parse.outputs.component_type }}"
-          DEPLOYMENT_NAME="${{ steps.parse.outputs.deployment_name }}"
-          NAMESPACE="${{ steps.parse.outputs.namespace }}"
-          ISSUE_NUMBER="${{ steps.parse.outputs.issue_number }}"
-          
-          echo "📦 组件: $COMPONENT_TYPE"
-          echo "🏷️ 名称: $DEPLOYMENT_NAME"
-          echo "🌐 命名空间: $NAMESPACE"
-          echo "📋 Issue: #$ISSUE_NUMBER"
-          echo ""
-          echo "📝 配置内容已保存到 /tmp/deployment-values.yaml"
-          
-          # 保存 YAML 配置到文件
+          # 保存配置到文件
           cat > /tmp/deployment-values.yaml << 'EOF'
           ${{ steps.parse.outputs.yaml_content }}
           EOF
           
-          echo "----------------------------------------"
-          echo "配置内容:"
-          cat /tmp/deployment-values.yaml
-          echo "----------------------------------------"
+          # Base64 编码配置内容以便传递
+          VALUES_BASE64=$(base64 -w 0 /tmp/deployment-values.yaml)
+          echo "VALUES_BASE64=$VALUES_BASE64" >> $GITHUB_OUTPUT
           
           # 保存部署元数据
           cat > /tmp/deployment-metadata.json << EOF
           {
-            "issue_number": "$ISSUE_NUMBER",
-            "component_type": "$COMPONENT_TYPE",
-            "deployment_name": "$DEPLOYMENT_NAME",
-            "namespace": "$NAMESPACE",
+            "issue_number": "${{ steps.parse.outputs.issue_number }}",
+            "component_type": "${{ steps.parse.outputs.component_type }}",
+            "deployment_name": "${{ steps.parse.outputs.deployment_name }}",
+            "namespace": "${{ steps.parse.outputs.namespace }}",
             "deployed_at": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
             "deployed_by": "${{ github.actor }}",
             "commit_sha": "${{ github.sha }}",
@@ -217,26 +205,136 @@ jobs:
           }
           EOF
           
-          # TODO: 在这里添加实际的部署命令
-          # 例如：
-          # - helm upgrade --install $DEPLOYMENT_NAME ./charts/$COMPONENT_TYPE \
-          #     -f /tmp/deployment-values.yaml \
-          #     -n $NAMESPACE \
-          #     --create-namespace
-          # - kubectl apply -f manifest.yaml -n $NAMESPACE
-          
-          echo ""
-          echo "⚡ 执行部署命令..."
-          echo "[部署逻辑占位符 - 请根据实际情况添加]"
-          echo ""
-          
-          # 模拟部署过程
-          sleep 2
-          
-          echo "✅ 部署执行完成！"
+          echo "✅ 配置准备完成"
       
       # ========================================
-      # 6. 上传配置到 deployment-configs 分支
+      # 6. 触发配置验证（仅更新配置或部署前验证）
+      # ========================================
+      - name: 🔍 Trigger validation
+        if: steps.parse.outputs.update_only_checked == 'true' || steps.parse.outputs.deploy_checked == 'true'
+        id: validation_trigger
+        uses: actions/github-script@v6
+        with:
+          script: |
+            console.log('🔍 触发配置验证（dry-run）');
+            
+            const response = await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'deploy-helm-chart.yml',
+              ref: context.ref,
+              inputs: {
+                deployment_name: '${{ steps.parse.outputs.deployment_name }}',
+                namespace: '${{ steps.parse.outputs.namespace }}',
+                component_type: '${{ steps.parse.outputs.component_type }}',
+                values_content: '${{ steps.prepare_config.outputs.VALUES_BASE64 }}',
+                issue_number: '${{ steps.parse.outputs.issue_number }}',
+                dry_run_only: 'true'
+              }
+            });
+            
+            console.log('✅ 已触发配置验证工作流');
+            
+            // 等待验证工作流开始
+            console.log('⏳ 等待验证工作流启动...');
+            await new Promise(resolve => setTimeout(resolve, 5000));
+            
+            // 获取最新的工作流运行
+            const runs = await github.rest.actions.listWorkflowRuns({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'deploy-helm-chart.yml',
+              per_page: 1
+            });
+            
+            if (runs.data.workflow_runs.length > 0) {
+              const runId = runs.data.workflow_runs[0].id;
+              console.log(`📊 验证工作流 ID: ${runId}`);
+              core.setOutput('validation_run_id', runId);
+              
+              // 等待验证完成（最多等待5分钟）
+              const maxAttempts = 30;
+              let attempts = 0;
+              let status = 'in_progress';
+              let conclusion = null;
+              
+              while (status === 'in_progress' && attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 10000));
+                
+                const run = await github.rest.actions.getWorkflowRun({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  run_id: runId
+                });
+                
+                status = run.data.status;
+                conclusion = run.data.conclusion;
+                console.log(`⏳ 验证状态: ${status} (尝试 ${attempts + 1}/${maxAttempts})`);
+                attempts++;
+              }
+              console.log(`验证结果: ${conclusion}`);
+              core.setOutput('validation_conclusion', conclusion);
+              
+              if (conclusion !== 'success' && '${{ steps.parse.outputs.deploy_checked }}' === 'true') {
+                console.log('❌ 验证失败，取消部署');
+                
+                // 添加失败评论
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: ${{ steps.parse.outputs.issue_number }},
+                  body: `❌ **配置验证失败**\n\n部署已取消。请检查配置并修复错误。\n\n[查看验证日志](${{ github.server_url }}/${{ github.repository }}/actions/runs/${runId})`
+                });
+                
+                core.setFailed('配置验证失败，无法继续部署');
+              } else if (conclusion === 'success' && '${{ steps.parse.outputs.update_only_checked }}' === 'true') {
+                // 仅更新配置时的成功通知
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: ${{ steps.parse.outputs.issue_number }},
+                  body: `✅ **配置验证成功**\n\n配置已通过验证，可以安全部署。\n\n如需部署，请勾选"确认部署"选项。`
+                });
+              }
+            }
+      
+      # ========================================
+      # 7. 触发测试部署（验证通过后）
+      # ========================================
+      - name: 🧪 Trigger test deployment
+        if: steps.parse.outputs.deploy_checked == 'true' && steps.validation_trigger.outputs.validation_conclusion == 'success'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            console.log('🧪 验证通过，开始生成部署命令');
+            
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'deploy-helm-chart.yml',
+              ref: context.ref,
+              inputs: {
+                deployment_name: '${{ steps.parse.outputs.deployment_name }}',
+                namespace: '${{ steps.parse.outputs.namespace }}',
+                component_type: '${{ steps.parse.outputs.component_type }}',
+                values_content: '${{ steps.prepare_config.outputs.VALUES_BASE64 }}',
+                issue_number: '${{ steps.parse.outputs.issue_number }}',
+                dry_run_only: 'false'
+              }
+            });
+            
+            console.log('✅ 已触发命令生成工作流');
+            
+            // 添加评论通知
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ steps.parse.outputs.issue_number }},
+              body: '🔍 **配置验证通过**\n\n正在生成部署命令，请稍候...\n\n[查看进度](${{ github.server_url }}/${{ github.repository }}/actions)'
+            });
+      
+      # ========================================
+      # 8. 上传配置到 deployment-configs 分支
       # ========================================
       - name: 📤 Upload configuration to deployment-configs
         if: steps.parse.outputs.deploy_checked == 'true'
@@ -394,7 +492,7 @@ jobs:
             }
       
       # ========================================
-      # 7. 更新部署状态
+      # 9. 更新部署状态
       # ========================================  
       - name: 📢 Update deployment status
         if: steps.parse.outputs.deploy_checked == 'true'
