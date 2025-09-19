@@ -3,7 +3,6 @@ name: Component Deployment Workflow
 on:
   issues:
     types: [opened, edited, labeled]
-    # 添加更多触发条件，方便调试
   workflow_dispatch:
     inputs:
       issue_number:
@@ -12,267 +11,93 @@ on:
         type: number
 
 jobs:
-  debug:
-    name: Debug Information
-    runs-on: ubuntu-latest
-    steps:
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: |
-          echo "GitHub Context:"
-          echo "$GITHUB_CONTEXT"
-          echo "Event Name: ${{ github.event_name }}"
-          echo "Action: ${{ github.event.action }}"
-          echo "Labels: ${{ join(github.event.issue.labels.*.name, ', ') }}"
-          echo "Title: ${{ github.event.issue.title }}"
-          
-          # 检查条件
-          echo "\nConditions:"
-          echo "Is workflow_dispatch: ${{ github.event_name == 'workflow_dispatch' }}"
-          echo "Is issues event: ${{ github.event_name == 'issues' }}"
-          
-          if [ "${{ github.event_name }}" = "issues" ]; then
-            echo "Issue action: ${{ github.event.action }}"
-            echo "Labels: ${{ join(github.event.issue.labels.*.name, ', ') }}"
-            echo "Contains 'deployment' label: ${{ contains(github.event.issue.labels.*.name, 'deployment') }}"
-          fi
-
   process-deployment-request:
-    needs: debug
-    # 临时移除所有条件，确保工作流能运行
-    # if: true  # 先注释掉所有条件
-    
-    # 原始条件（暂时禁用）
-    # if: |
-    #   github.event_name == 'workflow_dispatch' || 
-    #   (github.event_name == 'issues' && 
-    #    (contains(github.event.issue.labels.*.name, 'deployment') ||
-    #     github.event.action == 'labeled'))
-    
     runs-on: ubuntu-latest
     
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
         
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-          
-      - name: Install dependencies
+      - name: Setup environment
         run: |
-          python -m pip install --upgrade pip
-          pip install pyyaml
+          # 安装 jq 用于 JSON 处理
+          sudo apt-get update
+          sudo apt-get install -y jq
           
-      - name: Create Python script
-        run: |
-          cat > process_issue.py << 'EOF'
-          import os
-          import yaml
-          import json
-          import sys
-          from pathlib import Path
-          
-          def parse_issue_body(body):
-              # 处理 GitHub Issue 表单数据
-              result = {}
-              for item in body:
-                  if isinstance(item, dict) and 'id' in item:
-                      result[item['id']] = item.get('value', '')
-              return result
-          
-          def main():
-              # 从环境变量获取 Issue 内容
-              issue_body = os.environ.get('ISSUE_BODY', '[]')
-              try:
-                  issue_data = json.loads(issue_body)
-              except json.JSONDecodeError:
-                  print("Error: Failed to parse issue body as JSON")
-                  sys.exit(1)
-          
-              # 解析表单数据
-              form_data = {}
-              if isinstance(issue_data, list):
-                  form_data = parse_issue_body(issue_data)
-              elif isinstance(issue_data, dict):
-                  form_data = issue_data
-          
-              component_type = form_data.get('component_type', '').lower()
-              deployment_name = form_data.get('deployment_name', '')
-              namespace = form_data.get('namespace', 'default')
-          
-              # 读取对应的 values 文件
-              values_file = f'./helm/config/{component_type}/values.yaml'
-              if not os.path.exists(values_file):
-                  print(f"Error: Values file not found for {component_type}")
-                  sys.exit(1)
-          
-              try:
-                  with open(values_file, 'r') as f:
-                      values_content = f.read()
-              except Exception as e:
-                  print(f"Error reading values file: {e}")
-                  sys.exit(1)
-          
-              # 创建配置确认评论
-              comment = f"""## 部署配置确认
-  
-              **组件类型**: {component_type}  
-              **部署名称**: {deployment_name}  
-              **命名空间**: {namespace}  
-              
-              ### 配置内容
-              
-              ```yaml
-              {values_content}
-              ```
-              
-              请检查以上配置：
-              - 如果需要修改配置，请直接编辑上方的 YAML 内容
-              - 确认无误后，请回复 `/deploy` 开始部署
-              - 取消部署请回复 `/cancel`
-              
-              **注意**: 此配置将在 24 小时后自动过期。
-              """
-          
-              # 输出评论内容
-              with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
-                  print(f'comment={json.dumps(comment)}', file=fh)
-          
-              # 保存配置数据
-              config_data = {
-                  'component_type': component_type,
-                  'deployment_name': deployment_name,
-                  'namespace': namespace,
-                  'values': values_content,
-                  'issue_number': int(os.environ.get('ISSUE_NUMBER', '0'))
-              }
-          
-              with open('deployment_config.json', 'w') as f:
-                  json.dump(config_data, f)
-          
-          if __name__ == "__main__":
-              main()
-          EOF
-
-      - name: Debug Issue Data
-        run: |
-          echo "Event Name: ${{ github.event_name }}"
-          echo "Event Action: ${{ github.event.action }}"
-          echo "Issue Number: ${{ github.event.issue.number }}"
-          echo "Issue Body: ${{ toJSON(github.event.issue) }}"
-          
-          # 保存 Issue 数据到文件
-          mkdir -p .github/workflows/debug
-          echo "${{ toJSON(github.event.issue) }}" > .github/workflows/debug/issue_data.json
-          echo "${{ toJSON(github) }}" > .github/workflows/debug/context.json
-
       - name: Process deployment request
         id: process
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ISSUE_JSON: ${{ toJSON(github.event.issue) }}
-          GITHUB_EVENT_NAME: ${{ github.event_name }}
         run: |
-          # 创建处理脚本
-          cat > process_issue_fixed.py << 'EOF'
-          import os
-          import yaml
-          import json
-          import sys
+          # 调试信息
+          echo "Event Name: ${{ github.event_name }}"
+          echo "Event Action: ${{ github.event.action }}"
           
-          def main():
-              print("Starting issue processing...")
-              print(f"Event Name: {os.environ.get('GITHUB_EVENT_NAME')}")
-              
-              # 从环境变量获取 Issue 数据
-              issue_json = os.environ.get('ISSUE_JSON', '{}')
-              print(f"Raw issue JSON: {issue_json[:200]}...")  # 打印部分内容用于调试
-              
-              try:
-                  issue_data = json.loads(issue_json)
-                  print("Successfully parsed issue JSON")
-              except json.JSONDecodeError as e:
-                  print(f"Error parsing issue JSON: {e}")
-                  sys.exit(1)
-              
-              # 获取表单数据
-              form_data = {}
-              if 'body' in issue_data:
-                  print("Processing issue body...")
-                  body = issue_data['body']
-                  print(f"Issue body type: {type(body)}")
-                  
-                  if isinstance(body, str):
-                      try:
-                          # 尝试解析表单数据
-                          form_items = [item for item in body.split('\n\n') if item.strip()]
-                          for item in form_items:
-                              if '###' in item:
-                                  key = item.split('### ')[1].split('\n')[0].strip()
-                                  value = '\n'.join(item.split('\n')[1:]).strip()
-                                  form_data[key] = value
-                      except Exception as e:
-                          print(f"Error parsing form data: {e}")
-              
-              print(f"Form data: {json.dumps(form_data, ensure_ascii=False, indent=2)}")
-              
-              # 获取组件类型
-              component_type = form_data.get('组件类型', '').lower()
-              if not component_type:
-                  print("Error: 无法确定组件类型")
-                  sys.exit(1)
-                  
-              # 读取 values 文件
-              values_file = f'./helm/config/{component_type}/values.yaml'
-              print(f"Looking for values file: {values_file}")
-              
-              if not os.path.exists(values_file):
-                  print(f"Error: Values file not found at {values_file}")
-                  sys.exit(1)
-              
-              try:
-                  with open(values_file, 'r') as f:
-                      values_content = f.read()
-                  print("Successfully read values file")
-              except Exception as e:
-                  print(f"Error reading values file: {e}")
-                  sys.exit(1)
-              
-              # 准备输出
-              output = {
-                  'component_type': component_type,
-                  'deployment_name': form_data.get('部署名称', 'default-deployment'),
-                  'namespace': form_data.get('命名空间', 'default'),
-                  'values_content': values_content,
-                  'issue_number': issue_data.get('number', 0)
-              }
-              
-              # 输出到 GITHUB_OUTPUT
-              if 'GITHUB_OUTPUT' in os.environ:
-                  with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
-                      for key, value in output.items():
-                          if isinstance(value, str):
-                              value = value.replace('\n', '%0A').replace('"', '\"')
-                              print(f'{key}="{value}"')
-                              print(f'{key}="{value}"' >> $GITHUB_OUTPUT)
-                          else:
-                              print(f'{key}={value}')
-                              print(f'{key}={value}' >> $GITHUB_OUTPUT)
-              
-              print("Processing completed successfully")
+          # 解析 Issue 表单数据
+          echo "Raw issue body:"
+          echo "${{ toJSON(github.event.issue) }}"
           
-          if __name__ == "__main__":
-              main()
+          # 提取组件类型（使用 jq 解析 JSON）
+          COMPONENT_TYPE=$(echo '${{ toJSON(github.event.issue.body) }}' | jq -r '.[] | select(.id == "component_type") | .value // empty' | tr '[:upper:]' '[:lower:]')
+          DEPLOYMENT_NAME=$(echo '${{ toJSON(github.event.issue.body) }}' | jq -r '.[] | select(.id == "deployment_name") | .value // empty')
+          NAMESPACE=$(echo '${{ toJSON(github.event.issue.body) }}' | jq -r '.[] | select(.id == "namespace") | .value // "default"')
+          
+          echo "Component Type: $COMPONENT_TYPE"
+          echo "Deployment Name: $DEPLOYMENT_NAME"
+          echo "Namespace: $NAMESPACE"
+          
+          # 检查组件类型是否有效
+          if [ -z "$COMPONENT_TYPE" ]; then
+            echo "Error: 无法确定组件类型"
+            exit 1
+          fi
+          
+          # 检查 values 文件是否存在
+          VALUES_FILE="./helm/config/$COMPONENT_TYPE/values.yaml"
+          if [ ! -f "$VALUES_FILE" ]; then
+            echo "Error: 找不到 $VALUES_FILE 文件"
+            exit 1
+          fi
+          
+          # 读取 values 文件内容
+          VALUES_CONTENT=$(cat "$VALUES_FILE")
+          
+          # 创建配置确认评论
+          COMMENT="## 部署配置确认\n\n"
+          COMMENT+="**组件类型**: $COMPONENT_TYPE  \n"
+          COMMENT+="**部署名称**: $DEPLOYMENT_NAME  \n"
+          COMMENT+="**命名空间**: $NAMESPACE  \n\n"
+          COMMENT+="### 配置内容\n\n"
+          COMMENT+="\`\`\`yaml\n$VALUES_CONTENT\n\`\`\`\n\n"
+          COMMENT+="请检查以上配置：\n"
+          COMMENT+="- 如果需要修改配置，请直接编辑上方的 YAML 内容\n"
+          COMMENT+="- 确认无误后，请回复 \`/deploy\` 开始部署\n"
+          COMMENT+="- 取消部署请回复 \`/cancel\`\n\n"
+          COMMENT+="**注意**: 此配置将在 24 小时后自动过期。"
+          
+          # 输出到 GITHUB_OUTPUT
+          echo "comment<<EOF" >> $GITHUB_OUTPUT
+          echo "$COMMENT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          # 保存配置数据到 JSON 文件
+          cat > deployment_config.json << EOF
+          {
+            "component_type": "$COMPONENT_TYPE",
+            "deployment_name": "$DEPLOYMENT_NAME",
+            "namespace": "$NAMESPACE",
+            "values_content": $(jq -Rs . <<< "$VALUES_CONTENT"),
+            "issue_number": ${{ github.event.issue.number }}
+          }
           EOF
           
-          # 执行处理脚本
-          python process_issue_fixed.py
-              
-      - name: Create configuration comment
+          echo "配置处理完成"
+      
+      - name: Create or update configuration comment
         uses: actions/github-script@v6
+        env:
+          COMMENT: ${{ steps.process.outputs.comment }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
         with:
           script: |
             const fs = require('fs');
@@ -290,15 +115,13 @@ jobs:
               c.body.includes('## 部署配置确认')
             );
             
-            const commentBody = `${{ steps.process.outputs.comment }}`;
-            
             if (existingComment) {
               // 更新现有评论
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 comment_id: existingComment.id,
-                body: commentBody
+                body: process.env.COMMENT
               });
             } else {
               // 创建新评论
@@ -306,23 +129,9 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: config.issue_number,
-                body: commentBody
+                body: process.env.COMMENT
               });
             }
-            
-  # 处理部署命令
-  process-deployment-command:
-    needs: process-deployment-request
-    
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Check for deployment command
-        uses: actions/github-script@v6
-        id: check_command
-        with:
-          script: |
-            const fs = require('fs');
             const config = JSON.parse(fs.readFileSync('deployment_config.json', 'utf8'));
             
             // 检查评论中是否包含 /deploy 命令
