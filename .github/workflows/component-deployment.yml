@@ -114,29 +114,8 @@ jobs:
             VALUES_CONTENT=$(cat "$VALUES_FILE")
           else
             echo "⚠️  未找到专用配置文件，使用通用模板"
-            VALUES_CONTENT="# Auto-generated configuration for $COMPONENT_TYPE
-            # 请创建 $VALUES_FILE 来使用自定义配置
-            
-            replicaCount: 1
-            
-            image:
-              repository: $COMPONENT_TYPE
-              tag: latest
-              pullPolicy: IfNotPresent
-            
-            service:
-              type: ClusterIP
-              port: 8080
-            
-            resources:
-              limits:
-                cpu: 500m
-                memory: 512Mi
-              requests:
-                cpu: 100m
-                memory: 128Mi
-            
-            # 添加您的自定义配置..."
+            # 使用 printf 生成正确格式的 YAML 内容
+            VALUES_CONTENT=$(printf "# Auto-generated configuration for %s\n# 请创建 %s 来使用自定义配置\n\nreplicaCount: 1\n\nimage:\n  repository: %s\n  tag: latest\n  pullPolicy: IfNotPresent\n\nservice:\n  type: ClusterIP\n  port: 8080\n\nresources:\n  limits:\n    cpu: 500m\n    memory: 512Mi\n  requests:\n    cpu: 100m\n    memory: 128Mi\n\n# 添加您的自定义配置..." "$COMPONENT_TYPE" "$VALUES_FILE" "$COMPONENT_TYPE")
           fi
           
           # 保存配置内容
@@ -174,25 +153,27 @@ jobs:
             }
             
             // 构建评论内容
-            const comment = `## 🚀 部署配置预览
-
-            **组件信息:**
-            - 📦 **类型:** \`${config.component_type}\`
-            - 🏷️ **名称:** \`${config.deployment_name}\`
-            - 🌐 **命名空间:** \`${config.namespace}\`
-            
-            **配置详情:**
-            \`\`\`yaml
-            ${config.values}
-            \`\`\`
-            
-            ---
-            ### 📝 操作指南
-            - ✅ 输入 \`/deploy\` 确认部署
-            - ❌ 输入 \`/cancel\` 取消部署
-            - 🔄 修改 Issue 内容以更新配置
-            
-            > ⏰ 此配置将在 24 小时后过期`;
+            const comment = [
+              '## 🚀 部署配置预览',
+              '',
+              '**组件信息:**',
+              `- 📦 **类型:** \`${config.component_type}\``,
+              `- 🏷️ **名称:** \`${config.deployment_name}\``,
+              `- 🌐 **命名空间:** \`${config.namespace}\``,
+              '',
+              '**配置详情:**',
+              '```yaml',
+              config.values,
+              '```',
+              '',
+              '---',
+              '### 📝 操作指南',
+              '- ✅ 输入 `/deploy` 确认部署',
+              '- ❌ 输入 `/cancel` 取消部署',
+              '- 🔄 修改 Issue 内容以更新配置',
+              '',
+              '> ⏰ 此配置将在 24 小时后过期'
+            ].join('\n');
             
             // 查找现有评论
             const { data: comments } = await github.rest.issues.listComments({
@@ -344,19 +325,21 @@ jobs:
                 message = `部署以状态 \`${status}\` 结束`;
             }
             
-            const comment = `## ${emoji} ${title}
-
-            ${message}
-            
-            📊 **部署详情:**
-            - 组件: \`${config.component_type}\`
-            - 名称: \`${config.deployment_name}\`
-            - 命名空间: \`${config.namespace}\`
-            
-            📝 [查看详细日志](${runUrl})
-            
-            ---
-            _Generated at ${new Date().toISOString()}_`;
+            const comment = [
+              `## ${emoji} ${title}`,
+              '',
+              message,
+              '',
+              '📊 **部署详情:**',
+              `- 组件: \`${config.component_type}\``,
+              `- 名称: \`${config.deployment_name}\``,
+              `- 命名空间: \`${config.namespace}\``,
+              '',
+              `📝 [查看详细日志](${runUrl})`,
+              '',
+              '---',
+              `_Generated at ${new Date().toISOString()}_`
+            ].join('\n');
             
             await github.rest.issues.createComment({
               owner: context.repo.owner,
