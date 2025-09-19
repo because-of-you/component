@@ -9,10 +9,22 @@ on:
       - deployment-configs
     paths:
       - 'configs/**'
+  workflow_dispatch:  # 允许手动触发
+  workflow_run:
+    workflows: ["Issue Comment Edited - Process Deployment Action"]
+    types:
+      - completed
+    branches:
+      - main
+      - trunk
 
 jobs:
   build-pages:
     runs-on: ubuntu-latest
+    # 如果是 workflow_run 触发，只在成功时运行
+    if: |
+      github.event_name != 'workflow_run' || 
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     
     permissions:
       contents: write
@@ -20,12 +32,34 @@ jobs:
     
     steps:
       # ========================================
+      # 0. 调试信息
+      # ========================================
+      - name: 🐛 Debug trigger information
+        run: |
+          echo "Event Name: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
+          echo "Default Branch: ${{ github.event.repository.default_branch }}"
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            echo "Triggered by workflow: ${{ github.event.workflow_run.name }}"
+            echo "Workflow conclusion: ${{ github.event.workflow_run.conclusion }}"
+          fi
+      
+      # ========================================
       # 1. 检出两个分支
       # ========================================
       - name: 📥 Checkout deployment-configs branch
+        id: checkout-deploy-configs
         uses: actions/checkout@v3
         with:
           ref: deployment-configs
+          path: configs-repo
+        continue-on-error: true  # 如果分支不存在则继续
+      
+      - name: 📥 Checkout main branch if deployment-configs doesn't exist
+        if: steps.checkout-deploy-configs.outcome == 'failure'
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.repository.default_branch || 'trunk' }}
           path: configs-repo
       
       - name: 📥 Checkout gh-pages branch
@@ -51,6 +85,12 @@ jobs:
           
           # 确保目录存在
           mkdir -p pages-repo/deployments
+          
+          # 检查 configs 目录是否存在
+          if [ ! -d "configs-repo/configs" ]; then
+            echo "⚠️ configs 目录不存在，创建空的 gh-pages"
+            mkdir -p configs-repo/configs
+          fi
           
           # 遍历所有配置
           for config_dir in configs-repo/configs/*/; do

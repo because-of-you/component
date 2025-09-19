@@ -256,29 +256,72 @@ jobs:
             const metadata = JSON.parse(fs.readFileSync('/tmp/deployment-metadata.json', 'utf8'));
             
             try {
+              // 获取 main 分支的最新 SHA
+              const { data: mainRef } = await github.rest.git.getRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: 'heads/${{ github.event.repository.default_branch }}'
+              });
+              const mainSha = mainRef.object.sha;
+              
               // 获取或创建 deployment-configs 分支
-              let sha;
+              let deployConfigSha;
+              let branchExists = true;
               try {
                 const { data: ref } = await github.rest.git.getRef({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   ref: 'heads/deployment-configs'
                 });
-                sha = ref.object.sha;
+                deployConfigSha = ref.object.sha;
               } catch (e) {
                 // deployment-configs 分支不存在，创建它
-                const { data: mainRef } = await github.rest.git.getRef({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  ref: 'heads/${{ github.event.repository.default_branch }}'
-                });
+                branchExists = false;
                 await github.rest.git.createRef({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   ref: 'refs/heads/deployment-configs',
-                  sha: mainRef.object.sha
+                  sha: mainSha
                 });
-                sha = mainRef.object.sha;
+                deployConfigSha = mainSha;
+              }
+              
+              // 如果分支已存在，先合并 main 分支的最新更改
+              if (branchExists && deployConfigSha !== mainSha) {
+                console.log('🔄 合并 main 分支的最新更改到 deployment-configs');
+                
+                try {
+                  // 创建合并提交
+                  const { data: mergeCommit } = await github.rest.git.createCommit({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    message: `🔄 Merge main branch into deployment-configs`,
+                    tree: mainSha,
+                    parents: [deployConfigSha, mainSha]
+                  });
+                  
+                  // 更新 deployment-configs 分支引用
+                  await github.rest.git.updateRef({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    ref: 'heads/deployment-configs',
+                    sha: mergeCommit.sha
+                  });
+                  
+                  deployConfigSha = mergeCommit.sha;
+                  console.log('✅ 成功合并 main 分支的更改');
+                } catch (mergeError) {
+                  console.log('⚠️ 合并失败，使用 main 分支作为基础:', mergeError.message);
+                  // 如果合并失败，强制重置到 main 分支
+                  await github.rest.git.updateRef({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    ref: 'heads/deployment-configs',
+                    sha: mainSha,
+                    force: true
+                  });
+                  deployConfigSha = mainSha;
+                }
               }
               
               // 创建文件内容
@@ -297,7 +340,7 @@ jobs:
               const { data: baseTree } = await github.rest.git.getTree({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                tree_sha: sha,
+                tree_sha: deployConfigSha,
                 recursive: true
               });
               
@@ -331,7 +374,7 @@ jobs:
                 repo: context.repo.repo,
                 message: `📦 Upload deployment config for issue #${issueNumber}`,
                 tree: tree.sha,
-                parents: [sha]
+                parents: [deployConfigSha]
               });
               
               // 更新引用
