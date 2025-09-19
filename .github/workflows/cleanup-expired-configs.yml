@@ -1,0 +1,215 @@
+name: Cleanup Expired Configurations
+
+# ========================================
+# 定时清理超过 24 小时的配置文件
+# ========================================
+on:
+  schedule:
+    # 每天凌晨 2 点运行
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (only show what would be deleted)'
+        type: boolean
+        default: false
+      retention_hours:
+        description: 'Retention period in hours'
+        type: number
+        default: 24
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+      issues: read
+    
+    steps:
+      # ========================================
+      # 1. 检出分支
+      # ========================================
+      - name: 📥 Checkout deployment-configs branch
+        uses: actions/checkout@v3
+        with:
+          ref: deployment-configs
+          fetch-depth: 0
+      
+      # ========================================
+      # 2. 清理过期配置
+      # ========================================
+      - name: 🧹 Clean up expired configurations
+        id: cleanup
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs').promises;
+            const path = require('path');
+            
+            console.log('========================================');
+            console.log('🧹 清理过期配置文件');
+            console.log('========================================');
+            
+            const dryRun = ${{ github.event.inputs.dry_run || false }};
+            const retentionHours = ${{ github.event.inputs.retention_hours || 24 }};
+            const retentionMs = retentionHours * 60 * 60 * 1000;
+            const now = Date.now();
+            
+            console.log(`⏰ 保留期限: ${retentionHours} 小时`);
+            console.log(`🔍 模式: ${dryRun ? 'DRY RUN (仅显示)' : 'LIVE (实际删除)'}`);
+            console.log('');
+            
+            const configsDir = 'configs';
+            const expiredConfigs = [];
+            const activeConfigs = [];
+            
+            try {
+              const dirs = await fs.readdir(configsDir);
+              
+              for (const issueNumber of dirs) {
+                const dirPath = path.join(configsDir, issueNumber);
+                const metadataPath = path.join(dirPath, 'metadata.json');
+                
+                try {
+                  const stat = await fs.stat(dirPath);
+                  if (!stat.isDirectory()) continue;
+                  
+                  // 读取元数据
+                  const metadataContent = await fs.readFile(metadataPath, 'utf8');
+                  const metadata = JSON.parse(metadataContent);
+                  const deployedAt = new Date(metadata.deployed_at).getTime();
+                  const age = now - deployedAt;
+                  const ageHours = Math.floor(age / (1000 * 60 * 60));
+                  
+                  if (age > retentionMs) {
+                    expiredConfigs.push({
+                      issueNumber,
+                      deployedAt: metadata.deployed_at,
+                      ageHours,
+                      component: metadata.component_type,
+                      deploymentName: metadata.deployment_name
+                    });
+                    
+                    if (!dryRun) {
+                      // 删除目录
+                      await fs.rm(dirPath, { recursive: true, force: true });
+                      console.log(`🗑️ 删除: Issue #${issueNumber} (${ageHours} 小时前)`);
+                    } else {
+                      console.log(`[DRY RUN] 将删除: Issue #${issueNumber} (${ageHours} 小时前)`);
+                    }
+                  } else {
+                    activeConfigs.push({
+                      issueNumber,
+                      deployedAt: metadata.deployed_at,
+                      ageHours,
+                      component: metadata.component_type
+                    });
+                    console.log(`✅ 保留: Issue #${issueNumber} (${ageHours} 小时前)`);
+                  }
+                } catch (error) {
+                  console.log(`⚠️ 跳过 ${issueNumber}: ${error.message}`);
+                }
+              }
+              
+              // 输出统计
+              console.log('');
+              console.log('========================================');
+              console.log('📊 清理统计');
+              console.log('========================================');
+              console.log(`📁 总配置数: ${dirs.length}`);
+              console.log(`🗑️ 过期配置: ${expiredConfigs.length}`);
+              console.log(`✅ 保留配置: ${activeConfigs.length}`);
+              
+              // 设置输出
+              core.setOutput('expired_count', expiredConfigs.length);
+              core.setOutput('active_count', activeConfigs.length);
+              core.setOutput('expired_configs', JSON.stringify(expiredConfigs));
+              
+            } catch (error) {
+              console.error('清理过程出错:', error);
+              core.setFailed(error.message);
+            }
+      
+      # ========================================
+      # 3. 提交更改
+      # ========================================
+      - name: 💾 Commit changes
+        if: github.event.inputs.dry_run != 'true' && steps.cleanup.outputs.expired_count != '0'
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add .
+          git diff --staged --quiet || git commit -m "🧹 Cleanup expired configurations (removed ${{ steps.cleanup.outputs.expired_count }} configs)"
+          git push
+      
+      # ========================================
+      # 4. 触发 gh-pages 重建
+      # ========================================
+      - name: 🔄 Trigger gh-pages rebuild
+        if: github.event.inputs.dry_run != 'true' && steps.cleanup.outputs.expired_count != '0'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            console.log('🔄 触发 gh-pages 重建...');
+            
+            // 创建一个空提交来触发 gh-pages 构建
+            try {
+              const { data: ref } = await github.rest.git.getRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: 'heads/deployment-configs'
+              });
+              
+              const { data: commit } = await github.rest.git.getCommit({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                commit_sha: ref.object.sha
+              });
+              
+              const { data: newCommit } = await github.rest.git.createCommit({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                message: '🔄 Trigger gh-pages rebuild after cleanup',
+                tree: commit.tree.sha,
+                parents: [ref.object.sha]
+              });
+              
+              await github.rest.git.updateRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: 'heads/deployment-configs',
+                sha: newCommit.sha
+              });
+              
+              console.log('✅ 已触发 gh-pages 重建');
+            } catch (error) {
+              console.log('触发重建失败:', error.message);
+            }
+      
+      # ========================================
+      # 5. 创建清理报告
+      # ========================================
+      - name: 📋 Create cleanup report
+        if: always()
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## 🧹 配置清理报告
+          
+          ### 📊 统计信息
+          | 项目 | 数量 |
+          |------|------|
+          | 过期配置 | ${{ steps.cleanup.outputs.expired_count }} |
+          | 活跃配置 | ${{ steps.cleanup.outputs.active_count }} |
+          | 保留期限 | ${{ github.event.inputs.retention_hours || 24 }} 小时 |
+          
+          ### ⚙️ 运行参数
+          - **模式**: ${{ github.event.inputs.dry_run == 'true' && 'DRY RUN' || 'LIVE' }}
+          - **运行时间**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          
+          ### 🗑️ 已清理的配置
+          \`\`\`json
+          ${{ steps.cleanup.outputs.expired_configs }}
+          \`\`\`
+          EOF

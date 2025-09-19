@@ -1,0 +1,442 @@
+name: Build GitHub Pages
+
+# ========================================
+# deployment-configs 分支更新时构建 gh-pages
+# ========================================
+on:
+  push:
+    branches:
+      - deployment-configs
+    paths:
+      - 'configs/**'
+
+jobs:
+  build-pages:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+      pages: write
+    
+    steps:
+      # ========================================
+      # 1. 检出两个分支
+      # ========================================
+      - name: 📥 Checkout deployment-configs branch
+        uses: actions/checkout@v3
+        with:
+          ref: deployment-configs
+          path: configs-repo
+      
+      - name: 📥 Checkout gh-pages branch
+        uses: actions/checkout@v3
+        with:
+          ref: gh-pages
+          path: pages-repo
+        continue-on-error: true
+      
+      # ========================================
+      # 2. 生成页面
+      # ========================================
+      - name: 🔨 Build deployment pages
+        run: |
+          echo "========================================="
+          echo "🔨 构建部署页面"
+          echo "========================================="
+          
+          # 如果 gh-pages 不存在，创建目录结构
+          if [ ! -d "pages-repo" ]; then
+            mkdir -p pages-repo/deployments
+          fi
+          
+          # 确保目录存在
+          mkdir -p pages-repo/deployments
+          
+          # 遍历所有配置
+          for config_dir in configs-repo/configs/*/; do
+            if [ -d "$config_dir" ]; then
+              ISSUE_NUMBER=$(basename "$config_dir")
+              echo "📄 处理 Issue #$ISSUE_NUMBER"
+              
+              # 读取文件
+              if [ -f "$config_dir/values.yaml" ] && [ -f "$config_dir/metadata.json" ]; then
+                VALUES_CONTENT=$(cat "$config_dir/values.yaml")
+                METADATA=$(cat "$config_dir/metadata.json")
+                
+                # 提取元数据
+                COMPONENT_TYPE=$(echo "$METADATA" | jq -r '.component_type')
+                DEPLOYMENT_NAME=$(echo "$METADATA" | jq -r '.deployment_name')
+                NAMESPACE=$(echo "$METADATA" | jq -r '.namespace')
+                DEPLOYED_AT=$(echo "$METADATA" | jq -r '.deployed_at')
+                DEPLOYED_BY=$(echo "$METADATA" | jq -r '.deployed_by')
+                WORKFLOW_RUN=$(echo "$METADATA" | jq -r '.workflow_run')
+                
+                # 创建目录
+                mkdir -p "pages-repo/deployments/$ISSUE_NUMBER"
+                
+                # 复制文件
+                cp "$config_dir/values.yaml" "pages-repo/deployments/$ISSUE_NUMBER/"
+                cp "$config_dir/metadata.json" "pages-repo/deployments/$ISSUE_NUMBER/"
+                
+                # 生成 HTML 页面
+                cat > "pages-repo/deployments/$ISSUE_NUMBER/index.html" << 'EOF'
+          <!DOCTYPE html>
+          <html lang="zh-CN">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Deployment Config #ISSUE_NUMBER</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+            <link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+            <style>
+              :root {
+                --primary-gradient: linear-gradient(135deg, #6B73FF 0%, #000DFF 100%);
+                --card-shadow: 0 20px 60px rgba(0,0,0,0.1);
+              }
+              
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                background: #f0f2ff;
+                min-height: 100vh;
+              }
+              
+              .hero-section {
+                background: var(--primary-gradient);
+                color: white;
+                padding: 3rem 0;
+                margin-bottom: 3rem;
+                position: relative;
+                overflow: hidden;
+              }
+              
+              .hero-section::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+              }
+              
+              .hero-content {
+                position: relative;
+                z-index: 1;
+              }
+              
+              .issue-badge {
+                background: rgba(255,255,255,0.2);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255,255,255,0.3);
+                padding: 0.75rem 1.5rem;
+                border-radius: 100px;
+                font-size: 1.2rem;
+                font-weight: 600;
+                display: inline-block;
+                margin-bottom: 1rem;
+              }
+              
+              .main-card {
+                background: white;
+                border-radius: 20px;
+                box-shadow: var(--card-shadow);
+                overflow: hidden;
+                margin-bottom: 2rem;
+              }
+              
+              .card-header-custom {
+                background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                padding: 2rem;
+                border-bottom: 1px solid rgba(0,0,0,0.05);
+              }
+              
+              .info-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 2rem;
+                padding: 2rem;
+              }
+              
+              .info-item h6 {
+                color: #6c757d;
+                font-size: 0.875rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 0.5rem;
+              }
+              
+              .info-item p {
+                font-size: 1.25rem;
+                font-weight: 600;
+                color: #2c3e50;
+                margin: 0;
+              }
+              
+              .metadata-table {
+                margin: 0;
+              }
+              
+              .metadata-table td {
+                padding: 1rem 1.5rem;
+                border-bottom: 1px solid #f0f0f0;
+              }
+              
+              .metadata-table td:first-child {
+                font-weight: 600;
+                color: #6c757d;
+                width: 40%;
+              }
+              
+              .metadata-table tr:last-child td {
+                border-bottom: none;
+              }
+              
+              .code-container {
+                position: relative;
+                background: #2d2d2d;
+                border-radius: 15px;
+                padding: 2rem;
+                margin: 2rem;
+              }
+              
+              .code-container pre {
+                margin: 0;
+                background: transparent;
+              }
+              
+              .copy-button {
+                position: absolute;
+                top: 1rem;
+                right: 1rem;
+                background: rgba(255,255,255,0.1);
+                border: 1px solid rgba(255,255,255,0.2);
+                color: white;
+                padding: 0.5rem 1rem;
+                border-radius: 8px;
+                cursor: pointer;
+                transition: all 0.3s;
+              }
+              
+              .copy-button:hover {
+                background: rgba(255,255,255,0.2);
+                transform: translateY(-2px);
+              }
+              
+              .download-section {
+                text-align: center;
+                padding: 3rem;
+                background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+              }
+              
+              .download-btn {
+                background: var(--primary-gradient);
+                color: white;
+                border: none;
+                padding: 1rem 3rem;
+                border-radius: 100px;
+                font-size: 1.1rem;
+                font-weight: 600;
+                text-decoration: none;
+                display: inline-block;
+                transition: all 0.3s;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+              }
+              
+              .download-btn:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+                color: white;
+              }
+              
+              .footer {
+                text-align: center;
+                padding: 2rem;
+                color: #6c757d;
+              }
+              
+              .footer a {
+                color: #6B73FF;
+                text-decoration: none;
+                font-weight: 600;
+              }
+              
+              @media (max-width: 768px) {
+                .info-grid {
+                  grid-template-columns: 1fr;
+                  gap: 1rem;
+                }
+              }
+            </style>
+          </head>
+          <body>
+            <!-- Hero Section -->
+            <div class="hero-section">
+              <div class="container hero-content">
+                <div class="issue-badge">Issue #ISSUE_NUMBER</div>
+                <h1 class="display-4 fw-bold mb-3">🚀 Deployment Configuration</h1>
+                <p class="lead mb-0">COMPONENT_TYPE Deployment</p>
+              </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="container">
+              <!-- Component Info Card -->
+              <div class="main-card">
+                <div class="card-header-custom">
+                  <h2 class="h4 mb-0 fw-bold">📦 Component Details</h2>
+                </div>
+                <div class="info-grid">
+                  <div class="info-item">
+                    <h6>Component Type</h6>
+                    <p>COMPONENT_TYPE</p>
+                  </div>
+                  <div class="info-item">
+                    <h6>Deployment Name</h6>
+                    <p>DEPLOYMENT_NAME</p>
+                  </div>
+                  <div class="info-item">
+                    <h6>Namespace</h6>
+                    <p><code>NAMESPACE</code></p>
+                  </div>
+                  <div class="info-item">
+                    <h6>Deployed At</h6>
+                    <p>DEPLOYED_AT_FORMATTED</p>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Metadata Card -->
+              <div class="main-card">
+                <div class="card-header-custom">
+                  <h2 class="h4 mb-0 fw-bold">📋 Deployment Metadata</h2>
+                </div>
+                <table class="table metadata-table mb-0">
+                  <tbody>
+                    <tr>
+                      <td>Deployed By</td>
+                      <td>@DEPLOYED_BY</td>
+                    </tr>
+                    <tr>
+                      <td>Workflow Run</td>
+                      <td>
+                        <a href="https://github.com/$GITHUB_REPOSITORY/actions/runs/WORKFLOW_RUN" target="_blank">
+                          #WORKFLOW_RUN
+                        </a>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Related Issue</td>
+                      <td>
+                        <a href="https://github.com/$GITHUB_REPOSITORY/issues/ISSUE_NUMBER" target="_blank">
+                          View Issue #ISSUE_NUMBER
+                        </a>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              
+              <!-- Configuration Card -->
+              <div class="main-card">
+                <div class="card-header-custom">
+                  <h2 class="h4 mb-0 fw-bold">⚙️ Values Configuration</h2>
+                </div>
+                <div class="code-container">
+                  <button class="copy-button" onclick="copyToClipboard()">📋 Copy</button>
+                  <pre><code class="language-yaml" id="yamlContent">VALUES_CONTENT</code></pre>
+                </div>
+                <div class="download-section">
+                  <h5 class="mb-3">Download Configuration File</h5>
+                  <a href="values.yaml" download="values-ISSUE_NUMBER.yaml" class="download-btn">
+                    📥 Download values.yaml
+                  </a>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="footer">
+              <p class="mb-0">
+                Generated by GitHub Actions • 
+                <a href="https://github.com/$GITHUB_REPOSITORY">View Repository</a>
+              </p>
+            </div>
+            
+            <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+            <script>
+              function copyToClipboard() {
+                const content = document.getElementById('yamlContent').textContent;
+                navigator.clipboard.writeText(content).then(() => {
+                  const button = document.querySelector('.copy-button');
+                  button.textContent = '✅ Copied!';
+                  setTimeout(() => {
+                    button.textContent = '📋 Copy';
+                  }, 2000);
+                });
+              }
+              
+              // Format date
+              document.addEventListener('DOMContentLoaded', () => {
+                const deployedAt = 'DEPLOYED_AT';
+                const date = new Date(deployedAt);
+                const formatted = date.toLocaleString('zh-CN', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit'
+                });
+                document.body.innerHTML = document.body.innerHTML.replace('DEPLOYED_AT_FORMATTED', formatted);
+              });
+            </script>
+          </body>
+          </html>
+          EOF
+                
+                # 替换占位符
+                sed -i "s/ISSUE_NUMBER/$ISSUE_NUMBER/g" "pages-repo/deployments/$ISSUE_NUMBER/index.html"
+                sed -i "s/COMPONENT_TYPE/$COMPONENT_TYPE/g" "pages-repo/deployments/$ISSUE_NUMBER/index.html"
+                sed -i "s/DEPLOYMENT_NAME/$DEPLOYMENT_NAME/g" "pages-repo/deployments/$ISSUE_NUMBER/index.html"
+                sed -i "s/NAMESPACE/$NAMESPACE/g" "pages-repo/deployments/$ISSUE_NUMBER/index.html"
+                sed -i "s/DEPLOYED_AT/$DEPLOYED_AT/g" "pages-repo/deployments/$ISSUE_NUMBER/index.html"
+                sed -i "s/DEPLOYED_BY/$DEPLOYED_BY/g" "pages-repo/deployments/$ISSUE_NUMBER/index.html"
+                sed -i "s/WORKFLOW_RUN/$WORKFLOW_RUN/g" "pages-repo/deployments/$ISSUE_NUMBER/index.html"
+                sed -i "s|\$GITHUB_REPOSITORY|${{ github.repository }}|g" "pages-repo/deployments/$ISSUE_NUMBER/index.html"
+                
+                # 转义 YAML 内容并插入
+                ESCAPED_VALUES=$(echo "$VALUES_CONTENT" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+                awk -v values="$ESCAPED_VALUES" '{gsub(/VALUES_CONTENT/, values); print}' \
+                  "pages-repo/deployments/$ISSUE_NUMBER/index.html" > temp.html
+                mv temp.html "pages-repo/deployments/$ISSUE_NUMBER/index.html"
+                
+                echo "✅ 已生成 Issue #$ISSUE_NUMBER 的页面"
+              fi
+            fi
+          done
+      
+      # ========================================
+      # 3. 提交到 gh-pages
+      # ========================================
+      - name: 📤 Deploy to GitHub Pages
+        run: |
+          cd pages-repo
+          
+          # 配置 Git
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # 初始化 gh-pages（如果需要）
+          if [ ! -d ".git" ]; then
+            git init
+            git checkout -b gh-pages
+          fi
+          
+          # 提交更改
+          git add .
+          git diff --staged --quiet || git commit -m "🚀 Update deployment pages"
+          
+          # 推送到 gh-pages
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git gh-pages --force

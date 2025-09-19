@@ -184,10 +184,12 @@ jobs:
           COMPONENT_TYPE="${{ steps.parse.outputs.component_type }}"
           DEPLOYMENT_NAME="${{ steps.parse.outputs.deployment_name }}"
           NAMESPACE="${{ steps.parse.outputs.namespace }}"
+          ISSUE_NUMBER="${{ steps.parse.outputs.issue_number }}"
           
           echo "📦 组件: $COMPONENT_TYPE"
           echo "🏷️ 名称: $DEPLOYMENT_NAME"
           echo "🌐 命名空间: $NAMESPACE"
+          echo "📋 Issue: #$ISSUE_NUMBER"
           echo ""
           echo "📝 配置内容已保存到 /tmp/deployment-values.yaml"
           
@@ -200,6 +202,20 @@ jobs:
           echo "配置内容:"
           cat /tmp/deployment-values.yaml
           echo "----------------------------------------"
+          
+          # 保存部署元数据
+          cat > /tmp/deployment-metadata.json << EOF
+          {
+            "issue_number": "$ISSUE_NUMBER",
+            "component_type": "$COMPONENT_TYPE",
+            "deployment_name": "$DEPLOYMENT_NAME",
+            "namespace": "$NAMESPACE",
+            "deployed_at": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+            "deployed_by": "${{ github.actor }}",
+            "commit_sha": "${{ github.sha }}",
+            "workflow_run": "${{ github.run_id }}"
+          }
+          EOF
           
           # TODO: 在这里添加实际的部署命令
           # 例如：
@@ -220,7 +236,122 @@ jobs:
           echo "✅ 部署执行完成！"
       
       # ========================================
-      # 6. 更新部署状态
+      # 6. 上传配置到 deployment-configs 分支
+      # ========================================
+      - name: 📤 Upload configuration to deployment-configs
+        if: steps.parse.outputs.deploy_checked == 'true'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            
+            console.log('========================================');
+            console.log('📤 上传配置到 deployment-configs 分支');
+            console.log('========================================');
+            
+            const issueNumber = '${{ steps.parse.outputs.issue_number }}';
+            
+            // 读取文件内容
+            const yamlContent = fs.readFileSync('/tmp/deployment-values.yaml', 'utf8');
+            const metadata = JSON.parse(fs.readFileSync('/tmp/deployment-metadata.json', 'utf8'));
+            
+            try {
+              // 获取或创建 deployment-configs 分支
+              let sha;
+              try {
+                const { data: ref } = await github.rest.git.getRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: 'heads/deployment-configs'
+                });
+                sha = ref.object.sha;
+              } catch (e) {
+                // deployment-configs 分支不存在，创建它
+                const { data: mainRef } = await github.rest.git.getRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: 'heads/${{ github.event.repository.default_branch }}'
+                });
+                await github.rest.git.createRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: 'refs/heads/deployment-configs',
+                  sha: mainRef.object.sha
+                });
+                sha = mainRef.object.sha;
+              }
+              
+              // 创建文件内容
+              const files = [
+                {
+                  path: `configs/${issueNumber}/values.yaml`,
+                  content: yamlContent
+                },
+                {
+                  path: `configs/${issueNumber}/metadata.json`,
+                  content: JSON.stringify(metadata, null, 2)
+                }
+              ];
+              
+              // 获取当前树
+              const { data: baseTree } = await github.rest.git.getTree({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tree_sha: sha,
+                recursive: true
+              });
+              
+              // 创建 blobs
+              const blobs = await Promise.all(files.map(async file => {
+                const { data: blob } = await github.rest.git.createBlob({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  content: Buffer.from(file.content).toString('base64'),
+                  encoding: 'base64'
+                });
+                return {
+                  path: file.path,
+                  mode: '100644',
+                  type: 'blob',
+                  sha: blob.sha
+                };
+              }));
+              
+              // 创建树
+              const { data: tree } = await github.rest.git.createTree({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                base_tree: baseTree.sha,
+                tree: blobs
+              });
+              
+              // 创建提交
+              const { data: commit } = await github.rest.git.createCommit({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                message: `📦 Upload deployment config for issue #${issueNumber}`,
+                tree: tree.sha,
+                parents: [sha]
+              });
+              
+              // 更新引用
+              await github.rest.git.updateRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: 'heads/deployment-configs',
+                sha: commit.sha
+              });
+              
+              console.log(`✅ 配置已上传到 deployment-configs 分支`);
+              console.log(`📁 路径: configs/${issueNumber}/`);
+              
+            } catch (error) {
+              console.error('上传配置失败:', error);
+              core.setFailed(error.message);
+            }
+      
+      # ========================================
+      # 7. 更新部署状态
       # ========================================  
       - name: 📢 Update deployment status
         if: steps.parse.outputs.deploy_checked == 'true'
@@ -259,8 +390,9 @@ jobs:
             }
             
             // 添加状态评论
+            const configUrl = 'https://component.acitrus.cn/deployments/${{ steps.parse.outputs.issue_number }}/';
             const statusMessage = success
-              ? `✅ **部署成功！**\n\n组件 \`${{ steps.parse.outputs.component_type }}\` 已成功部署到 \`${{ steps.parse.outputs.namespace }}\` 命名空间。\n\n[查看部署日志](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})`
+              ? `✅ **部署成功！**\n\n组件 \`${{ steps.parse.outputs.component_type }}\` 已成功部署到 \`${{ steps.parse.outputs.namespace }}\` 命名空间。\n\n📎 **配置文件**: [${configUrl}](${configUrl})\n📥 **下载 values.yaml**: [${configUrl}values.yaml](${configUrl}values.yaml)\n📝 **部署日志**: [查看日志](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})`
               : `❌ **部署失败！**\n\n请检查[部署日志](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})了解详细错误信息。`;
             
             await github.rest.issues.createComment({
