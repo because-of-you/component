@@ -1,0 +1,142 @@
+name: Kafka 部署请求处理
+
+on:
+  issues:
+    types: [opened, closed]
+  issue_comment:
+    types: [created]
+
+jobs:
+  process-kafka-deployment-issue:
+    runs-on: ubuntu-latest
+    if: >
+      (contains(github.event.issue.labels.*.name, 'kafka') && contains(github.event.issue.labels.*.name, 'deployment')) ||
+      (github.event_name == 'issue_comment' && contains(github.event.issue.labels.*.name, 'kafka') && contains(github.event.issue.labels.*.name, 'deployment'))
+    steps:
+      - name: 处理新部署请求
+        if: github.event_name == 'issues' && github.event.action == 'opened'
+        run: |
+          echo "检测到新的Kafka部署请求issue #${{ github.event.issue.number }}"
+          # 提取issue内容中的sample.yaml配置
+          ISSUE_CONTENT="${{ github.event.issue.body }}"
+          SAMPLE_CONFIG=$(echo "$ISSUE_CONTENT" | sed -n '/```yaml/,/```/p' | tail -n +2 | head -n -1)
+          
+          # 创建issue分支
+          BRANCH_NAME="issue-${{ github.event.issue.number }}-kafka-deployment"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH_NAME"
+          
+          # 创建配置文件目录
+          mkdir -p "helm/configs/kafka/${{ github.event.issue.number }}"
+          
+          # 保存配置到文件
+          echo "$SAMPLE_CONFIG" > "helm/configs/kafka/${{ github.event.issue.number }}/values.yaml"
+          
+          # 提交并推送分支
+          git add "helm/configs/kafka/${{ github.event.issue.number }}/values.yaml"
+          git commit -m "Add Kafka deployment config for issue #${{ github.event.issue.number }}"
+          git push origin "$BRANCH_NAME"
+          
+          # 生成Helm部署命令
+          DEPLOY_NAME=$(echo "$ISSUE_CONTENT" | grep "部署名称" | sed 's/.*部署名称.*:\s*//' | tr -d '[]')
+          if [ -z "$DEPLOY_NAME" ]; then
+            DEPLOY_NAME="kafka-${{ github.event.issue.number }}"
+          fi
+          
+          # 获取GitHub仓库信息
+          REPO_URL="${{ github.server_url }}/${{ github.repository }}"
+          RAW_FILE_URL="${{ github.server_url }}/${{ github.repository }}/raw/$BRANCH_NAME/helm/configs/kafka/${{ github.event.issue.number }}/values.yaml"
+          
+          # 添加Bitnami Helm仓库
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm repo update
+          
+          # 生成使用Bitnami仓库的Helm命令
+          HELM_COMMAND="helm upgrade --install $DEPLOY_NAME bitnami/kafka -f $RAW_FILE_URL"
+          
+          # 构建评论内容
+          COMMENT="✅ **部署配置已准备就绪**\n\n""
+          ## Kafka 部署命令\n\n"
+          "请执行以下命令进行Kafka部署：\n\n"
+          "```bash\n""
+          "$HELM_COMMAND\n""
+          "```\n\n"
+          "## 配置说明\n\n"
+          "- 配置文件已保存到：`helm/configs/kafka/${{ github.event.issue.number }}/values.yaml`\n"
+          "- 分支：`$BRANCH_NAME`\n\n"
+          "**注意：** 当您关闭此issue时，相关配置文件将被自动删除。""
+          
+          # 添加评论到issue
+          curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments \
+            -d "{\"body\": \"$COMMENT\"}"
+
+      - name: 处理确认部署评论
+        if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '我已确认')
+        run: |
+          echo "处理issue #${{ github.event.issue.number }}的部署确认评论"
+          # 提取issue内容中的部署信息
+          ISSUE_CONTENT="$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }} | jq -r .body)"
+          
+          # 获取分支信息
+          BRANCH_NAME="issue-${{ github.event.issue.number }}-kafka-deployment"
+          
+          # 提取部署名称
+          DEPLOY_NAME=$(echo "$ISSUE_CONTENT" | grep "部署名称" | sed 's/.*部署名称.*:\s*//' | tr -d '[]')
+          if [ -z "$DEPLOY_NAME" ]; then
+            DEPLOY_NAME="kafka-${{ github.event.issue.number }}"
+          fi
+          
+          # 生成使用Bitnami仓库的Helm命令
+          RAW_FILE_URL="${{ github.server_url }}/${{ github.repository }}/raw/$BRANCH_NAME/helm/configs/kafka/${{ github.event.issue.number }}/values.yaml"
+          HELM_COMMAND="helm upgrade --install $DEPLOY_NAME bitnami/kafka -f $RAW_FILE_URL"
+          
+          # 构建确认评论内容
+          CONFIRM_COMMENT="✅ **部署命令已生成**\n\n""
+          感谢您的确认！以下是最终的Kafka部署命令：\n\n"
+          "```bash\n""
+          "$HELM_COMMAND\n""
+          "```\n\n"
+          "请复制上述命令并在您的Kubernetes集群环境中执行。部署完成后，您可以在集群中查看Kafka服务的运行状态。""
+          
+          # 添加确认评论到issue
+          curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments \
+            -d "{\"body\": \"$CONFIRM_COMMENT\"}"
+
+      - name: 处理issue关闭
+        if: github.event_name == 'issues' && github.event.action == 'closed'
+        run: |
+          echo "处理关闭的Kafka部署请求issue #${{ github.event.issue.number }}"
+          
+          # 获取分支信息
+          BRANCH_NAME="issue-${{ github.event.issue.number }}-kafka-deployment"
+          
+          # 切换到main分支
+          git checkout main
+          
+          # 删除配置文件（如果存在）
+          CONFIG_FILE="helm/configs/kafka/${{ github.event.issue.number }}/values.yaml"
+          if [ -f "$CONFIG_FILE" ]; then
+            git rm "$CONFIG_FILE"
+            git commit -m "Remove Kafka deployment config for closed issue #${{ github.event.issue.number }}"
+            git push origin main
+          fi
+          
+          # 删除issue分支
+          git push origin --delete "$BRANCH_NAME" || echo "分支已不存在或删除失败"
+          
+          # 添加关闭评论
+          CLOSE_COMMENT="🔒 **部署请求已关闭**\n\n""
+          您的Kafka部署请求issue已关闭。相关配置文件已从代码库中删除。\n\n"
+          "如果您需要再次部署Kafka组件，请创建新的部署请求issue。""
+          
+          # 添加关闭评论到issue
+          curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments \
+            -d "{\"body\": \"$CLOSE_COMMENT\"}"

@@ -1,0 +1,76 @@
+# Bitnami Kafka Chart 配置示例
+
+# Kafka 服务配置
+replicaCount: 3
+
+# 镜像配置
+image:
+  repository: bitnami/kafka
+  tag: 3.5.1
+  pullPolicy: IfNotPresent
+
+# 认证配置
+auth:
+  clientProtocol: sasl
+  interBrokerProtocol: sasl
+  sasl:
+    mechanisms: SCRAM-SHA-256
+    jaas:
+      clientUsers: user
+      clientPasswords: password
+      interBrokerUser: admin
+      interBrokerPassword: admin-password
+
+# 存储配置
+persistence:
+  enabled: true
+  storageClass: "" # 使用默认存储类
+  size: 10Gi
+
+# 资源配置
+resources:
+  requests:
+    cpu: 1
+    memory: 2Gi
+  limits:
+    cpu: 2
+    memory: 4Gi
+
+# ZooKeeper 配置
+zookeeper:
+  enabled: true # 使用内置ZooKeeper
+  replicaCount: 3
+  persistence:
+    size: 5Gi
+
+# 配置参数
+configuration:
+  offsetsTopicReplicationFactor: 3
+  transactionStateLogReplicationFactor: 3
+  logRetentionHours: 168
+  autoCreateTopicsEnable: true
+
+# 服务配置
+service:
+  type: ClusterIP
+  ports:
+    client: 9092
+    internal: 9093
+
+# 外部访问配置（如需）
+externalAccess:
+  enabled: false
+  service:
+    type: LoadBalancer
+    ports:
+      external: 9094
+
+# Pod 亲和性配置
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchLabels:
+            app.kubernetes.io/instance: kafka
+            app.kubernetes.io/name: kafka
+        topologyKey: kubernetes.io/hostname
