@@ -50,14 +50,8 @@ body:
       required: true
 
   # ========================================
-  # Configuration Section
+  # Environment
   # ========================================
-  - type: markdown
-    attributes:
-      value: |
-        ## ⚙️ Configuration Details
-        Provide any specific configuration requirements.
-
   - type: dropdown
     id: environment
     attributes:
@@ -70,91 +64,6 @@ body:
       default: 0
     validations:
       required: true
-
-  - type: input
-    id: replicas
-    attributes:
-      label: 🔢 Replicas
-      description: Number of replicas (pods)
-      placeholder: "1"
-      value: "1"
-
-  - type: textarea
-    id: resources
-    attributes:
-      label: 💻 Resource Requirements
-      description: Specify CPU and memory requirements
-      placeholder: |
-        CPU Request: 100m
-        CPU Limit: 500m
-        Memory Request: 128Mi
-        Memory Limit: 512Mi
-      render: yaml
-
-  # ========================================
-  # Additional Configuration
-  # ========================================
-  - type: textarea
-    id: custom_config
-    attributes:
-      label: 📝 Custom Configuration
-      description: |
-        Add any custom YAML configuration here.
-        This will be merged with the default values.
-      placeholder: |
-        # Example:
-        persistence:
-          enabled: true
-          size: 10Gi
-        
-        env:
-          - name: DEBUG
-            value: "false"
-      render: yaml
-
-  - type: textarea
-    id: secrets
-    attributes:
-      label: 🔐 Secret References
-      description: |
-        List any secrets that need to be configured (DO NOT include actual secret values!)
-      placeholder: |
-        - database-password (from vault)
-        - api-key (existing k8s secret)
-      render: markdown
-
-  # ========================================
-  # Deployment Options
-  # ========================================
-  - type: markdown
-    attributes:
-      value: |
-        ## 🎯 Deployment Options
-        Configure deployment behavior.
-
-  - type: checkboxes
-    id: options
-    attributes:
-      label: ⚡ Deployment Features
-      description: Select the features you want to enable
-      options:
-        - label: Enable autoscaling
-        - label: Enable monitoring/metrics
-        - label: Enable logging
-        - label: Create ingress/route
-        - label: Enable backup
-
-  - type: dropdown
-    id: strategy
-    attributes:
-      label: 📈 Deployment Strategy
-      description: How should the deployment be performed?
-      options:
-        - RollingUpdate (default)
-        - Recreate
-        - Blue/Green
-        - Canary
-      default: 0
 
   # ========================================
   # Additional Information

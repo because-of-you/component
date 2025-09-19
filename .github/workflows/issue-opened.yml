@@ -61,14 +61,6 @@ jobs:
             const envMatch = body.match(/### 🏭 Environment\s*\n\s*(\w+)/);
             const environment = envMatch ? envMatch[1] : 'development';
             
-            // 提取副本数
-            const replicasMatch = body.match(/### 🔢 Replicas\s*\n\s*(\d+)/);
-            const replicas = replicasMatch ? replicasMatch[1] : '1';
-            
-            // 提取自定义配置
-            const customConfigMatch = body.match(/### 📝 Custom Configuration\s*\n\s*```yaml\s*\n([\s\S]*?)\n```/);
-            const customConfig = customConfigMatch ? customConfigMatch[1] : '';
-            
             // 生成部署名称
             const timestamp = Date.now();
             const deploymentName = `${componentType}-${environment}-${timestamp}`;
@@ -77,7 +69,6 @@ jobs:
             console.log(`🏷️ 部署名称: ${deploymentName}`);
             console.log(`🌐 命名空间: ${namespace}`);
             console.log(`🏭 环境: ${environment}`);
-            console.log(`🔢 副本数: ${replicas}`);
             
             // 设置输出
             core.setOutput('issue_number', issue.number);
@@ -85,17 +76,13 @@ jobs:
             core.setOutput('deployment_name', deploymentName);
             core.setOutput('namespace', namespace);
             core.setOutput('environment', environment);
-            core.setOutput('replicas', replicas);
-            core.setOutput('custom_config', customConfig);
             
             return {
               issueNumber: issue.number,
               componentType,
               deploymentName,
               namespace,
-              environment,
-              replicas,
-              customConfig
+              environment
             };
       
       # ========================================
