@@ -1,15 +1,12 @@
-name: Kafka 组件部署
-description: 部署 Kafka 组件到 Kubernetes 集群
+---
+name: "Kafka 组件部署"
+description: "部署 Kafka 组件到 Kubernetes 集群"
 title: "[部署] Kafka 组件部署请求"
-labels: [deployment, kafka]
-assignees: []
+labels: ["deployment", "kafka"]
 body:
   - type: markdown
     attributes:
-      value: |
-        # Kafka 组件部署请求
-        
-        请选择配置方式并填写必要信息以部署 Kafka 组件到 Kubernetes 集群。
+      value: "# Kafka 组件部署请求\n\n请选择配置方式并填写必要信息以部署 Kafka 组件到 Kubernetes 集群。"
 
   - type: dropdown
     id: config_method
@@ -31,9 +28,7 @@ body:
     validations:
       required: true
 
-  # 简易表单部分
   - type: markdown
-    id: simple_form_header
     attributes:
       value: "## 简易配置 (当选择'使用简易表单'时填写)"
 
@@ -83,9 +78,7 @@ body:
     validations:
       required: false
 
-  # 完整 YAML 配置部分
   - type: markdown
-    id: yaml_config_header
     attributes:
       value: |
         ## 完整 YAML 配置 (当选择'使用完整 YAML 配置'时填写)
@@ -97,11 +90,9 @@ body:
         ```yaml
         # 示例配置 (点击上方链接查看完整示例)
         replicaCount: 3
-        
         persistence:
           enabled: true
           size: 10Gi
-        
         resources:
           requests:
             cpu: "1"
@@ -109,7 +100,6 @@ body:
           limits:
             cpu: "2"
             memory: "4Gi"
-        
         externalAccess:
           enabled: false
         ```
