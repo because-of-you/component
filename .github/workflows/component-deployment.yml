@@ -2,13 +2,24 @@ name: Component Deployment Workflow
 
 on:
   issues:
-    types: [opened, edited]
+    types: [opened, edited, labeled]
+    # 添加更多触发条件，方便调试
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to process'
+        required: true
+        type: number
 
 jobs:
   process-deployment-request:
-    if: >
-      contains(github.event.issue.labels.*.name, 'deployment') && 
-      startsWith(github.event.issue.title, '[部署]')
+    # 简化触发条件，先确保工作流能运行
+    # 后续可以根据需要添加更严格的条件
+    if: |
+      github.event_name == 'workflow_dispatch' || 
+      (github.event_name == 'issues' && 
+       (contains(github.event.issue.labels.*.name, 'deployment') ||
+        github.event.action == 'labeled'))
     
     runs-on: ubuntu-latest
     
