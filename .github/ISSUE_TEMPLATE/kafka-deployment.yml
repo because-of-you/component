@@ -3,8 +3,6 @@ name: "Kafka 组件部署"
 description: "部署 Kafka 组件到 Kubernetes 集群"
 title: "[部署] Kafka 组件部署请求"
 labels: ["deployment", "kafka"]
----
-
 body:
   - type: markdown
     attributes:
