@@ -1,1 +1,0 @@
-FROM conduktor/conduktor-console-cortex:${TAG}

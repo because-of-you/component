@@ -1,1 +1,0 @@
-FROM dockerproxy.cn/bitnami/apisix:3.9.1-debian-12-r8

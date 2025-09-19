@@ -1,4 +1,0 @@
-resources:
-  - namespace/cert-manager.yaml
-  - crds/acitrus-acme-issuer.yaml
-  - crds/certificate.yaml

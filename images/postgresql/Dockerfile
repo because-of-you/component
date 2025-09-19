@@ -1,2 +1,0 @@
-FROM bitnami/postgresql:16.4.0-debian-12-r0
-# docker buildx build  --platform linux/arm64,linux/amd64 -t registry.cn-shenzhen.aliyuncs.com/gravitation/postgresql:16.4.0-debian-12-r0 -f Dockerfile . --push --no-cache
