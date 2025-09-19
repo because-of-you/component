@@ -176,18 +176,15 @@ jobs:
           echo "执行命令:"
           echo "helm template ${{ inputs.deployment_name }} $CHART_URL \\"
           echo "  --namespace ${{ inputs.namespace }} \\"
-          echo "  --create-namespace \\"
-          echo "  --values /tmp/values.yaml \\"
-          echo "  --validate"
+          echo "  --values /tmp/values.yaml"
           echo ""
           
           # 使用 helm template 代替 helm upgrade --dry-run
           # helm template 不需要连接到 Kubernetes 集群
+          # 不使用 --validate 因为它需要连接集群验证 API 版本
           if helm template "${{ inputs.deployment_name }}" "$CHART_URL" \
             --namespace "${{ inputs.namespace }}" \
-            --create-namespace \
-            --values /tmp/values.yaml \
-            --validate > /tmp/template-output.yaml 2> /tmp/template-error.log; then
+            --values /tmp/values.yaml > /tmp/template-output.yaml 2> /tmp/template-error.log; then
             
             echo "✅ 模板验证通过"
             echo "status=success" >> $GITHUB_OUTPUT
@@ -251,8 +248,6 @@ jobs:
           # 再次使用 template 验证
           if helm template "${{ inputs.deployment_name }}" "$CHART_URL" \
             --namespace "${{ inputs.namespace }}" \
-            --create-namespace \
-            --validate \
             --values /tmp/values.yaml > /dev/null 2>&1; then
             
             echo ""
@@ -434,6 +429,18 @@ jobs:
               body: message
             });
             
+            // 移除 processing 标签
+            try {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: parseInt(issueNumber),
+                name: 'processing'
+              });
+            } catch (e) {
+              console.log('移除 processing 标签失败:', e.message);
+            }
+            
             // 添加标签
             if (labels.length > 0) {
               await github.rest.issues.addLabels({
@@ -444,7 +451,7 @@ jobs:
               });
             }
             
-            // 如果是成功生成命令，移除 deployment-preview 标签
+            // 如果是成功生成命令，移除 deployment-preview 标签并关闭 Issue
             if (!isDryRun && deploymentStatus === 'success') {
               try {
                 await github.rest.issues.removeLabel({
@@ -457,4 +464,14 @@ jobs:
               } catch (e) {
                 console.log('移除 deployment-preview 标签失败:', e.message);
               }
+              
+              // 关闭 Issue
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: parseInt(issueNumber),
+                state: 'closed',
+                state_reason: 'completed'
+              });
+              console.log('✅ Issue 已关闭');
             }

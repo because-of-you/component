@@ -411,46 +411,19 @@ jobs:
             }
       
       # ========================================
-      # 8. 更新部署状态
+      # 8. 触发工作流后的状态更新
       # ========================================  
-      - name: 📢 Update deployment status
-        if: steps.parse.outputs.deploy_checked == 'true'
+      - name: 📢 Update workflow trigger status
+        if: steps.parse.outputs.deploy_checked == 'true' || steps.parse.outputs.update_only_checked == 'true'
         uses: actions/github-script@v6
         with:
           script: |
-            const success = '${{ job.status }}' === 'success';
+            // 只更新触发状态，不判断成功失败
+            // 实际的部署结果由 deploy-helm-chart.yml 工作流负责更新
             
-            // 更新标签
-            if (success) {
-              await github.rest.issues.addLabels({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.payload.issue.number,
-                labels: ['deployed-successfully']
-              });
-              
-              // 移除 deployment-preview 标签
-              try {
-                await github.rest.issues.removeLabel({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: context.payload.issue.number,
-                  name: 'deployment-preview'
-                });
-                console.log('✅ 已移除 deployment-preview 标签');
-              } catch (e) {
-                console.log('移除 deployment-preview 标签失败:', e.message);
-              }
-            } else {
-              await github.rest.issues.addLabels({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.payload.issue.number,
-                labels: ['deployment-failed']
-              });
-            }
+            console.log('✅ 已触发工作流，请查看进度');
             
-            // 移除 pending 标签
+            // 移除 pending 标签，添加 processing 标签
             try {
               await github.rest.issues.removeLabel({
                 owner: context.repo.owner,
@@ -462,26 +435,9 @@ jobs:
               console.log('移除 pending 标签失败:', e.message);
             }
             
-            // 添加状态评论
-            const configUrl = 'https://component.acitrus.cn/deployments/${{ steps.parse.outputs.issue_number }}/';
-            const statusMessage = success
-              ? `✅ **部署成功！**\n\n组件 \`${{ steps.parse.outputs.component_type }}\` 已成功部署到 \`${{ steps.parse.outputs.namespace }}\` 命名空间。\n\n📎 **配置文件**: [${configUrl}](${configUrl})\n📥 **下载 values.yaml**: [${configUrl}values.yaml](${configUrl}values.yaml)\n📝 **部署日志**: [查看日志](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})`
-              : `❌ **部署失败！**\n\n请检查[部署日志](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})了解详细错误信息。`;
-            
-            await github.rest.issues.createComment({
+            await github.rest.issues.addLabels({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.payload.issue.number,
-              body: statusMessage
+              labels: ['processing']
             });
-            
-            // 如果成功，关闭 Issue
-            if (success) {
-              await github.rest.issues.update({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.payload.issue.number,
-                state: 'closed',
-                state_reason: 'completed'
-              });
-            }
