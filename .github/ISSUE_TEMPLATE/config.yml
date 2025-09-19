@@ -1,5 +1,0 @@
-blank_issues_enabled: false
-contact_links:
-  - name: 查看 Kafka 部署文档
-    url: https://github.com/your-org/your-repo/blob/main/helm/configs/kafka/sample.yaml
-    about: 查看 Kafka 部署配置文档
