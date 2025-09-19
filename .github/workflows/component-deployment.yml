@@ -157,14 +157,119 @@ jobs:
               main()
           EOF
 
+      - name: Debug Issue Data
+        run: |
+          echo "Event Name: ${{ github.event_name }}"
+          echo "Event Action: ${{ github.event.action }}"
+          echo "Issue Number: ${{ github.event.issue.number }}"
+          echo "Issue Body: ${{ toJSON(github.event.issue) }}"
+          
+          # 保存 Issue 数据到文件
+          mkdir -p .github/workflows/debug
+          echo "${{ toJSON(github.event.issue) }}" > .github/workflows/debug/issue_data.json
+          echo "${{ toJSON(github) }}" > .github/workflows/debug/context.json
+
       - name: Process deployment request
         id: process
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ISSUE_BODY: ${{ toJSON(github.event.issue.body) }}
-          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_JSON: ${{ toJSON(github.event.issue) }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
         run: |
-          python process_issue.py
+          # 创建处理脚本
+          cat > process_issue_fixed.py << 'EOF'
+          import os
+          import yaml
+          import json
+          import sys
+          
+          def main():
+              print("Starting issue processing...")
+              print(f"Event Name: {os.environ.get('GITHUB_EVENT_NAME')}")
+              
+              # 从环境变量获取 Issue 数据
+              issue_json = os.environ.get('ISSUE_JSON', '{}')
+              print(f"Raw issue JSON: {issue_json[:200]}...")  # 打印部分内容用于调试
+              
+              try:
+                  issue_data = json.loads(issue_json)
+                  print("Successfully parsed issue JSON")
+              except json.JSONDecodeError as e:
+                  print(f"Error parsing issue JSON: {e}")
+                  sys.exit(1)
+              
+              # 获取表单数据
+              form_data = {}
+              if 'body' in issue_data:
+                  print("Processing issue body...")
+                  body = issue_data['body']
+                  print(f"Issue body type: {type(body)}")
+                  
+                  if isinstance(body, str):
+                      try:
+                          # 尝试解析表单数据
+                          form_items = [item for item in body.split('\n\n') if item.strip()]
+                          for item in form_items:
+                              if '###' in item:
+                                  key = item.split('### ')[1].split('\n')[0].strip()
+                                  value = '\n'.join(item.split('\n')[1:]).strip()
+                                  form_data[key] = value
+                      except Exception as e:
+                          print(f"Error parsing form data: {e}")
+              
+              print(f"Form data: {json.dumps(form_data, ensure_ascii=False, indent=2)}")
+              
+              # 获取组件类型
+              component_type = form_data.get('组件类型', '').lower()
+              if not component_type:
+                  print("Error: 无法确定组件类型")
+                  sys.exit(1)
+                  
+              # 读取 values 文件
+              values_file = f'./helm/config/{component_type}/values.yaml'
+              print(f"Looking for values file: {values_file}")
+              
+              if not os.path.exists(values_file):
+                  print(f"Error: Values file not found at {values_file}")
+                  sys.exit(1)
+              
+              try:
+                  with open(values_file, 'r') as f:
+                      values_content = f.read()
+                  print("Successfully read values file")
+              except Exception as e:
+                  print(f"Error reading values file: {e}")
+                  sys.exit(1)
+              
+              # 准备输出
+              output = {
+                  'component_type': component_type,
+                  'deployment_name': form_data.get('部署名称', 'default-deployment'),
+                  'namespace': form_data.get('命名空间', 'default'),
+                  'values_content': values_content,
+                  'issue_number': issue_data.get('number', 0)
+              }
+              
+              # 输出到 GITHUB_OUTPUT
+              if 'GITHUB_OUTPUT' in os.environ:
+                  with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+                      for key, value in output.items():
+                          if isinstance(value, str):
+                              value = value.replace('\n', '%0A').replace('"', '\"')
+                              print(f'{key}="{value}"')
+                              print(f'{key}="{value}"' >> $GITHUB_OUTPUT)
+                          else:
+                              print(f'{key}={value}')
+                              print(f'{key}={value}' >> $GITHUB_OUTPUT)
+              
+              print("Processing completed successfully")
+          
+          if __name__ == "__main__":
+              main()
+          EOF
+          
+          # 执行处理脚本
+          python process_issue_fixed.py
               
       - name: Create configuration comment
         uses: actions/github-script@v6
