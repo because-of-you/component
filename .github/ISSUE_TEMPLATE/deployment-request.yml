@@ -86,8 +86,6 @@ body:
           required: true
         - label: I have verified the namespace exists or can be created
           required: true
-        - label: All required secrets are available
-          required: true
         - label: I understand this will trigger an automated deployment workflow
           required: true
 
