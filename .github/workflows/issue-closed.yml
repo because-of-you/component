@@ -1,0 +1,183 @@
+name: Issue Closed - Cleanup Configuration
+
+# ========================================
+# 当 Issue 关闭时清理相关配置
+# ========================================
+on:
+  issues:
+    types: [closed]
+
+jobs:
+  cleanup-config:
+    runs-on: ubuntu-latest
+    # 只处理带有部署相关标签的 Issue
+    if: |
+      contains(github.event.issue.labels.*.name, 'deployment-preview') ||
+      contains(github.event.issue.labels.*.name, 'deployed-successfully') ||
+      contains(github.event.issue.labels.*.name, 'command-generated')
+    
+    steps:
+      # ========================================
+      # 1. 准备环境
+      # ========================================
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      # ========================================
+      # 2. 删除 deployment-configs 分支中的配置
+      # ========================================
+      - name: 🗑️ Remove configuration from deployment-configs branch
+        uses: actions/github-script@v6
+        with:
+          script: |
+            console.log('========================================');
+            console.log('🗑️ 清理部署配置');
+            console.log('========================================');
+            
+            const issueNumber = context.payload.issue.number;
+            console.log(`📋 Issue #${issueNumber} 已关闭，开始清理配置`);
+            
+            try {
+              // 检查 deployment-configs 分支是否存在
+              let branchExists = true;
+              try {
+                await github.rest.git.getRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: 'heads/deployment-configs'
+                });
+              } catch (e) {
+                console.log('⚠️ deployment-configs 分支不存在');
+                branchExists = false;
+              }
+              
+              if (branchExists) {
+                // 获取分支的最新提交
+                const { data: branch } = await github.rest.git.getRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: 'heads/deployment-configs'
+                });
+                
+                // 获取树
+                const { data: tree } = await github.rest.git.getTree({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  tree_sha: branch.object.sha,
+                  recursive: true
+                });
+                
+                // 检查是否存在该 Issue 的配置目录
+                const configPath = `configs/${issueNumber}`;
+                const hasConfig = tree.tree.some(item => item.path.startsWith(configPath));
+                
+                if (hasConfig) {
+                  console.log(`📁 找到配置目录: ${configPath}`);
+                  
+                  // 过滤掉要删除的文件，创建新树
+                  const newTree = tree.tree
+                    .filter(item => !item.path.startsWith(configPath))
+                    .map(item => ({
+                      path: item.path,
+                      mode: item.mode,
+                      type: item.type,
+                      sha: item.sha
+                    }));
+                  
+                  // 创建新的树对象
+                  const { data: newTreeObj } = await github.rest.git.createTree({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    tree: newTree
+                  });
+                  
+                  // 创建新的提交
+                  const { data: newCommit } = await github.rest.git.createCommit({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    message: `🗑️ Remove configuration for closed issue #${issueNumber}`,
+                    tree: newTreeObj.sha,
+                    parents: [branch.object.sha]
+                  });
+                  
+                  // 更新分支引用
+                  await github.rest.git.updateRef({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    ref: 'heads/deployment-configs',
+                    sha: newCommit.sha
+                  });
+                  
+                  console.log(`✅ 已删除 Issue #${issueNumber} 的配置`);
+                } else {
+                  console.log(`ℹ️ 未找到 Issue #${issueNumber} 的配置，无需清理`);
+                }
+              }
+            } catch (error) {
+              console.error('清理配置失败:', error);
+              // 不让清理失败影响 Issue 关闭
+              console.log('⚠️ 清理失败但不影响 Issue 关闭');
+            }
+      
+      # ========================================
+      # 3. 更新 Issue 标签
+      # ========================================
+      - name: 🏷️ Update issue labels
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const issueNumber = context.payload.issue.number;
+            
+            // 添加已归档标签
+            try {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                labels: ['archived']
+              });
+              console.log('✅ 已添加 archived 标签');
+            } catch (e) {
+              console.log('添加标签失败:', e.message);
+            }
+            
+            // 移除处理中的标签
+            const labelsToRemove = ['processing', 'deployment-preview'];
+            for (const label of labelsToRemove) {
+              try {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  name: label
+                });
+                console.log(`✅ 已移除 ${label} 标签`);
+              } catch (e) {
+                // 标签可能不存在，忽略错误
+              }
+            }
+      
+      # ========================================
+      # 4. 添加关闭评论
+      # ========================================
+      - name: 💬 Add closing comment
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const issueNumber = context.payload.issue.number;
+            const closedBy = context.payload.issue.closed_by?.login || 'unknown';
+            
+            const message = `🏁 **Issue 已关闭**\n\n` +
+              `- 关闭者: @${closedBy}\n` +
+              `- 关闭时间: ${new Date().toISOString()}\n` +
+              `- 相关配置已清理\n\n` +
+              `感谢使用组件部署系统！`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: message
+            });

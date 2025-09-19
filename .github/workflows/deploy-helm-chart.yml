@@ -471,13 +471,6 @@ jobs:
                 console.log('移除 deployment-preview 标签失败:', e.message);
               }
               
-              // 关闭 Issue
-              await github.rest.issues.update({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: parseInt(issueNumber),
-                state: 'closed',
-                state_reason: 'completed'
-              });
-              console.log('✅ Issue 已关闭');
+              // 不自动关闭 Issue，让用户手动关闭
+              console.log('✅ 部署完成，Issue 保持开启状态');
             }

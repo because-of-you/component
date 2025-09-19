@@ -14,6 +14,8 @@ A GitHub Issues-driven deployment system for Kubernetes components using Helm ch
 - ✅ **Validation & Testing** - Automatic configuration validation before deployment
 - 🌐 **Web Interface** - GitHub Pages hosted deployment configurations
 - 🤖 **Full Automation** - GitHub Actions powered CI/CD pipeline
+- 🗑️ **Automatic Cleanup** - Configurations are cleaned when issues are closed
+- 📌 **Persistent Storage** - Configurations remain available until manually closed
 
 ## 🏗️ Architecture
 
@@ -27,6 +29,7 @@ graph LR
     F --> G[Generate Deploy Command]
     G --> H[Store in Git]
     H --> I[Publish to GitHub Pages]
+    J[User Closes Issue] --> K[Auto Cleanup Config]
 ```
 
 ## 🚀 Quick Start
@@ -124,6 +127,7 @@ Check the "Confirm Deployment" checkbox and save the comment. The system will:
 2. Generate deployment commands
 3. Store configuration in `deployment-configs` branch
 4. Publish to GitHub Pages
+5. Keep the issue open for your reference
 
 ### 4. Deploy to Kubernetes
 
@@ -139,6 +143,12 @@ helm upgrade --install redis-production \
   --wait \
   --values https://your-domain/deployments/123/values.yaml
 ```
+
+### 5. Lifecycle Management
+
+- **Issue remains open** - Continue discussions, adjustments, or monitoring
+- **Close when ready** - Closing the issue automatically cleans up configurations
+- **Configurations persist** - No automatic expiration, configs stay until issue is closed
 
 ## 🔧 Configuration
 
@@ -161,6 +171,7 @@ All workflows are in `.github/workflows/`:
 - `issue-comment-edited.yml` - Processes deployment confirmations
 - `deploy-helm-chart.yml` - Validates and generates deployment commands
 - `build-gh-pages.yml` - Publishes configurations to GitHub Pages
+- `issue-closed.yml` - Cleans up configurations when issues are closed
 
 ## 📊 Status Labels
 
@@ -173,6 +184,7 @@ All workflows are in `.github/workflows/`:
 | `command-generated` | Deployment command ready |
 | `deployed-successfully` | Deployment completed |
 | `deployment-cancelled` | Deployment cancelled by user |
+| `archived` | Issue closed and configuration cleaned |
 
 ## 🔒 Security
 
