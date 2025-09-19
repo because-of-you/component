@@ -5,8 +5,11 @@ labels: ["deployment"]
 body:
   - type: markdown
     attributes:
-      value: "# 组件部署请求"
-  
+      value: |
+        # 组件部署请求
+        
+        请填写以下信息来创建部署请求。提交后，系统会创建一个包含默认配置的评论，您可以在评论中修改配置并确认。
+
   - type: dropdown
     id: component_type
     attributes:
@@ -24,10 +27,11 @@ body:
     id: deployment_name
     attributes:
       label: "部署名称"
-      description: "请为您的部署命名"
+      description: "请为您的部署命名，只能包含小写字母、数字和连字符"
       placeholder: "例如: kafka-production"
     validations:
       required: true
+      pattern: '^[a-z0-9-]+$'
 
   - type: input
     id: namespace
@@ -38,133 +42,23 @@ body:
     validations:
       required: true
 
-  - type: markdown
-    id: config_guide
-    attributes:
-      value: |
-        ## 配置指南
-        
-        请参考以下配置示例，根据您的需求修改配置项。
-        
-        <details>
-        <summary>点击查看配置示例</summary>
-        
-        ```yaml
-        # 根据您选择的组件类型，这里会显示对应的配置示例
-        # 请在下方编辑配置
-        ```
-        
-        </details>
-  
   - type: textarea
-    id: values
+    id: description
     attributes:
-      label: "Values 配置"
-      description: |
-        请在此处输入组件的 values 配置 (YAML 格式)
-        
-        配置项说明：
-        - 对于 Kafka：
-          - `replicaCount`: Kafka 代理的副本数
-          - `image`: Kafka 镜像配置
-          - `persistence`: 持久化存储配置
-          - `resources`: 资源请求和限制
-          - `authentication`: 认证配置
-          - `zookeeper`: ZooKeeper 配置
-          - `configurationOverrides`: 自定义 Kafka 配置
-          
-        其他组件的配置说明将在选择对应组件后显示。
-      placeholder: |
-        # 在此处输入组件的 values 配置
-        # 例如 Kafka 配置：
-        # replicaCount: 3
-        # persistence:
-        #   enabled: true
-        #   size: 8Gi
-        # resources:
-        #   requests:
-        #     cpu: 500m
-        #     memory: 1Gi
-        #   limits:
-        #     cpu: 1
-        #     memory: 2Gi
-    render: yaml
+      label: "部署描述"
+      description: "请简要描述此部署的目的和用途"
+      placeholder: "例如：为测试环境部署 Kafka 消息队列"
     validations:
       required: true
 
   - type: markdown
-    id: dynamic_script
     attributes:
       value: |
-        <script>
-        // 当组件类型变化时更新配置示例
-        document.getElementById('component_type').addEventListener('change', function() {
-          const componentType = this.value;
-          const configGuide = document.getElementById('config_guide');
-          const valuesTextarea = document.getElementById('values');
-          
-          // 默认配置示例
-          let exampleConfig = '';
-          
-          // 根据组件类型设置不同的配置示例
-          switch(componentType) {
-            case 'Kafka':
-              exampleConfig = `# Kafka 配置示例\n\n# 副本数\nreplicaCount: 3\n\n# 镜像配置\nimage:\n  repository: bitnami/kafka\n  tag: 3.4.0\n  pullPolicy: IfNotPresent\n\n# 持久化配置\npersistence:\n  enabled: true\n  storageClass: ""\n  size: 8Gi\n\n# 资源配置\nresources:\n  requests:\n    cpu: 500m\n    memory: 1Gi\n  limits:\n    cpu: 1\n    memory: 2Gi\n\n# 认证配置\nauthentication:\n  enabled: false\n  clientProtocol: "plaintext"\n\n# ZooKeeper 配置\nzookeeper:\n  enabled: true\n  replicaCount: 3\n  persistence:\n    enabled: true\n    size: 8Gi`;
-              break;
-              
-            case 'Redis':
-              exampleConfig = `# Redis 配置示例\n\n# 全局配置\nglobal:\n  redis:\n    password: "your-password"\n\n# 主节点配置\nmaster:\n  count: 1\n  persistence:\n    enabled: true\n    size: 8Gi\n  resources:\n    requests:\n      cpu: 100m\n      memory: 256Mi\n\n# 副本配置\nreplica:\n  replicaCount: 2\n  persistence:\n    enabled: true\n    size: 8Gi`;
-              break;
-              
-            case 'MySQL':
-              exampleConfig = `# MySQL 配置示例\n\n# 认证配置\nauth:\n  rootPassword: "your-root-password"\n  database: "my_database"\n  username: "my_user"\n  password: "your-password"\n\n# 主节点配置\nprimary:\n  persistence:\n    enabled: true\n    size: 8Gi\n  resources:\n    requests:\n      cpu: 500m\n      memory: 1Gi\n\n# 从节点配置\nsecondary:\n  replicaCount: 2\n  persistence:\n    enabled: true\n    size: 8Gi`;
-              break;
-              
-            case 'PostgreSQL':
-              exampleConfig = `# PostgreSQL 配置示例\n\n# 全局配置\nglobal:\n  postgresql:\n    postgresqlDatabase: "my_database"\n    postgresqlUsername: "my_user"\n    postgresqlPassword: "your-password"\n    postgresqlPostgresPassword: "your-postgres-password"\n\n# 主节点配置\nprimary:\n  persistence:\n    enabled: true\n    size: 8Gi\n  resources:\n    requests:\n      cpu: 500m\n      memory: 1Gi\n\n# 从节点配置\nreadReplicas:\n  replicaCount: 2\n  persistence:\n    enabled: true\n    size: 8Gi`;
-              break;
-          }
-          
-          // 更新配置示例
-          const details = configGuide.querySelector('details');
-          details.innerHTML = `
-            <summary>${componentType} 配置示例</summary>
-            <pre><code class="language-yaml">${exampleConfig}</code></pre>
-          `;
-          
-          // 更新占位符
-          valuesTextarea.placeholder = `# 在此处输入 ${componentType} 的 values 配置\n# 例如：\n${exampleConfig.split('\n').slice(0, 10).join('\n')}\n# ...`;
-        });
+        ## 后续步骤
         
-        // 触发一次 change 事件以初始化配置
-        document.getElementById('component_type').dispatchEvent(new Event('change'));
-        </script>
+        1. 提交此表单后，系统会创建一个包含默认配置的评论
+        2. 检查并修改配置（如果需要）
+        3. 使用 `/deploy` 命令确认部署
+        4. 系统将开始部署流程
         
-        <style>
-        /* 样式优化 */
-        details {
-          margin: 1em 0;
-          padding: 0.5em;
-          border: 1px solid #e1e4e8;
-          border-radius: 6px;
-        }
-        
-        details summary {
-          font-weight: 600;
-          cursor: pointer;
-          outline: none;
-          padding: 0.5em;
-        }
-        
-        details pre {
-          background-color: #f6f8fa;
-          padding: 1em;
-          border-radius: 6px;
-          overflow-x: auto;
-          margin: 0.5em 0 0 0;
-        }
-        
-        .language-yaml {
-          margin: 0;
-        }
-        </style>
+        注意：您需要有相应的权限才能执行部署操作。

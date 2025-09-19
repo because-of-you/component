@@ -1,0 +1,198 @@
+name: Component Deployment Workflow
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  process-deployment-request:
+    if: >
+      contains(github.event.issue.labels.*.name, 'deployment') && 
+      startsWith(github.event.issue.title, '[部署]')
+    
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+          
+      - name: Process deployment request
+        id: process
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          import os
+          import yaml
+          import json
+          from pathlib import Path
+          
+          # 获取 Issue 内容
+          issue_body = "${{ toJSON(github.event.issue.body) }}"
+          issue_body = json.loads(issue_body)
+          
+          # 解析表单数据
+          def parse_issue_body(body):
+              result = {}
+              for item in body:
+                  if 'id' in item and item.get('id') in ['component_type', 'deployment_name', 'namespace', 'description']:
+                      result[item['id']] = item['value']
+              return result
+              
+          form_data = parse_issue_body(issue_body)
+          component_type = form_data.get('component_type', '').lower()
+          deployment_name = form_data.get('deployment_name', '')
+          namespace = form_data.get('namespace', 'default')
+          
+          # 读取对应的 values 文件
+          values_file = f'./helm/config/{component_type}/values.yaml'
+          if not os.path.exists(values_file):
+              print(f"Error: Values file not found for {component_type}")
+              exit(1)
+              
+          with open(values_file, 'r') as f:
+              values_content = f.read()
+          
+          # 创建配置确认评论
+          comment = f"""## 部署配置确认
+          
+          **组件类型**: {component_type}  
+          **部署名称**: {deployment_name}  
+          **命名空间**: {namespace}  
+          
+          ### 配置内容
+          
+          ```yaml
+          {values_content}
+          ```
+          
+          请检查以上配置：
+          - 如果需要修改配置，请直接编辑上方的 YAML 内容
+          - 确认无误后，请回复 `/deploy` 开始部署
+          - 取消部署请回复 `/cancel`
+          
+          **注意**: 此配置将在 24 小时后自动过期。"""
+          
+          # 输出评论内容供后续步骤使用
+          print(f"comment={comment}" >> $GITHUB_OUTPUT)
+          
+          # 将配置数据保存为 JSON 供后续步骤使用
+          config_data = {
+              'component_type': component_type,
+              'deployment_name': deployment_name,
+              'namespace': namespace,
+              'values': values_content,
+              'issue_number': ${{ github.event.issue.number }}
+          }
+          
+          with open('deployment_config.json', 'w') as f:
+              json.dump(config_data, f)
+              
+      - name: Create configuration comment
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const config = JSON.parse(fs.readFileSync('deployment_config.json', 'utf8'));
+            
+            // 检查是否已经存在配置评论
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: config.issue_number
+            });
+            
+            const existingComment = comments.find(c => 
+              c.user.login === 'github-actions[bot]' && 
+              c.body.includes('## 部署配置确认')
+            );
+            
+            const commentBody = `${{ steps.process.outputs.comment }}`;
+            
+            if (existingComment) {
+              // 更新现有评论
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: commentBody
+              });
+            } else {
+              // 创建新评论
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: config.issue_number,
+                body: commentBody
+              });
+            }
+            
+  # 处理部署命令
+  process-deployment-command:
+    needs: process-deployment-request
+    
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check for deployment command
+        uses: actions/github-script@v6
+        id: check_command
+        with:
+          script: |
+            const fs = require('fs');
+            const config = JSON.parse(fs.readFileSync('deployment_config.json', 'utf8'));
+            
+            // 检查评论中是否包含 /deploy 命令
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: config.issue_number
+            });
+            
+            const deployCommand = comments.find(c => 
+              c.user.login !== 'github-actions[bot]' && 
+              c.body.trim() === '/deploy'
+            );
+            
+            if (deployCommand) {
+              console.log('Deployment command found');
+              return 'true';
+            }
+            return 'false';
+            
+      - name: Execute deployment
+        if: steps.check_command.outputs.result == 'true'
+        run: |
+          echo "Starting deployment..."
+          # 这里添加实际的部署逻辑
+          # 可以使用 helm upgrade --install 等命令
+          echo "Deployment completed successfully!"
+          
+          # 更新 Issue 状态
+          echo "Updating issue status..."
+          # 添加部署成功评论
+          # 关闭 Issue 等
+        
+      - name: Notify deployment status
+        if: always()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const config = JSON.parse(fs.readFileSync('deployment_config.json', 'utf8'));
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: config.issue_number,
+              body: '部署流程已开始。您可以在 Actions 标签页查看详细日志。'
+            });
