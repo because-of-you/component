@@ -1,0 +1,178 @@
+name: Issue Opened - Create Deployment Preview
+
+# ========================================
+# 当 Issue 被创建时生成配置预览
+# ========================================
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  create-preview:
+    runs-on: ubuntu-latest
+    # 只处理包含特定标签或标题的 Issue
+    if: contains(github.event.issue.title, 'deploy') || contains(github.event.issue.title, '部署')
+    
+    steps:
+      # ========================================
+      # 1. 准备环境
+      # ========================================
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v3
+      
+      # ========================================
+      # 2. 解析 Issue 内容
+      # ========================================
+      - name: 🔍 Parse issue content
+        id: parse
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "========================================="
+          echo "📋 解析 Issue 内容"
+          echo "========================================="
+          
+          ISSUE_NUMBER="${{ github.event.issue.number }}"
+          ISSUE_TITLE="${{ github.event.issue.title }}"
+          ISSUE_BODY="${{ github.event.issue.body }}"
+          
+          # 从标题或内容中提取组件类型
+          # 示例标题格式: "[部署] redis" 或 "Deploy kafka to production"
+          COMPONENT_TYPE=""
+          
+          # 尝试从标题提取组件类型
+          if echo "$ISSUE_TITLE" | grep -iq "redis"; then
+            COMPONENT_TYPE="redis"
+          elif echo "$ISSUE_TITLE" | grep -iq "postgres"; then
+            COMPONENT_TYPE="postgres"
+          elif echo "$ISSUE_TITLE" | grep -iq "kafka"; then
+            COMPONENT_TYPE="kafka"
+          elif echo "$ISSUE_TITLE" | grep -iq "mysql"; then
+            COMPONENT_TYPE="mysql"
+          elif echo "$ISSUE_TITLE" | grep -iq "mongodb"; then
+            COMPONENT_TYPE="mongodb"
+          fi
+          
+          # 如果没有找到，尝试从 body 解析
+          if [ -z "$COMPONENT_TYPE" ] && [ -n "$ISSUE_BODY" ]; then
+            # 查找 component: xxx 格式
+            COMPONENT_TYPE=$(echo "$ISSUE_BODY" | grep -i "component:" | head -1 | cut -d: -f2 | xargs | tr '[:upper:]' '[:lower:]')
+          fi
+          
+          # 默认值
+          [ -z "$COMPONENT_TYPE" ] && COMPONENT_TYPE="generic"
+          DEPLOYMENT_NAME="${COMPONENT_TYPE}-$(date +%s)"
+          NAMESPACE=$(echo "$ISSUE_BODY" | grep -i "namespace:" | head -1 | cut -d: -f2 | xargs || echo "default")
+          
+          echo "📦 组件类型: $COMPONENT_TYPE"
+          echo "🏷️ 部署名称: $DEPLOYMENT_NAME"
+          echo "🌐 命名空间: $NAMESPACE"
+          
+          # 输出变量
+          echo "issue_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
+          echo "component_type=$COMPONENT_TYPE" >> $GITHUB_OUTPUT
+          echo "deployment_name=$DEPLOYMENT_NAME" >> $GITHUB_OUTPUT
+          echo "namespace=$NAMESPACE" >> $GITHUB_OUTPUT
+      
+      # ========================================
+      # 3. 加载或生成配置模板
+      # ========================================
+      - name: 📦 Load configuration template
+        id: config
+        run: |
+          echo "========================================="
+          echo "📦 加载配置模板"
+          echo "========================================="
+          
+          COMPONENT_TYPE="${{ steps.parse.outputs.component_type }}"
+          VALUES_FILE="./helm/config/$COMPONENT_TYPE/values.yaml"
+          
+          echo "🔍 查找配置文件: $VALUES_FILE"
+          
+          if [ -f "$VALUES_FILE" ]; then
+            echo "✅ 找到配置文件"
+            VALUES_CONTENT=$(cat "$VALUES_FILE")
+          else
+            echo "⚠️ 使用通用配置模板"
+            VALUES_CONTENT=$(printf "# Configuration for %s\nreplicaCount: 1\n\nimage:\n  repository: %s\n  tag: latest\n  pullPolicy: IfNotPresent\n\nservice:\n  type: ClusterIP\n  port: 8080\n\nresources:\n  limits:\n    cpu: 500m\n    memory: 512Mi\n  requests:\n    cpu: 100m\n    memory: 128Mi" "$COMPONENT_TYPE" "$COMPONENT_TYPE")
+          fi
+          
+          # 保存到文件供后续使用
+          echo "$VALUES_CONTENT" > /tmp/values.yaml
+          
+          # 创建配置 JSON
+          cat > deployment.json << EOF
+          {
+            "issue_number": "${{ steps.parse.outputs.issue_number }}",
+            "component_type": "${{ steps.parse.outputs.component_type }}",
+            "deployment_name": "${{ steps.parse.outputs.deployment_name }}",
+            "namespace": "${{ steps.parse.outputs.namespace }}",
+            "values": $(cat /tmp/values.yaml | jq -Rs .)
+          }
+          EOF
+      
+      # ========================================
+      # 4. 创建配置预览评论（带复选框）
+      # ========================================
+      - name: 💬 Create configuration preview
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const config = JSON.parse(fs.readFileSync('deployment.json', 'utf8'));
+            
+            // 构建带复选框的评论
+            const comment = [
+              '## 🚀 部署配置预览',
+              '',
+              '### 📋 组件信息',
+              `- **类型:** \`${config.component_type}\``,
+              `- **名称:** \`${config.deployment_name}\``,
+              `- **命名空间:** \`${config.namespace}\``,
+              '',
+              '### 📝 配置内容',
+              '> 💡 提示：您可以直接编辑下方的 YAML 配置',
+              '',
+              '```yaml',
+              config.values,
+              '```',
+              '',
+              '---',
+              '### 🎯 操作选项',
+              '请编辑上方配置后，勾选以下选项之一：',
+              '',
+              '- [ ] 🔄 **仅更新配置** - 更新配置但不部署',
+              '- [ ] ✅ **确认部署** - 使用上述配置开始部署',
+              '- [ ] ❌ **取消部署** - 不执行部署操作',
+              '',
+              '> ⚠️ **注意：**',
+              '> - 编辑配置后，请点击 "Update comment" 保存',
+              '> - 勾选操作选项后，系统将自动执行相应操作',
+              '> - 此配置将在 24 小时后过期',
+              '',
+              '---',
+              `_Created at ${new Date().toISOString()}_`,
+              `_Config ID: ${config.issue_number}-${Date.now()}_`
+            ].join('\n');
+            
+            // 创建评论
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: parseInt(config.issue_number),
+              body: comment
+            });
+            
+            console.log('✅ 配置预览已创建');
+            
+            // 添加标签
+            try {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: parseInt(config.issue_number),
+                labels: ['deployment-preview', 'pending']
+              });
+            } catch (error) {
+              console.log('添加标签失败（可能标签不存在）:', error.message);
+            }

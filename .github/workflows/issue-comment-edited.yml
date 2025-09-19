@@ -1,0 +1,282 @@
+name: Issue Comment Edited - Process Deployment Action
+
+# ========================================
+# 当评论被编辑时检查复选框状态并执行相应操作
+# ========================================
+on:
+  issue_comment:
+    types: [edited]
+
+jobs:
+  process-deployment:
+    runs-on: ubuntu-latest
+    # 只处理 bot 自己的评论被编辑的情况
+    if: |
+      github.event.comment.user.login == 'github-actions[bot]' &&
+      contains(github.event.comment.body, '🚀 部署配置预览')
+    
+    steps:
+      # ========================================
+      # 1. 准备环境
+      # ========================================
+      - name: 📥 Checkout repository  
+        uses: actions/checkout@v3
+      
+      # ========================================
+      # 2. 解析评论内容和复选框状态
+      # ========================================
+      - name: 🔍 Parse comment and checkboxes
+        id: parse
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const comment = context.payload.comment.body;
+            const issueNumber = context.payload.issue.number;
+            
+            console.log('========================================');
+            console.log('📋 解析评论内容');
+            console.log('========================================');
+            console.log(`Issue #${issueNumber}`);
+            console.log(`Comment ID: ${context.payload.comment.id}`);
+            
+            // 提取配置 ID
+            const configIdMatch = comment.match(/_Config ID: (\d+-\d+)_/);
+            const configId = configIdMatch ? configIdMatch[1] : null;
+            
+            // 检查复选框状态
+            const deployChecked = comment.includes('- [x] ✅ **确认部署**') || 
+                                comment.includes('- [X] ✅ **确认部署**');
+            const cancelChecked = comment.includes('- [x] ❌ **取消部署**') || 
+                                comment.includes('- [X] ❌ **取消部署**');
+            const updateOnlyChecked = comment.includes('- [x] 🔄 **仅更新配置**') || 
+                                     comment.includes('- [X] 🔄 **仅更新配置**');
+            
+            // 提取 YAML 配置
+            const yamlMatch = comment.match(/```yaml\n([\s\S]*?)\n```/);
+            const yamlContent = yamlMatch ? yamlMatch[1] : '';
+            
+            // 提取组件信息
+            const componentMatch = comment.match(/- \*\*类型:\*\* `([^`]+)`/);
+            const namespaceMatch = comment.match(/- \*\*命名空间:\*\* `([^`]+)`/);
+            const deploymentNameMatch = comment.match(/- \*\*名称:\*\* `([^`]+)`/);
+            
+            const result = {
+              configId: configId,
+              deployChecked: deployChecked,
+              cancelChecked: cancelChecked,
+              updateOnlyChecked: updateOnlyChecked,
+              yamlContent: yamlContent,
+              componentType: componentMatch ? componentMatch[1] : 'unknown',
+              namespace: namespaceMatch ? namespaceMatch[1] : 'default',
+              deploymentName: deploymentNameMatch ? deploymentNameMatch[1] : 'unknown',
+              issueNumber: issueNumber
+            };
+            
+            console.log('解析结果:', JSON.stringify(result, null, 2));
+            
+            // 设置输出
+            core.setOutput('deploy_checked', deployChecked);
+            core.setOutput('cancel_checked', cancelChecked);
+            core.setOutput('update_only_checked', updateOnlyChecked);
+            core.setOutput('config_id', configId);
+            core.setOutput('yaml_content', yamlContent);
+            core.setOutput('component_type', result.componentType);
+            core.setOutput('namespace', result.namespace);
+            core.setOutput('deployment_name', result.deploymentName);
+            core.setOutput('issue_number', issueNumber);
+            
+            return result;
+      
+      # ========================================
+      # 3. 处理仅更新配置的情况
+      # ========================================
+      - name: 🔄 Handle config update only
+        if: steps.parse.outputs.update_only_checked == 'true'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            console.log('🔄 仅更新配置，不执行部署');
+            
+            // 重置复选框并更新评论
+            const comment = context.payload.comment;
+            let newBody = comment.body;
+            
+            // 重置所有复选框
+            newBody = newBody.replace(/- \[x\] ✅ \*\*确认部署\*\*/gi, '- [ ] ✅ **确认部署**');
+            newBody = newBody.replace(/- \[x\] ❌ \*\*取消部署\*\*/gi, '- [ ] ❌ **取消部署**');
+            newBody = newBody.replace(/- \[x\] 🔄 \*\*仅更新配置\*\*/gi, '- [ ] 🔄 **仅更新配置**');
+            
+            // 更新时间戳
+            newBody = newBody.replace(/_Updated at.*_/g, '');
+            newBody += `\n_Updated at ${new Date().toISOString()}_`;
+            
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: comment.id,
+              body: newBody
+            });
+            
+            // 添加通知评论
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body: '✅ 配置已更新保存。如需部署，请重新勾选 "确认部署" 选项。'
+            });
+      
+      # ========================================
+      # 4. 处理取消部署的情况
+      # ========================================
+      - name: ❌ Handle deployment cancellation
+        if: steps.parse.outputs.cancel_checked == 'true'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            console.log('❌ 用户取消部署');
+            
+            // 添加取消标签
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              labels: ['deployment-cancelled']
+            });
+            
+            // 移除 pending 标签
+            try {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.issue.number,
+                name: 'pending'
+              });
+            } catch (e) {
+              console.log('移除标签失败:', e.message);
+            }
+            
+            // 添加通知评论
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body: '❌ 部署已取消。Issue 将被关闭。'
+            });
+            
+            // 关闭 Issue
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              state: 'closed'
+            });
+      
+      # ========================================
+      # 5. 执行部署（确认部署被勾选）
+      # ========================================
+      - name: 🚀 Execute deployment
+        if: steps.parse.outputs.deploy_checked == 'true'
+        run: |
+          echo "========================================="
+          echo "🚀 开始执行部署"
+          echo "========================================="
+          
+          COMPONENT_TYPE="${{ steps.parse.outputs.component_type }}"
+          DEPLOYMENT_NAME="${{ steps.parse.outputs.deployment_name }}"
+          NAMESPACE="${{ steps.parse.outputs.namespace }}"
+          
+          echo "📦 组件: $COMPONENT_TYPE"
+          echo "🏷️ 名称: $DEPLOYMENT_NAME"
+          echo "🌐 命名空间: $NAMESPACE"
+          echo ""
+          echo "📝 配置内容已保存到 /tmp/deployment-values.yaml"
+          
+          # 保存 YAML 配置到文件
+          cat > /tmp/deployment-values.yaml << 'EOF'
+          ${{ steps.parse.outputs.yaml_content }}
+          EOF
+          
+          echo "----------------------------------------"
+          echo "配置内容:"
+          cat /tmp/deployment-values.yaml
+          echo "----------------------------------------"
+          
+          # TODO: 在这里添加实际的部署命令
+          # 例如：
+          # - helm upgrade --install $DEPLOYMENT_NAME ./charts/$COMPONENT_TYPE \
+          #     -f /tmp/deployment-values.yaml \
+          #     -n $NAMESPACE \
+          #     --create-namespace
+          # - kubectl apply -f manifest.yaml -n $NAMESPACE
+          
+          echo ""
+          echo "⚡ 执行部署命令..."
+          echo "[部署逻辑占位符 - 请根据实际情况添加]"
+          echo ""
+          
+          # 模拟部署过程
+          sleep 2
+          
+          echo "✅ 部署执行完成！"
+      
+      # ========================================
+      # 6. 更新部署状态
+      # ========================================  
+      - name: 📢 Update deployment status
+        if: steps.parse.outputs.deploy_checked == 'true'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const success = '${{ job.status }}' === 'success';
+            
+            // 更新标签
+            if (success) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.issue.number,
+                labels: ['deployed-successfully']
+              });
+            } else {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.issue.number,
+                labels: ['deployment-failed']
+              });
+            }
+            
+            // 移除 pending 标签
+            try {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.issue.number,
+                name: 'pending'
+              });
+            } catch (e) {
+              console.log('移除标签失败:', e.message);
+            }
+            
+            // 添加状态评论
+            const statusMessage = success
+              ? `✅ **部署成功！**\n\n组件 \`${{ steps.parse.outputs.component_type }}\` 已成功部署到 \`${{ steps.parse.outputs.namespace }}\` 命名空间。\n\n[查看部署日志](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})`
+              : `❌ **部署失败！**\n\n请检查[部署日志](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})了解详细错误信息。`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body: statusMessage
+            });
+            
+            // 如果成功，关闭 Issue
+            if (success) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.issue.number,
+                state: 'closed',
+                state_reason: 'completed'
+              });
+            }
