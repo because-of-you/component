@@ -25,54 +25,78 @@ jobs:
       # ========================================
       - name: 🔍 Parse issue content
         id: parse
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "========================================="
-          echo "📋 解析 Issue 内容"
-          echo "========================================="
-          
-          ISSUE_NUMBER="${{ github.event.issue.number }}"
-          ISSUE_TITLE="${{ github.event.issue.title }}"
-          ISSUE_BODY="${{ github.event.issue.body }}"
-          
-          # 从标题或内容中提取组件类型
-          # 示例标题格式: "[部署] redis" 或 "Deploy kafka to production"
-          COMPONENT_TYPE=""
-          
-          # 尝试从标题提取组件类型
-          if echo "$ISSUE_TITLE" | grep -iq "redis"; then
-            COMPONENT_TYPE="redis"
-          elif echo "$ISSUE_TITLE" | grep -iq "postgres"; then
-            COMPONENT_TYPE="postgres"
-          elif echo "$ISSUE_TITLE" | grep -iq "kafka"; then
-            COMPONENT_TYPE="kafka"
-          elif echo "$ISSUE_TITLE" | grep -iq "mysql"; then
-            COMPONENT_TYPE="mysql"
-          elif echo "$ISSUE_TITLE" | grep -iq "mongodb"; then
-            COMPONENT_TYPE="mongodb"
-          fi
-          
-          # 如果没有找到，尝试从 body 解析
-          if [ -z "$COMPONENT_TYPE" ] && [ -n "$ISSUE_BODY" ]; then
-            # 查找 component: xxx 格式
-            COMPONENT_TYPE=$(echo "$ISSUE_BODY" | grep -i "component:" | head -1 | cut -d: -f2 | xargs | tr '[:upper:]' '[:lower:]')
-          fi
-          
-          # 默认值
-          [ -z "$COMPONENT_TYPE" ] && COMPONENT_TYPE="generic"
-          DEPLOYMENT_NAME="${COMPONENT_TYPE}-$(date +%s)"
-          NAMESPACE=$(echo "$ISSUE_BODY" | grep -i "namespace:" | head -1 | cut -d: -f2 | xargs || echo "default")
-          
-          echo "📦 组件类型: $COMPONENT_TYPE"
-          echo "🏷️ 部署名称: $DEPLOYMENT_NAME"
-          echo "🌐 命名空间: $NAMESPACE"
-          
-          # 输出变量
-          echo "issue_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
-          echo "component_type=$COMPONENT_TYPE" >> $GITHUB_OUTPUT
-          echo "deployment_name=$DEPLOYMENT_NAME" >> $GITHUB_OUTPUT
-          echo "namespace=$NAMESPACE" >> $GITHUB_OUTPUT
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const body = issue.body || '';
+            
+            console.log('========================================');
+            console.log('📋 解析 Issue 内容');
+            console.log('========================================');
+            
+            // 解析 Issue Template 表单数据
+            // GitHub 会将表单数据转换为 Markdown 格式
+            
+            // 提取组件类型 (从 ### 📦 Component Type 部分)
+            let componentType = 'generic';
+            const componentMatch = body.match(/### 📦 Component Type\s*\n\s*(\w+)/);
+            if (componentMatch) {
+              componentType = componentMatch[1].toLowerCase();
+            }
+            
+            // 如果是 custom，获取自定义组件名
+            if (componentType === 'custom') {
+              const customMatch = body.match(/### 📝 Custom Component Name\s*\n\s*(\S+)/);
+              if (customMatch) {
+                componentType = customMatch[1].toLowerCase();
+              }
+            }
+            
+            // 提取命名空间
+            const namespaceMatch = body.match(/### 🌐 Namespace\s*\n\s*(\S+)/);
+            const namespace = namespaceMatch ? namespaceMatch[1] : 'default';
+            
+            // 提取环境
+            const envMatch = body.match(/### 🏭 Environment\s*\n\s*(\w+)/);
+            const environment = envMatch ? envMatch[1] : 'development';
+            
+            // 提取副本数
+            const replicasMatch = body.match(/### 🔢 Replicas\s*\n\s*(\d+)/);
+            const replicas = replicasMatch ? replicasMatch[1] : '1';
+            
+            // 提取自定义配置
+            const customConfigMatch = body.match(/### 📝 Custom Configuration\s*\n\s*```yaml\s*\n([\s\S]*?)\n```/);
+            const customConfig = customConfigMatch ? customConfigMatch[1] : '';
+            
+            // 生成部署名称
+            const timestamp = Date.now();
+            const deploymentName = `${componentType}-${environment}-${timestamp}`;
+            
+            console.log(`📦 组件类型: ${componentType}`);
+            console.log(`🏷️ 部署名称: ${deploymentName}`);
+            console.log(`🌐 命名空间: ${namespace}`);
+            console.log(`🏭 环境: ${environment}`);
+            console.log(`🔢 副本数: ${replicas}`);
+            
+            // 设置输出
+            core.setOutput('issue_number', issue.number);
+            core.setOutput('component_type', componentType);
+            core.setOutput('deployment_name', deploymentName);
+            core.setOutput('namespace', namespace);
+            core.setOutput('environment', environment);
+            core.setOutput('replicas', replicas);
+            core.setOutput('custom_config', customConfig);
+            
+            return {
+              issueNumber: issue.number,
+              componentType,
+              deploymentName,
+              namespace,
+              environment,
+              replicas,
+              customConfig
+            };
       
       # ========================================
       # 3. 加载或生成配置模板

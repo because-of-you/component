@@ -1,0 +1,196 @@
+name: 🚀 Deployment Request
+description: Request deployment of a component to Kubernetes cluster
+title: "[Deploy] "
+labels: ["deployment", "pending"]
+assignees: []
+
+body:
+  # ========================================
+  # Component Information
+  # ========================================
+  - type: markdown
+    attributes:
+      value: |
+        ## 📋 Deployment Information
+        Please provide the details for your deployment request.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: 📦 Component Type
+      description: Select the component you want to deploy
+      options:
+        - redis
+        - postgres
+        - kafka
+        - mysql
+        - mongodb
+        - rabbitmq
+        - elasticsearch
+        - custom
+      default: 0
+    validations:
+      required: true
+
+  - type: input
+    id: custom_component
+    attributes:
+      label: 📝 Custom Component Name
+      description: If you selected "custom" above, specify the component name
+      placeholder: e.g., my-service
+
+  - type: input
+    id: namespace
+    attributes:
+      label: 🌐 Namespace
+      description: Kubernetes namespace for deployment
+      placeholder: default
+      value: default
+    validations:
+      required: true
+
+  # ========================================
+  # Configuration Section
+  # ========================================
+  - type: markdown
+    attributes:
+      value: |
+        ## ⚙️ Configuration Details
+        Provide any specific configuration requirements.
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: 🏭 Environment
+      description: Target deployment environment
+      options:
+        - development
+        - staging
+        - production
+      default: 0
+    validations:
+      required: true
+
+  - type: input
+    id: replicas
+    attributes:
+      label: 🔢 Replicas
+      description: Number of replicas (pods)
+      placeholder: "1"
+      value: "1"
+
+  - type: textarea
+    id: resources
+    attributes:
+      label: 💻 Resource Requirements
+      description: Specify CPU and memory requirements
+      placeholder: |
+        CPU Request: 100m
+        CPU Limit: 500m
+        Memory Request: 128Mi
+        Memory Limit: 512Mi
+      render: yaml
+
+  # ========================================
+  # Additional Configuration
+  # ========================================
+  - type: textarea
+    id: custom_config
+    attributes:
+      label: 📝 Custom Configuration
+      description: |
+        Add any custom YAML configuration here.
+        This will be merged with the default values.
+      placeholder: |
+        # Example:
+        persistence:
+          enabled: true
+          size: 10Gi
+        
+        env:
+          - name: DEBUG
+            value: "false"
+      render: yaml
+
+  - type: textarea
+    id: secrets
+    attributes:
+      label: 🔐 Secret References
+      description: |
+        List any secrets that need to be configured (DO NOT include actual secret values!)
+      placeholder: |
+        - database-password (from vault)
+        - api-key (existing k8s secret)
+      render: markdown
+
+  # ========================================
+  # Deployment Options
+  # ========================================
+  - type: markdown
+    attributes:
+      value: |
+        ## 🎯 Deployment Options
+        Configure deployment behavior.
+
+  - type: checkboxes
+    id: options
+    attributes:
+      label: ⚡ Deployment Features
+      description: Select the features you want to enable
+      options:
+        - label: Enable autoscaling
+        - label: Enable monitoring/metrics
+        - label: Enable logging
+        - label: Create ingress/route
+        - label: Enable backup
+
+  - type: dropdown
+    id: strategy
+    attributes:
+      label: 📈 Deployment Strategy
+      description: How should the deployment be performed?
+      options:
+        - RollingUpdate (default)
+        - Recreate
+        - Blue/Green
+        - Canary
+      default: 0
+
+  # ========================================
+  # Additional Information
+  # ========================================
+  - type: textarea
+    id: notes
+    attributes:
+      label: 📌 Additional Notes
+      description: Any additional information or special requirements
+      placeholder: |
+        Please provide any additional context or requirements...
+
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: ✅ Pre-deployment Checklist
+      description: Please confirm the following before submitting
+      options:
+        - label: I have reviewed the configuration requirements
+          required: true
+        - label: I have verified the namespace exists or can be created
+          required: true
+        - label: All required secrets are available
+          required: true
+        - label: I understand this will trigger an automated deployment workflow
+          required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ### 🤖 What happens next?
+        
+        1. **Automated Review**: GitHub Actions will validate your request
+        2. **Configuration Preview**: A bot will comment with the deployment configuration
+        3. **Your Action**: Review and edit the configuration in the comment
+        4. **Deploy**: Check the appropriate checkbox to proceed with deployment
+        
+        > ⏱️ The configuration preview will expire after 24 hours
