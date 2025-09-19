@@ -1,5 +1,10 @@
 name: Component Deployment Workflow
 
+# ========================================
+# 触发条件
+# 1. Issue 创建/编辑/打标签时触发
+# 2. 手动触发 (workflow_dispatch)
+# ========================================
 on:
   issues:
     types: [opened, edited, labeled]
@@ -9,235 +14,294 @@ on:
         description: 'Issue number to process'
         required: true
         type: number
+      component_type:
+        description: 'Component type (e.g., redis, postgres, kafka)'
+        required: false
+        default: ''
+      namespace:
+        description: 'Kubernetes namespace'
+        required: false
+        default: 'default'
 
 jobs:
-  process-deployment-request:
+  process-deployment:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout repository
+      # ========================================
+      # 1. 环境准备
+      # ========================================
+      - name: 📥 Checkout repository
         uses: actions/checkout@v3
-        
-      - name: Setup environment
-        run: |
-          # 安装 jq 用于 JSON 处理
-          sudo apt-get update
-          sudo apt-get install -y jq
-          
-      - name: Process deployment request
-        id: process
+      
+      # ========================================
+      # 2. 解析部署参数
+      # ========================================
+      - name: 🔍 Parse deployment parameters
+        id: parse
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # 调试信息
-          echo "Event Name: ${{ github.event_name }}"
-          echo "Event Action: ${{ github.event.action }}"
+          echo "========================================="
+          echo "📊 解析部署参数"
+          echo "========================================="
+          echo "📌 触发方式: ${{ github.event_name }}"
+          echo "📌 触发动作: ${{ github.event.action || 'manual' }}"
           
-          # 处理不同的触发方式
+          # 初始化变量
+          ISSUE_NUMBER=""
+          COMPONENT_TYPE=""
+          DEPLOYMENT_NAME=""
+          NAMESPACE="default"
+          
+          # 根据触发方式获取参数
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            # 手动触发时，从输入获取 issue number
-            ISSUE_NUMBER=${{ github.event.inputs.issue_number }}
-            echo "Using issue number from workflow_dispatch input: $ISSUE_NUMBER"
+            echo ""
+            echo "🚀 手动触发模式"
+            ISSUE_NUMBER="${{ github.event.inputs.issue_number }}"
+            COMPONENT_TYPE="${{ github.event.inputs.component_type }}"
+            NAMESPACE="${{ github.event.inputs.namespace || 'default' }}"
             
-            # 获取 issue 信息
-            ISSUE_BODY=$(gh issue view $ISSUE_NUMBER --json body --jq '.body' || echo "")
-            echo "Issue body: $ISSUE_BODY"
-            
-            # 为了简化测试，使用默认值
-            COMPONENT_TYPE="frontend"
-            DEPLOYMENT_NAME="test-deployment"
-            NAMESPACE="default"
-          else
-            # Issue 事件触发
-            ISSUE_NUMBER=${{ github.event.issue.number }}
-            echo "Raw issue body:"
-            echo "${{ toJSON(github.event.issue.body) }}"
-            
-            # 尝试解析 Issue 表单数据
-            if [ -n "${{ github.event.issue.body }}" ]; then
-              # 如果 body 是 JSON 格式
-              COMPONENT_TYPE=$(echo '${{ toJSON(github.event.issue.body) }}' | jq -r '.[] | select(.id == "component_type") | .value // empty' 2>/dev/null | tr '[:upper:]' '[:lower:]')
-              DEPLOYMENT_NAME=$(echo '${{ toJSON(github.event.issue.body) }}' | jq -r '.[] | select(.id == "deployment_name") | .value // empty' 2>/dev/null)
-              NAMESPACE=$(echo '${{ toJSON(github.event.issue.body) }}' | jq -r '.[] | select(.id == "namespace") | .value // empty' 2>/dev/null)
-              
-              # 如果 JSON 解析失败，尝试简单文本解析
-              if [ -z "$COMPONENT_TYPE" ]; then
-                # 从 issue body 中提取简单格式的数据
-                COMPONENT_TYPE="frontend"  # 默认值
-                DEPLOYMENT_NAME="deployment-$(date +%Y%m%d%H%M%S)"
-                NAMESPACE="default"
-              fi
-            else
-              # 使用默认值
-              COMPONENT_TYPE="frontend"
-              DEPLOYMENT_NAME="deployment-$(date +%Y%m%d%H%M%S)"
-              NAMESPACE="default"
+            # 如果没有指定组件类型，尝试从 Issue 获取
+            if [ -z "$COMPONENT_TYPE" ] && [ -n "$ISSUE_NUMBER" ]; then
+              echo "📝 从 Issue #$ISSUE_NUMBER 获取信息..."
+              ISSUE_BODY=$(gh issue view $ISSUE_NUMBER --json body --jq '.body' 2>/dev/null || echo "")
+              # 这里可以添加更复杂的解析逻辑
             fi
+          else
+            echo ""
+            echo "🔔 Issue 事件触发"
+            ISSUE_NUMBER="${{ github.event.issue.number }}"
+            # 这里可以添加从 Issue body 解析参数的逻辑
           fi
           
-          echo "Component Type: $COMPONENT_TYPE"
-          echo "Deployment Name: $DEPLOYMENT_NAME"
-          echo "Namespace: $NAMESPACE"
+          # 设置默认值
+          [ -z "$COMPONENT_TYPE" ] && COMPONENT_TYPE="generic"
+          [ -z "$DEPLOYMENT_NAME" ] && DEPLOYMENT_NAME="${COMPONENT_TYPE}-$(date +%s)"
+          [ -z "$NAMESPACE" ] && NAMESPACE="default"
           
-          # 检查组件类型是否有效
-          if [ -z "$COMPONENT_TYPE" ]; then
-            echo "Error: 无法确定组件类型"
-            exit 1
-          fi
+          # 输出参数
+          echo ""
+          echo "📋 解析结果:"
+          echo "  • Issue Number: $ISSUE_NUMBER"
+          echo "  • Component Type: $COMPONENT_TYPE"
+          echo "  • Deployment Name: $DEPLOYMENT_NAME"
+          echo "  • Namespace: $NAMESPACE"
           
-          # 检查 values 文件是否存在
+          # 保存到输出
+          echo "issue_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
+          echo "component_type=$COMPONENT_TYPE" >> $GITHUB_OUTPUT
+          echo "deployment_name=$DEPLOYMENT_NAME" >> $GITHUB_OUTPUT
+          echo "namespace=$NAMESPACE" >> $GITHUB_OUTPUT
+      
+      # ========================================
+      # 3. 加载或生成配置
+      # ========================================
+      - name: 📦 Load configuration
+        id: config
+        run: |
+          echo "========================================="
+          echo "📦 加载配置文件"
+          echo "========================================="
+          
+          COMPONENT_TYPE="${{ steps.parse.outputs.component_type }}"
           VALUES_FILE="./helm/config/$COMPONENT_TYPE/values.yaml"
-          if [ ! -f "$VALUES_FILE" ]; then
-            echo "Error: 找不到 $VALUES_FILE 文件"
-            exit 1
+          
+          echo "🔍 查找配置文件: $VALUES_FILE"
+          
+          if [ -f "$VALUES_FILE" ]; then
+            echo "✅ 找到配置文件"
+            VALUES_CONTENT=$(cat "$VALUES_FILE")
+          else
+            echo "⚠️  未找到专用配置文件，使用通用模板"
+            VALUES_CONTENT="# Auto-generated configuration for $COMPONENT_TYPE
+            # 请创建 $VALUES_FILE 来使用自定义配置
+            
+            replicaCount: 1
+            
+            image:
+              repository: $COMPONENT_TYPE
+              tag: latest
+              pullPolicy: IfNotPresent
+            
+            service:
+              type: ClusterIP
+              port: 8080
+            
+            resources:
+              limits:
+                cpu: 500m
+                memory: 512Mi
+              requests:
+                cpu: 100m
+                memory: 128Mi
+            
+            # 添加您的自定义配置..."
           fi
           
-          # 读取 values 文件内容
-          VALUES_CONTENT=$(cat "$VALUES_FILE")
-          
-          # 创建配置确认评论
-          COMMENT="## 部署配置确认\n\n"
-          COMMENT+="**组件类型**: $COMPONENT_TYPE  \n"
-          COMMENT+="**部署名称**: $DEPLOYMENT_NAME  \n"
-          COMMENT+="**命名空间**: $NAMESPACE  \n\n"
-          COMMENT+="### 配置内容\n\n"
-          COMMENT+="\`\`\`yaml\n$VALUES_CONTENT\n\`\`\`\n\n"
-          COMMENT+="请检查以上配置：\n"
-          COMMENT+="- 如果需要修改配置，请直接编辑上方的 YAML 内容\n"
-          COMMENT+="- 确认无误后，请回复 \`/deploy\` 开始部署\n"
-          COMMENT+="- 取消部署请回复 \`/cancel\`\n\n"
-          COMMENT+="**注意**: 此配置将在 24 小时后自动过期。"
-          
-          # 输出到 GITHUB_OUTPUT
-          echo "comment<<EOF" >> $GITHUB_OUTPUT
-          echo "$COMMENT" >> $GITHUB_OUTPUT
+          # 保存配置内容
+          echo "values<<EOF" >> $GITHUB_OUTPUT
+          echo "$VALUES_CONTENT" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
           
-          # 保存配置数据到 JSON 文件
-          cat > deployment_config.json << EOF
+          # 创建部署配置文件（供后续步骤使用）
+          cat > deployment.json << EOF
           {
-            "component_type": "$COMPONENT_TYPE",
-            "deployment_name": "$DEPLOYMENT_NAME",
-            "namespace": "$NAMESPACE",
-            "values_content": $(jq -Rs . <<< "$VALUES_CONTENT"),
-            "issue_number": $ISSUE_NUMBER
+            "issue_number": "${{ steps.parse.outputs.issue_number }}",
+            "component_type": "${{ steps.parse.outputs.component_type }}",
+            "deployment_name": "${{ steps.parse.outputs.deployment_name }}",
+            "namespace": "${{ steps.parse.outputs.namespace }}",
+            "values": $(echo "$VALUES_CONTENT" | jq -Rs .)
           }
           EOF
           
-          echo "配置处理完成"
+          echo "✅ 配置加载完成"
       
-      - name: Create or update configuration comment
-        if: success()
+      # ========================================
+      # 4. 发布配置预览（仅当有 Issue 时）
+      # ========================================
+      - name: 💬 Post configuration preview
+        if: steps.parse.outputs.issue_number != ''
         uses: actions/github-script@v6
-        env:
-          COMMENT: ${{ steps.process.outputs.comment }}
         with:
           script: |
             const fs = require('fs');
+            const config = JSON.parse(fs.readFileSync('deployment.json', 'utf8'));
             
-            // 检查 deployment_config.json 是否存在
-            let config;
-            try {
-              config = JSON.parse(fs.readFileSync('deployment_config.json', 'utf8'));
-            } catch (error) {
-              console.error('Failed to read deployment_config.json:', error);
-              core.setFailed('Configuration file not found');
+            if (!config.issue_number) {
+              console.log('⏭️ No issue number, skipping comment');
               return;
             }
             
-            const issueNumber = config.issue_number || ${{ github.event.inputs.issue_number || 'null' }};
+            // 构建评论内容
+            const comment = `## 🚀 部署配置预览
+
+            **组件信息:**
+            - 📦 **类型:** \`${config.component_type}\`
+            - 🏷️ **名称:** \`${config.deployment_name}\`
+            - 🌐 **命名空间:** \`${config.namespace}\`
             
-            if (!issueNumber) {
-              console.error('No issue number available');
-              return;
-            }
+            **配置详情:**
+            \`\`\`yaml
+            ${config.values}
+            \`\`\`
             
-            // 检查是否已经存在配置评论
+            ---
+            ### 📝 操作指南
+            - ✅ 输入 \`/deploy\` 确认部署
+            - ❌ 输入 \`/cancel\` 取消部署
+            - 🔄 修改 Issue 内容以更新配置
+            
+            > ⏰ 此配置将在 24 小时后过期`;
+            
+            // 查找现有评论
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: issueNumber
+              issue_number: parseInt(config.issue_number)
             });
             
             const existingComment = comments.find(c => 
               c.user.login === 'github-actions[bot]' && 
-              c.body.includes('## 部署配置确认')
+              c.body.includes('🚀 部署配置预览')
             );
             
-            const commentBody = process.env.COMMENT || `## 部署配置确认\n\n**组件类型**: ${config.component_type}\n**部署名称**: ${config.deployment_name}\n**命名空间**: ${config.namespace}\n`;
-            
             if (existingComment) {
-              // 更新现有评论
+              console.log(`📝 更新现有评论 #${existingComment.id}`);
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 comment_id: existingComment.id,
-                body: commentBody
+                body: comment
               });
             } else {
-              // 创建新评论
+              console.log('📝 创建新评论');
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: issueNumber,
-                body: commentBody
+                issue_number: parseInt(config.issue_number),
+                body: comment
               });
             }
       
-      - name: Check for deployment command
-        id: check_command
+      # ========================================
+      # 5. 检查部署命令
+      # ========================================
+      - name: 🔎 Check for deployment command
+        id: check_deploy
+        if: steps.parse.outputs.issue_number != ''
         uses: actions/github-script@v6
         with:
           script: |
             const fs = require('fs');
+            const config = JSON.parse(fs.readFileSync('deployment.json', 'utf8'));
             
-            let config;
-            try {
-              config = JSON.parse(fs.readFileSync('deployment_config.json', 'utf8'));
-            } catch (error) {
-              console.error('Failed to read deployment_config.json:', error);
-              return 'false';
+            if (!config.issue_number) {
+              return false;
             }
             
-            const issueNumber = config.issue_number || ${{ github.event.inputs.issue_number || 'null' }};
+            console.log(`🔍 检查 Issue #${config.issue_number} 的评论...`);
             
-            if (!issueNumber) {
-              return 'false';
-            }
-            
-            // 检查评论中是否包含 /deploy 命令
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: issueNumber
+              issue_number: parseInt(config.issue_number)
             });
             
-            const deployCommand = comments.find(c => 
-              c.user.login !== 'github-actions[bot]' && 
-              c.body.trim() === '/deploy'
-            );
+            // 查找最新的部署命令
+            const deployCommand = comments
+              .filter(c => c.user.login !== 'github-actions[bot]')
+              .reverse()
+              .find(c => {
+                const content = c.body.trim().toLowerCase();
+                return content === '/deploy' || content === '/cancel';
+              });
             
             if (deployCommand) {
-              console.log('Deployment command found');
-              return 'true';
+              const command = deployCommand.body.trim().toLowerCase();
+              console.log(`✅ 找到命令: ${command}`);
+              return command === '/deploy';
             }
-            return 'false';
             
-      - name: Execute deployment
-        if: steps.check_command.outputs.result == 'true'
+            console.log('⏭️ 未找到部署命令');
+            return false;
+      
+      # ========================================
+      # 6. 执行部署（实际部署逻辑）
+      # ========================================
+      - name: 🚀 Execute deployment
+        if: steps.check_deploy.outputs.result == 'true' || github.event_name == 'workflow_dispatch'
         run: |
-          echo "Starting deployment..."
-          # 这里添加实际的部署逻辑
-          # 可以使用 helm upgrade --install 等命令
-          echo "Deployment completed successfully!"
+          echo "========================================="
+          echo "🚀 开始部署"
+          echo "========================================="
           
-          # 更新 Issue 状态
-          echo "Updating issue status..."
-          # 添加部署成功评论
-          # 关闭 Issue 等
-        
-      - name: Notify deployment status
-        if: always()
+          # 读取配置
+          COMPONENT_TYPE="${{ steps.parse.outputs.component_type }}"
+          DEPLOYMENT_NAME="${{ steps.parse.outputs.deployment_name }}"
+          NAMESPACE="${{ steps.parse.outputs.namespace }}"
+          
+          echo "📦 组件: $COMPONENT_TYPE"
+          echo "🏷️ 名称: $DEPLOYMENT_NAME"
+          echo "🌐 命名空间: $NAMESPACE"
+          echo ""
+          
+          # TODO: 在这里添加实际的部署命令
+          # 例如：
+          # - helm upgrade --install $DEPLOYMENT_NAME ./charts/$COMPONENT_TYPE -n $NAMESPACE
+          # - kubectl apply -f ./manifests/$COMPONENT_TYPE -n $NAMESPACE
+          # - 调用部署 API
+          
+          echo "⚡ 执行部署命令..."
+          echo "  [部署逻辑占位符]"
+          echo ""
+          echo "✅ 部署完成！"
+      
+      # ========================================
+      # 7. 发送结果通知
+      # ========================================
+      - name: 📢 Notify result
+        if: always() && steps.parse.outputs.issue_number != ''
         uses: actions/github-script@v6
         with:
           script: |
@@ -245,33 +309,69 @@ jobs:
             
             let config;
             try {
-              config = JSON.parse(fs.readFileSync('deployment_config.json', 'utf8'));
-            } catch (error) {
-              console.log('No deployment config found, skipping notification');
+              config = JSON.parse(fs.readFileSync('deployment.json', 'utf8'));
+            } catch {
+              console.log('⏭️ 无配置文件，跳过通知');
               return;
             }
             
-            const issueNumber = config.issue_number || ${{ github.event.inputs.issue_number || 'null' }};
-            
-            if (!issueNumber) {
-              console.log('No issue number available, skipping notification');
-              return;
-            }
+            if (!config.issue_number) return;
             
             const status = '${{ job.status }}';
-            let message = '';
+            const runUrl = '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}';
             
-            if (status === 'success') {
-              message = '✅ 部署流程已成功完成。';
-            } else if (status === 'failure') {
-              message = '❌ 部署流程失败。请查看 Actions 日志了解详情。';
-            } else {
-              message = '⚠️ 部署流程已结束，状态: ' + status;
+            let emoji, title, message;
+            
+            switch(status) {
+              case 'success':
+                emoji = '✅';
+                title = '部署成功';
+                message = `组件 \`${config.component_type}\` 已成功部署到 \`${config.namespace}\` 命名空间`;
+                break;
+              case 'failure':
+                emoji = '❌';
+                title = '部署失败';
+                message = '部署过程中发生错误，请检查日志';
+                break;
+              case 'cancelled':
+                emoji = '⏹️';
+                title = '部署取消';
+                message = '部署已被用户取消';
+                break;
+              default:
+                emoji = '⚠️';
+                title = '部署状态未知';
+                message = `部署以状态 \`${status}\` 结束`;
             }
+            
+            const comment = `## ${emoji} ${title}
+
+            ${message}
+            
+            📊 **部署详情:**
+            - 组件: \`${config.component_type}\`
+            - 名称: \`${config.deployment_name}\`
+            - 命名空间: \`${config.namespace}\`
+            
+            📝 [查看详细日志](${runUrl})
+            
+            ---
+            _Generated at ${new Date().toISOString()}_`;
             
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: issueNumber,
-              body: message + '\n\n您可以在 [Actions 标签页](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) 查看详细日志。'
+              issue_number: parseInt(config.issue_number),
+              body: comment
             });
+            
+            // 如果成功，可以添加标签或关闭 Issue
+            if (status === 'success') {
+              console.log('🏷️ 添加成功标签');
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: parseInt(config.issue_number),
+                labels: ['deployed']
+              });
+            }
