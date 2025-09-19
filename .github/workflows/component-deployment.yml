@@ -66,76 +66,105 @@ jobs:
           python -m pip install --upgrade pip
           pip install pyyaml
           
+      - name: Create Python script
+        run: |
+          cat > process_issue.py << 'EOF'
+          import os
+          import yaml
+          import json
+          import sys
+          from pathlib import Path
+          
+          def parse_issue_body(body):
+              # 处理 GitHub Issue 表单数据
+              result = {}
+              for item in body:
+                  if isinstance(item, dict) and 'id' in item:
+                      result[item['id']] = item.get('value', '')
+              return result
+          
+          def main():
+              # 从环境变量获取 Issue 内容
+              issue_body = os.environ.get('ISSUE_BODY', '[]')
+              try:
+                  issue_data = json.loads(issue_body)
+              except json.JSONDecodeError:
+                  print("Error: Failed to parse issue body as JSON")
+                  sys.exit(1)
+          
+              # 解析表单数据
+              form_data = {}
+              if isinstance(issue_data, list):
+                  form_data = parse_issue_body(issue_data)
+              elif isinstance(issue_data, dict):
+                  form_data = issue_data
+          
+              component_type = form_data.get('component_type', '').lower()
+              deployment_name = form_data.get('deployment_name', '')
+              namespace = form_data.get('namespace', 'default')
+          
+              # 读取对应的 values 文件
+              values_file = f'./helm/config/{component_type}/values.yaml'
+              if not os.path.exists(values_file):
+                  print(f"Error: Values file not found for {component_type}")
+                  sys.exit(1)
+          
+              try:
+                  with open(values_file, 'r') as f:
+                      values_content = f.read()
+              except Exception as e:
+                  print(f"Error reading values file: {e}")
+                  sys.exit(1)
+          
+              # 创建配置确认评论
+              comment = f"""## 部署配置确认
+  
+              **组件类型**: {component_type}  
+              **部署名称**: {deployment_name}  
+              **命名空间**: {namespace}  
+              
+              ### 配置内容
+              
+              ```yaml
+              {values_content}
+              ```
+              
+              请检查以上配置：
+              - 如果需要修改配置，请直接编辑上方的 YAML 内容
+              - 确认无误后，请回复 `/deploy` 开始部署
+              - 取消部署请回复 `/cancel`
+              
+              **注意**: 此配置将在 24 小时后自动过期。
+              """
+          
+              # 输出评论内容
+              with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+                  print(f'comment={json.dumps(comment)}', file=fh)
+          
+              # 保存配置数据
+              config_data = {
+                  'component_type': component_type,
+                  'deployment_name': deployment_name,
+                  'namespace': namespace,
+                  'values': values_content,
+                  'issue_number': int(os.environ.get('ISSUE_NUMBER', '0'))
+              }
+          
+              with open('deployment_config.json', 'w') as f:
+                  json.dump(config_data, f)
+          
+          if __name__ == "__main__":
+              main()
+          EOF
+
       - name: Process deployment request
         id: process
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_BODY: ${{ toJSON(github.event.issue.body) }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
-          import os
-          import yaml
-          import json
-          from pathlib import Path
-          
-          # 获取 Issue 内容
-          issue_body = "${{ toJSON(github.event.issue.body) }}"
-          issue_body = json.loads(issue_body)
-          
-          # 解析表单数据
-          def parse_issue_body(body):
-              result = {}
-              for item in body:
-                  if 'id' in item and item.get('id') in ['component_type', 'deployment_name', 'namespace', 'description']:
-                      result[item['id']] = item['value']
-              return result
-              
-          form_data = parse_issue_body(issue_body)
-          component_type = form_data.get('component_type', '').lower()
-          deployment_name = form_data.get('deployment_name', '')
-          namespace = form_data.get('namespace', 'default')
-          
-          # 读取对应的 values 文件
-          values_file = f'./helm/config/{component_type}/values.yaml'
-          if not os.path.exists(values_file):
-              print(f"Error: Values file not found for {component_type}")
-              exit(1)
-              
-          with open(values_file, 'r') as f:
-              values_content = f.read()
-          
-          # 创建配置确认评论
-          comment = f"""## 部署配置确认
-          
-          **组件类型**: {component_type}  
-          **部署名称**: {deployment_name}  
-          **命名空间**: {namespace}  
-          
-          ### 配置内容
-          
-          ```yaml
-          {values_content}
-          ```
-          
-          请检查以上配置：
-          - 如果需要修改配置，请直接编辑上方的 YAML 内容
-          - 确认无误后，请回复 `/deploy` 开始部署
-          - 取消部署请回复 `/cancel`
-          
-          **注意**: 此配置将在 24 小时后自动过期。"""
-          
-          # 输出评论内容供后续步骤使用
-          print(f"comment={comment}" >> $GITHUB_OUTPUT)
-          
-          # 将配置数据保存为 JSON 供后续步骤使用
-          config_data = {
-              'component_type': component_type,
-              'deployment_name': deployment_name,
-              'namespace': namespace,
-              'values': values_content,
-              'issue_number': ${{ github.event.issue.number }}
-          }
-          
-          with open('deployment_config.json', 'w') as f:
-              json.dump(config_data, f)
+          python process_issue.py
               
       - name: Create configuration comment
         uses: actions/github-script@v6
