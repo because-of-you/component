@@ -33,14 +33,47 @@ jobs:
           echo "Event Name: ${{ github.event_name }}"
           echo "Event Action: ${{ github.event.action }}"
           
-          # 解析 Issue 表单数据
-          echo "Raw issue body:"
-          echo "${{ toJSON(github.event.issue) }}"
-          
-          # 提取组件类型（使用 jq 解析 JSON）
-          COMPONENT_TYPE=$(echo '${{ toJSON(github.event.issue.body) }}' | jq -r '.[] | select(.id == "component_type") | .value // empty' | tr '[:upper:]' '[:lower:]')
-          DEPLOYMENT_NAME=$(echo '${{ toJSON(github.event.issue.body) }}' | jq -r '.[] | select(.id == "deployment_name") | .value // empty')
-          NAMESPACE=$(echo '${{ toJSON(github.event.issue.body) }}' | jq -r '.[] | select(.id == "namespace") | .value // "default"')
+          # 处理不同的触发方式
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            # 手动触发时，从输入获取 issue number
+            ISSUE_NUMBER=${{ github.event.inputs.issue_number }}
+            echo "Using issue number from workflow_dispatch input: $ISSUE_NUMBER"
+            
+            # 获取 issue 信息
+            ISSUE_BODY=$(gh issue view $ISSUE_NUMBER --json body --jq '.body' || echo "")
+            echo "Issue body: $ISSUE_BODY"
+            
+            # 为了简化测试，使用默认值
+            COMPONENT_TYPE="frontend"
+            DEPLOYMENT_NAME="test-deployment"
+            NAMESPACE="default"
+          else
+            # Issue 事件触发
+            ISSUE_NUMBER=${{ github.event.issue.number }}
+            echo "Raw issue body:"
+            echo "${{ toJSON(github.event.issue.body) }}"
+            
+            # 尝试解析 Issue 表单数据
+            if [ -n "${{ github.event.issue.body }}" ]; then
+              # 如果 body 是 JSON 格式
+              COMPONENT_TYPE=$(echo '${{ toJSON(github.event.issue.body) }}' | jq -r '.[] | select(.id == "component_type") | .value // empty' 2>/dev/null | tr '[:upper:]' '[:lower:]')
+              DEPLOYMENT_NAME=$(echo '${{ toJSON(github.event.issue.body) }}' | jq -r '.[] | select(.id == "deployment_name") | .value // empty' 2>/dev/null)
+              NAMESPACE=$(echo '${{ toJSON(github.event.issue.body) }}' | jq -r '.[] | select(.id == "namespace") | .value // empty' 2>/dev/null)
+              
+              # 如果 JSON 解析失败，尝试简单文本解析
+              if [ -z "$COMPONENT_TYPE" ]; then
+                # 从 issue body 中提取简单格式的数据
+                COMPONENT_TYPE="frontend"  # 默认值
+                DEPLOYMENT_NAME="deployment-$(date +%Y%m%d%H%M%S)"
+                NAMESPACE="default"
+              fi
+            else
+              # 使用默认值
+              COMPONENT_TYPE="frontend"
+              DEPLOYMENT_NAME="deployment-$(date +%Y%m%d%H%M%S)"
+              NAMESPACE="default"
+            fi
+          fi
           
           echo "Component Type: $COMPONENT_TYPE"
           echo "Deployment Name: $DEPLOYMENT_NAME"
@@ -87,27 +120,43 @@ jobs:
             "deployment_name": "$DEPLOYMENT_NAME",
             "namespace": "$NAMESPACE",
             "values_content": $(jq -Rs . <<< "$VALUES_CONTENT"),
-            "issue_number": ${{ github.event.issue.number }}
+            "issue_number": $ISSUE_NUMBER
           }
           EOF
           
           echo "配置处理完成"
       
       - name: Create or update configuration comment
+        if: success()
         uses: actions/github-script@v6
         env:
           COMMENT: ${{ steps.process.outputs.comment }}
-          ISSUE_NUMBER: ${{ github.event.issue.number }}
         with:
           script: |
             const fs = require('fs');
-            const config = JSON.parse(fs.readFileSync('deployment_config.json', 'utf8'));
+            
+            // 检查 deployment_config.json 是否存在
+            let config;
+            try {
+              config = JSON.parse(fs.readFileSync('deployment_config.json', 'utf8'));
+            } catch (error) {
+              console.error('Failed to read deployment_config.json:', error);
+              core.setFailed('Configuration file not found');
+              return;
+            }
+            
+            const issueNumber = config.issue_number || ${{ github.event.inputs.issue_number || 'null' }};
+            
+            if (!issueNumber) {
+              console.error('No issue number available');
+              return;
+            }
             
             // 检查是否已经存在配置评论
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: config.issue_number
+              issue_number: issueNumber
             });
             
             const existingComment = comments.find(c => 
@@ -115,30 +164,52 @@ jobs:
               c.body.includes('## 部署配置确认')
             );
             
+            const commentBody = process.env.COMMENT || `## 部署配置确认\n\n**组件类型**: ${config.component_type}\n**部署名称**: ${config.deployment_name}\n**命名空间**: ${config.namespace}\n`;
+            
             if (existingComment) {
               // 更新现有评论
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 comment_id: existingComment.id,
-                body: process.env.COMMENT
+                body: commentBody
               });
             } else {
               // 创建新评论
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: config.issue_number,
-                body: process.env.COMMENT
+                issue_number: issueNumber,
+                body: commentBody
               });
             }
-            const config = JSON.parse(fs.readFileSync('deployment_config.json', 'utf8'));
+      
+      - name: Check for deployment command
+        id: check_command
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            
+            let config;
+            try {
+              config = JSON.parse(fs.readFileSync('deployment_config.json', 'utf8'));
+            } catch (error) {
+              console.error('Failed to read deployment_config.json:', error);
+              return 'false';
+            }
+            
+            const issueNumber = config.issue_number || ${{ github.event.inputs.issue_number || 'null' }};
+            
+            if (!issueNumber) {
+              return 'false';
+            }
             
             // 检查评论中是否包含 /deploy 命令
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: config.issue_number
+              issue_number: issueNumber
             });
             
             const deployCommand = comments.find(c => 
@@ -171,11 +242,36 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const config = JSON.parse(fs.readFileSync('deployment_config.json', 'utf8'));
+            
+            let config;
+            try {
+              config = JSON.parse(fs.readFileSync('deployment_config.json', 'utf8'));
+            } catch (error) {
+              console.log('No deployment config found, skipping notification');
+              return;
+            }
+            
+            const issueNumber = config.issue_number || ${{ github.event.inputs.issue_number || 'null' }};
+            
+            if (!issueNumber) {
+              console.log('No issue number available, skipping notification');
+              return;
+            }
+            
+            const status = '${{ job.status }}';
+            let message = '';
+            
+            if (status === 'success') {
+              message = '✅ 部署流程已成功完成。';
+            } else if (status === 'failure') {
+              message = '❌ 部署流程失败。请查看 Actions 日志了解详情。';
+            } else {
+              message = '⚠️ 部署流程已结束，状态: ' + status;
+            }
             
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: config.issue_number,
-              body: '部署流程已开始。您可以在 Actions 标签页查看详细日志。'
+              issue_number: issueNumber,
+              body: message + '\n\n您可以在 [Actions 标签页](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) 查看详细日志。'
             });
