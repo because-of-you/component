@@ -410,3 +410,18 @@ jobs:
                 labels: labels
               });
             }
+            
+            // 如果是成功生成命令，移除 deployment-preview 标签
+            if (!isDryRun && deploymentStatus === 'success') {
+              try {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: parseInt(issueNumber),
+                  name: 'deployment-preview'
+                });
+                console.log('✅ 已移除 deployment-preview 标签');
+              } catch (e) {
+                console.log('移除 deployment-preview 标签失败:', e.message);
+              }
+            }

@@ -143,16 +143,20 @@ jobs:
               labels: ['deployment-cancelled']
             });
             
-            // 移除 pending 标签
-            try {
-              await github.rest.issues.removeLabel({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.payload.issue.number,
-                name: 'pending'
-              });
-            } catch (e) {
-              console.log('移除标签失败:', e.message);
+            // 移除 pending 和 deployment-preview 标签
+            const labelsToRemove = ['pending', 'deployment-preview'];
+            for (const label of labelsToRemove) {
+              try {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.payload.issue.number,
+                  name: label
+                });
+                console.log(`✅ 已移除 ${label} 标签`);
+              } catch (e) {
+                console.log(`移除 ${label} 标签失败:`, e.message);
+              }
             }
             
             // 添加通知评论
@@ -509,6 +513,19 @@ jobs:
                 issue_number: context.payload.issue.number,
                 labels: ['deployed-successfully']
               });
+              
+              // 移除 deployment-preview 标签
+              try {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.payload.issue.number,
+                  name: 'deployment-preview'
+                });
+                console.log('✅ 已移除 deployment-preview 标签');
+              } catch (e) {
+                console.log('移除 deployment-preview 标签失败:', e.message);
+              }
             } else {
               await github.rest.issues.addLabels({
                 owner: context.repo.owner,
@@ -527,7 +544,7 @@ jobs:
                 name: 'pending'
               });
             } catch (e) {
-              console.log('移除标签失败:', e.message);
+              console.log('移除 pending 标签失败:', e.message);
             }
             
             // 添加状态评论
