@@ -167,41 +167,46 @@ jobs:
           echo "📥 获取 Chart 默认配置..."
           helm show values "$CHART_URL" > /tmp/default-values.yaml || true
           
-          # Dry-run 测试
+          # 模板验证（不需要连接集群）
           echo ""
           echo "========================================="
-          echo "🔧 执行 Dry-run 测试"
+          echo "🔧 验证 Helm Chart 模板"
           echo "========================================="
           
           echo "执行命令:"
-          echo "helm upgrade --install ${{ inputs.deployment_name }} $CHART_URL \\"
+          echo "helm template ${{ inputs.deployment_name }} $CHART_URL \\"
           echo "  --namespace ${{ inputs.namespace }} \\"
           echo "  --create-namespace \\"
           echo "  --values /tmp/values.yaml \\"
-          echo "  --dry-run --debug"
+          echo "  --validate"
           echo ""
           
-          if helm upgrade --install "${{ inputs.deployment_name }}" "$CHART_URL" \
+          # 使用 helm template 代替 helm upgrade --dry-run
+          # helm template 不需要连接到 Kubernetes 集群
+          if helm template "${{ inputs.deployment_name }}" "$CHART_URL" \
             --namespace "${{ inputs.namespace }}" \
             --create-namespace \
             --values /tmp/values.yaml \
-            --dry-run --debug > /tmp/dry-run.log 2>&1; then
+            --validate > /tmp/template-output.yaml 2> /tmp/template-error.log; then
             
-            echo "✅ Dry-run 测试通过"
+            echo "✅ 模板验证通过"
             echo "status=success" >> $GITHUB_OUTPUT
             
-            # 显示部分输出
+            # 显示生成的资源统计
             echo ""
-            echo "📋 Dry-run 输出摘要:"
+            echo "📋 生成的 Kubernetes 资源:"
             echo "----------------------------------------"
-            tail -n 50 /tmp/dry-run.log
+            echo "$(grep '^kind:' /tmp/template-output.yaml | sort | uniq -c)"
+            echo "----------------------------------------"
+            echo "总计: $(grep '^---$' /tmp/template-output.yaml | wc -l) 个资源"
+            
           else
-            echo "❌ Dry-run 测试失败"
+            echo "❌ 模板验证失败"
             echo "status=failed" >> $GITHUB_OUTPUT
             echo ""
             echo "错误输出:"
             echo "----------------------------------------"
-            cat /tmp/dry-run.log
+            cat /tmp/template-error.log
             exit 1
           fi
       
@@ -243,11 +248,11 @@ jobs:
           echo "📝 请将 values.yaml 文件和上述命令保存后执行"
           echo "========================================="
           
-          # 再次执行 dry-run 验证
-          if helm upgrade --install "${{ inputs.deployment_name }}" "$CHART_URL" \
+          # 再次使用 template 验证
+          if helm template "${{ inputs.deployment_name }}" "$CHART_URL" \
             --namespace "${{ inputs.namespace }}" \
             --create-namespace \
-            --dry-run \
+            --validate \
             --values /tmp/values.yaml > /dev/null 2>&1; then
             
             echo ""
@@ -382,7 +387,14 @@ jobs:
                 }
               }
             } else {
-              if (deploymentStatus === 'success') {
+              // dry_run_only=false 的情况
+              if (validationStatus !== 'success') {
+                // 验证失败，不应该到这里，但以防万一
+                message = `❌ **配置验证失败**\n\n` +
+                  `无法生成部署命令，请修复配置错误。\n` +
+                  `[查看错误详情](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
+                labels = ['validation-failed'];
+              } else if (deploymentStatus === 'success') {
                 message = `✅ **部署命令已生成！**\n\n` +
                   `- 组件: \`${{ inputs.component_type }}\`\n` +
                   `- 名称: \`${{ inputs.deployment_name }}\`\n` +
