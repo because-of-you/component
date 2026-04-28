@@ -1,3 +1,18 @@
+redisIngress:
+  enabled: true
+  name: redis-ingress-route-tcp
+  host: redis.acitrus.cn
+  entryPoints:
+    - gravitation
+  service:
+    name: redis-master
+    port: 6379
+  tls:
+    domains:
+      - main: acitrus.cn
+        sans:
+          - redis.acitrus.cn
+
 redis:
   architecture: standalone
   master:
