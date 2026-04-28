@@ -1,6 +1,8 @@
 repositories:
   - name: bitnami
     url: https://charts.bitnami.com/bitnami
+  - name: traefik
+    url: https://traefik.github.io/charts
 
 ---
 
@@ -28,3 +30,10 @@ releases:
     chart: ./charts/redis
     values:
       - ./environments/{{ .Environment.Name }}/redis/values.yaml
+
+  - name: traefik
+    namespace: traefik
+    createNamespace: true
+    chart: ./charts/traefik
+    values:
+      - ./environments/{{ .Environment.Name }}/traefik/values.yaml
