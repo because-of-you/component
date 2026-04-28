@@ -1,0 +1,30 @@
+repositories:
+  - name: bitnami
+    url: https://charts.bitnami.com/bitnami
+
+---
+
+environments:
+  dev:
+    values:
+      - environments/dev/values.yaml
+  prod:
+    values:
+      - environments/prod/values.yaml
+
+---
+
+releases:
+  - name: test-charts
+    namespace: app
+    createNamespace: true
+    chart: ./charts/test-charts
+    values:
+      - ./environments/{{ .Environment.Name }}/test-charts/values.yaml
+
+  - name: redis
+    namespace: infra
+    createNamespace: true
+    chart: ./charts/redis
+    values:
+      - ./environments/{{ .Environment.Name }}/redis/values.yaml

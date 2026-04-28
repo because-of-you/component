@@ -1,0 +1,129 @@
+name: Dev Release
+
+on:
+  pull_request:
+    branches:
+      - dev
+    paths:
+      - charts/**
+      - .github/workflows/dev-release.yaml
+  push:
+    branches:
+      - dev
+    paths:
+      - charts/**
+      - .github/workflows/dev-release.yaml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  changed-charts:
+    runs-on: ubuntu-latest
+    outputs:
+      charts: ${{ steps.detect.outputs.charts }}
+      has_changes: ${{ steps.detect.outputs.has_changes }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed charts
+        id: detect
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            base="${{ github.event.pull_request.base.sha }}"
+            head="${{ github.event.pull_request.head.sha }}"
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
+            base="${{ github.event.before }}"
+            head="${{ github.sha }}"
+          else
+            base="$(git rev-list --max-parents=0 HEAD)"
+            head="${{ github.sha }}"
+          fi
+
+          if [[ "$base" == "0000000000000000000000000000000000000000" ]]; then
+            base="$(git rev-list --max-parents=0 HEAD)"
+          fi
+
+          mapfile -t charts < <(
+            git diff --name-only "$base" "$head" \
+              | awk -F/ '$1 == "charts" && $2 != "" { print "charts/" $2 }' \
+              | sort -u
+          )
+
+          if [[ "${#charts[@]}" -eq 0 ]]; then
+            echo 'charts=[]' >> "$GITHUB_OUTPUT"
+            echo 'has_changes=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          printf '%s\n' "${charts[@]}" \
+            | jq -R '{chart: ., name: split("/")[1]}' \
+            | jq -s -c '{include: .}' > /tmp/charts.json
+          echo "charts=$(cat /tmp/charts.json)" >> "$GITHUB_OUTPUT"
+          echo 'has_changes=true' >> "$GITHUB_OUTPUT"
+
+  lint-and-package:
+    needs: changed-charts
+    if: needs.changed-charts.outputs.has_changes == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.changed-charts.outputs.charts) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Update chart dependencies
+        shell: bash
+        run: |
+          if grep -q '^dependencies:' "${{ matrix.chart }}/Chart.yaml"; then
+            helm dependency update "${{ matrix.chart }}"
+          fi
+
+      - name: Lint chart
+        run: helm lint "${{ matrix.chart }}"
+
+      - name: Render chart
+        run: helm template test "${{ matrix.chart }}" >/dev/null
+
+      - name: Package chart
+        id: package
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+
+          dev_version="0.0.0-dev"
+
+          helm package "${{ matrix.chart }}" \
+            --version "$dev_version" \
+            --app-version dev \
+            --destination dist
+
+          echo "version=$dev_version" >> "$GITHUB_OUTPUT"
+
+      - name: Upload chart package
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}-dev-${{ github.run_number }}
+          path: dist/*.tgz
+
+      - name: Login to GHCR
+        if: github.event_name == 'push'
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io --username "${{ github.actor }}" --password-stdin
+
+      - name: Push dev chart to OCI
+        if: github.event_name == 'push'
+        run: helm push "dist/${{ matrix.name }}-${{ steps.package.outputs.version }}.tgz" "oci://ghcr.io/${{ github.repository_owner }}/charts"

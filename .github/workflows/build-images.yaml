@@ -1,0 +1,38 @@
+name: Build Images
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - images/**
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-test-charts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: images/test-charts
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/test-charts:${{ github.sha }}
+

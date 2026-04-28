@@ -1,0 +1,4 @@
+redis:
+  master:
+    persistence:
+      size: 10Gi

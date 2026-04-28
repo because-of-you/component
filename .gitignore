@@ -1,0 +1,6 @@
+.DS_Store
+dist/
+*.tgz
+charts/**/charts/
+.helmfile/
+.idea
