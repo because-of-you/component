@@ -1,12 +1,13 @@
-architecture: standalone
-master:
-  extraEnvVars:
-    - name: TZ
-      value: "Asia/Shanghai"
-  resources:
-    limits:
-      cpu: 1000m
-      memory: 512Mi
-    requests:
-      cpu: 10m
-      memory: 128Mi
+redis:
+  architecture: standalone
+  master:
+    extraEnvVars:
+      - name: TZ
+        value: "Asia/Shanghai"
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 512Mi
+      requests:
+        cpu: 10m
+        memory: 128Mi
