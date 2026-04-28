@@ -13,7 +13,7 @@
 - 支持通过 Helmfile 在本地渲染和部署
 - 支持按变更的 Chart 自动执行 CI
 - 支持 dev 分支自动发布到 GHCR OCI Registry
-- 支持后续扩展 Docker 镜像构建和正式版本发布
+- 支持后续扩展 Docker 镜像构建和正式版本发布流程
 
 ## 快速开始
 
@@ -152,7 +152,7 @@ PR 合并前会执行：
 - 上传 Chart package artifact
 - 推送 `0.0.0-dev` 到 GHCR OCI Registry
 
-正式版本发布由 [.github/workflows/release-charts.yaml](./.github/workflows/release-charts.yaml) 负责，后续可以按 tag 或 release 规则收紧。
+正式版本发布流程暂未启用，后续可以按 tag 或 GitHub Release 规则补充。
 
 ## 新增组件
 
@@ -179,4 +179,3 @@ PR 合并前会执行：
 ## 许可证
 
 见 [LICENSE](./LICENSE)。
-
