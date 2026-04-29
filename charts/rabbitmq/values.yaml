@@ -13,6 +13,22 @@ rabbitmqIngress:
         sans:
           - rabbitmq.acitrus.cn
 
+rabbitmqUiIngress:
+  enabled: true
+  name: rabbitmqui-ingress-route-http
+  host: ui.rabbitmq.acitrus.cn
+  entryPoints:
+    - websecure
+    - web
+  service:
+    name: rabbitmq
+    port: 15672
+  tls:
+    domains:
+      - main: acitrus.cn
+        sans:
+          - ui.rabbitmq.acitrus.cn
+
 rabbitmq:
   replicaCount: 1
   extraEnvVars:

@@ -16,3 +16,23 @@ spec:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 {{- end }}
+{{- if .Values.rabbitmqUiIngress.enabled }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ .Values.rabbitmqUiIngress.name | quote }}
+spec:
+  entryPoints:
+    {{- toYaml .Values.rabbitmqUiIngress.entryPoints | nindent 4 }}
+  routes:
+    - match: Host(`{{ .Values.rabbitmqUiIngress.host }}`)
+      kind: Rule
+      services:
+        - name: {{ .Values.rabbitmqUiIngress.service.name | quote }}
+          port: {{ .Values.rabbitmqUiIngress.service.port }}
+  {{- with .Values.rabbitmqUiIngress.tls }}
+  tls:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
