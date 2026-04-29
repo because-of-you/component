@@ -18,8 +18,8 @@ rabbitmq:
   extraEnvVars:
     - name: TZ
       value: "Asia/Shanghai"
-  # auth:
-  #   username: user
+  auth:
+   username: admin
   # ingress:
   #   enabled: false
   #   hostname: rabbitmq.acitrus.cn
