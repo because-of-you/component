@@ -1,0 +1,35 @@
+rabbitmqIngress:
+  enabled: true
+  name: rabbitmq-ingress-route-tcp
+  host: rabbitmq.acitrus.cn
+  entryPoints:
+    - gravitation
+  service:
+    name: rabbitmq
+    port: 5672
+  tls:
+    domains:
+      - main: acitrus.cn
+        sans:
+          - rabbitmq.acitrus.cn
+
+rabbitmq:
+  replicaCount: 1
+  extraEnvVars:
+    - name: TZ
+      value: "Asia/Shanghai"
+  # auth:
+  #   username: user
+  # ingress:
+  #   enabled: false
+  #   hostname: rabbitmq.acitrus.cn
+  #   path: /
+  persistence:
+    enabled: true
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1024Mi
+    requests:
+      cpu: 10m
+      memory: 256Mi
