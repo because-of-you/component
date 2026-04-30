@@ -19,6 +19,8 @@ redis:
     extraEnvVars:
       - name: TZ
         value: "Asia/Shanghai"
+    persistence:
+      size: 1Gi
     resources:
       limits:
         cpu: 1000m

@@ -41,10 +41,11 @@ rabbitmq:
   #   path: /
   persistence:
     enabled: true
+    size: 2Gi
   resources:
     limits:
       cpu: 1000m
       memory: 1024Mi
     requests:
       cpu: 10m
-      memory: 256Mi
+      memory: 128Mi
