@@ -20,6 +20,10 @@ rabbitmqUiIngress:
   entryPoints:
     - web
     - websecure
+  redirectToHttps:
+    enabled: true
+    name: rabbitmqui-redirect-https
+    permanent: true
   service:
     name: rabbitmq
     port: 15672

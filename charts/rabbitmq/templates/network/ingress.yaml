@@ -18,6 +18,17 @@ spec:
 {{- end }}
 {{- if .Values.rabbitmqUiIngress.enabled }}
 ---
+{{- if .Values.rabbitmqUiIngress.redirectToHttps.enabled }}
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ .Values.rabbitmqUiIngress.redirectToHttps.name | quote }}
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: {{ .Values.rabbitmqUiIngress.redirectToHttps.permanent }}
+---
+{{- end }}
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
@@ -28,6 +39,10 @@ spec:
   routes:
     - match: Host(`{{ .Values.rabbitmqUiIngress.host }}`)
       kind: Rule
+      {{- if .Values.rabbitmqUiIngress.redirectToHttps.enabled }}
+      middlewares:
+        - name: {{ .Values.rabbitmqUiIngress.redirectToHttps.name | quote }}
+      {{- end }}
       services:
         - name: {{ .Values.rabbitmqUiIngress.service.name | quote }}
           port: {{ .Values.rabbitmqUiIngress.service.port }}
