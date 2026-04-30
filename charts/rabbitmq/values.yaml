@@ -18,11 +18,13 @@ rabbitmqUiIngress:
   name: rabbitmqui-ingress-route-http
   host: rabbitmq.ui.acitrus.cn
   entryPoints:
-    - web
     - websecure
   redirectToHttps:
     enabled: true
     name: rabbitmqui-redirect-https
+    ingressRouteName: rabbitmqui-ingress-route-http-redirect
+    entryPoints:
+      - web
     permanent: true
   service:
     name: rabbitmq
