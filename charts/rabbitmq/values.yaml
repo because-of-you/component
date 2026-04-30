@@ -1,7 +1,7 @@
 rabbitmqIngress:
   enabled: true
   name: rabbitmq-ingress-route-tcp
-  host: rabbitmq.acitrus.cn
+  host: rabbitmq.tcp.acitrus.cn
   entryPoints:
     - gravitation
   service:
@@ -11,7 +11,7 @@ rabbitmqIngress:
     domains:
       - main: acitrus.cn
         sans:
-          - rabbitmq.acitrus.cn
+          - rabbitmq.tcp.acitrus.cn
 
 rabbitmqUiIngress:
   enabled: true
@@ -37,7 +37,7 @@ rabbitmq:
    username: admin
   # ingress:
   #   enabled: false
-  #   hostname: rabbitmq.acitrus.cn
+  #   hostname: rabbitmq.tcp.acitrus.cn
   #   path: /
   persistence:
     enabled: true

@@ -1,7 +1,7 @@
 redisIngress:
   enabled: true
   name: redis-ingress-route-tcp
-  host: redis.acitrus.cn
+  host: redis.tcp.acitrus.cn
   entryPoints:
     - gravitation
   service:
@@ -11,7 +11,7 @@ redisIngress:
     domains:
       - main: acitrus.cn
         sans:
-          - redis.acitrus.cn
+          - redis.tcp.acitrus.cn
 
 redis:
   architecture: standalone

@@ -52,6 +52,7 @@ traefik:
               sans:
                 - "*.acitrus.cn"
                 - "*.ui.acitrus.cn"
+                - "*.tcp.acitrus.cn"
 
 
   # -- Certificates resolvers configuration.
