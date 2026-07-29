@@ -6,6 +6,8 @@
 
 dev 分支构建会发布到 GHCR 的 OCI Helm Registry：
 
+PostgreSQL 和 Redis 使用同一个基础组件命名空间：`infra`。
+
 ```bash
 helm registry login ghcr.io
 

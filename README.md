@@ -99,6 +99,13 @@ helm upgrade --install traefik oci://ghcr.io/because-of-you/charts/traefik \
   --create-namespace
 ```
 
+命名空间约定：
+
+```text
+infra: redis, postgresql, rabbitmq, casdoor
+traefik: traefik
+```
+
 获取默认密码：
 
 ```bash
