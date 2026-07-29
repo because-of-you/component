@@ -1,3 +1,18 @@
+postgresqlIngress:
+  enabled: true
+  name: postgresql-ingress-route-tcp
+  host: postgresql.tcp.acitrus.cn
+  entryPoints:
+    - gravitation
+  service:
+    name: postgresql
+    port: 5432
+  tls:
+    domains:
+      - main: acitrus.cn
+        sans:
+          - postgresql.tcp.acitrus.cn
+
 postgresql:
   architecture: standalone
   primary:
@@ -5,7 +20,7 @@ postgresql:
       - name: TZ
         value: "Asia/Shanghai"
     persistence:
-      size: 1Gi
+      size: 10Gi
     resources:
       limits:
         cpu: 1000m

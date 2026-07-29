@@ -1,4 +1,4 @@
 postgresql:
   primary:
     persistence:
-      size: 1Gi
+      size: 10Gi
