@@ -108,3 +108,12 @@ helm upgrade --install postgresql oci://ghcr.io/because-of-you/charts/postgresql
   --namespace infra \
   --create-namespace
 ```
+
+## 获取默认密码
+
+如果没有通过 values 指定密码，Bitnami PostgreSQL 会在安装时生成 `postgres` 管理员密码，并写入 `postgresql` Secret：
+
+```bash
+kubectl -n infra get secret postgresql \
+  -o go-template='{{ index .data "postgres-password" | base64decode }}{{ "\n" }}'
+```

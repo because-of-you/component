@@ -99,6 +99,16 @@ helm upgrade --install traefik oci://ghcr.io/because-of-you/charts/traefik \
   --create-namespace
 ```
 
+获取默认密码：
+
+```bash
+kubectl -n infra get secret redis \
+  -o go-template='{{ index .data "redis-password" | base64decode }}{{ "\n" }}'
+
+kubectl -n infra get secret postgresql \
+  -o go-template='{{ index .data "postgres-password" | base64decode }}{{ "\n" }}'
+```
+
 ## 本地开发
 
 本仓库使用 Helmfile 管理本地环境渲染和部署。

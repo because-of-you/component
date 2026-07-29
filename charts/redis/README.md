@@ -110,3 +110,11 @@ helm upgrade --install redis oci://ghcr.io/because-of-you/charts/redis \
   --create-namespace
 ```
 
+## 获取默认密码
+
+如果没有通过 values 指定密码，Bitnami Redis 会在安装时生成默认密码，并写入 `redis` Secret：
+
+```bash
+kubectl -n infra get secret redis \
+  -o go-template='{{ index .data "redis-password" | base64decode }}{{ "\n" }}'
+```
