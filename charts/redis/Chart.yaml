@@ -3,8 +3,8 @@ name: redis
 description: Wrapper chart for Bitnami Redis with local values and extra resources
 type: application
 version: 0.1.0
-appVersion: "8.2.1"
+appVersion: "8.8.1"
 dependencies:
   - name: redis
-    version: 23.1.1
-    repository: https://charts.bitnami.com/bitnami
+    version: 27.0.18
+    repository: oci://registry-1.docker.io/bitnamicharts

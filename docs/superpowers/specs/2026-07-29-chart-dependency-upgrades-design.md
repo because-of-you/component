@@ -8,8 +8,12 @@ public Bitnami chart is available.
 
 ## Changes
 
-- Update `charts/redis/Chart.yaml` from Redis chart `23.1.1` to `27.0.17`.
+- Update `charts/redis/Chart.yaml` to Redis chart `27.0.18` and its OCI repository
+  `oci://registry-1.docker.io/bitnamicharts`, which is the distribution endpoint
+  published by Bitnami for this release.
 - Update `charts/traefik/Chart.yaml` from Traefik chart `39.0.8` to `41.0.2`.
+- Align each wrapper chart's `appVersion` with the application version in its
+  downloaded upstream chart.
 - Regenerate the Redis and Traefik dependency locks with Helm so each lock matches
   its declared dependency version.
 - Do not change the existing wrapper or environment values unless rendering shows
