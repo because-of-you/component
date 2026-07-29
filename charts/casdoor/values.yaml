@@ -1,0 +1,18 @@
+casdoor-helm-charts:
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8000
+  ingress:
+    enabled: false
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1024Mi
+    requests:
+      cpu: 10m
+      memory: 128Mi
+  envFromConfigmap:
+    - name: TZ
+      configmapName: casdoor-env
+      key: TZ

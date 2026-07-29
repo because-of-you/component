@@ -1,0 +1,2 @@
+casdoor-helm-charts:
+  replicaCount: 1

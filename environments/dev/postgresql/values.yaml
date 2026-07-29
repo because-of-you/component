@@ -1,0 +1,4 @@
+postgresql:
+  primary:
+    persistence:
+      size: 1Gi
