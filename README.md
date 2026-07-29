@@ -70,6 +70,35 @@ helm upgrade --install redis oci://ghcr.io/because-of-you/charts/redis \
   -f values.yaml
 ```
 
+常用组件启动命令：
+
+```bash
+helm upgrade --install redis oci://ghcr.io/because-of-you/charts/redis \
+  --version 0.0.0-dev \
+  --namespace infra \
+  --create-namespace
+
+helm upgrade --install postgresql oci://ghcr.io/because-of-you/charts/postgresql \
+  --version 0.0.0-dev \
+  --namespace infra \
+  --create-namespace
+
+helm upgrade --install rabbitmq oci://ghcr.io/because-of-you/charts/rabbitmq \
+  --version 0.0.0-dev \
+  --namespace infra \
+  --create-namespace
+
+helm upgrade --install casdoor oci://ghcr.io/because-of-you/charts/casdoor \
+  --version 0.0.0-dev \
+  --namespace infra \
+  --create-namespace
+
+helm upgrade --install traefik oci://ghcr.io/because-of-you/charts/traefik \
+  --version 0.0.0-dev \
+  --namespace traefik \
+  --create-namespace
+```
+
 ## 本地开发
 
 本仓库使用 Helmfile 管理本地环境渲染和部署。
