@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: casdoor-enforcer-plugin
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: casdoor-enforcer
+    app.kubernetes.io/component: traefik-plugin
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+  go.mod: |-
+{{ .Files.Get "plugins/casdoor-enforcer/go.mod" | nindent 4 }}
+  .traefik.yml: |-
+{{ .Files.Get "plugins/casdoor-enforcer/.traefik.yml" | nindent 4 }}
+  enforcer.go: |-
+{{ .Files.Get "plugins/casdoor-enforcer/enforcer.go" | nindent 4 }}

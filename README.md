@@ -116,6 +116,12 @@ kubectl -n infra get secret postgresql \
   -o go-template='{{ index .data "postgres-password" | base64decode }}{{ "\n" }}'
 ```
 
+Traefik Chart 内置 Casdoor OIDC + Casbin Enforce Middleware Chain，可以让 Casdoor 统一管理不同角色对 Host、Path 和 HTTP Method 的访问权限，并且不新增授权服务。Secret 创建、Helm values、IngressRoute 和 Casdoor Model 示例见：
+
+```text
+charts/traefik/README.md
+```
+
 ## 本地开发
 
 本仓库使用 Helmfile 管理本地环境渲染和部署。

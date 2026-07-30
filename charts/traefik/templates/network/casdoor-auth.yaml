@@ -1,0 +1,58 @@
+{{- if .Values.casdoorAuthorization.enabled }}
+{{- $config := .Values.casdoorAuthorization }}
+{{- $providerURL := required "casdoorAuthorization.providerURL is required" $config.providerURL }}
+{{- $clientID := required "casdoorAuthorization.clientID is required" $config.clientID }}
+{{- $permissionID := required "casdoorAuthorization.permissionID is required" $config.permissionID }}
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ $config.middlewares.oidcName }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  plugin:
+    traefikoidc:
+      providerURL: {{ $providerURL | quote }}
+      clientID: {{ $clientID | quote }}
+      clientSecret: "urn:k8s:secret:casdoor-traefik-auth:client-secret"
+      sessionEncryptionKey: "urn:k8s:secret:casdoor-traefik-auth:session-encryption-key"
+      callbackURL: {{ $config.oidc.callbackURL | quote }}
+      logoutURL: {{ $config.oidc.logoutURL | quote }}
+      postLogoutRedirectURI: {{ $config.oidc.postLogoutRedirectURI | quote }}
+      forceHTTPS: {{ $config.oidc.forceHTTPS }}
+      strictAudienceValidation: {{ $config.oidc.strictAudienceValidation }}
+      userIdentifierClaim: name
+      allowedClaims:
+        - owner
+      headers:
+        - name: {{ $config.enforcer.subjectHeader }}
+          value: "{{`{{.Claims.owner}}/{{.Claims.name}}`}}"
+      {{- with $config.oidc.cookieDomain }}
+      cookieDomain: {{ . | quote }}
+      {{- end }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ $config.middlewares.enforcerName }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  plugin:
+    casdoorEnforcer:
+      endpoint: {{ $config.enforceEndpoint | quote }}
+      permissionId: {{ $permissionID | quote }}
+      clientId: {{ $clientID | quote }}
+      clientSecretEnv: "CASDOOR_ENFORCER_CLIENT_SECRET"
+      subjectHeader: {{ $config.enforcer.subjectHeader | quote }}
+      timeout: {{ $config.enforcer.timeout | quote }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ $config.middlewares.chainName }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  chain:
+    middlewares:
+      - name: {{ $config.middlewares.oidcName }}
+      - name: {{ $config.middlewares.enforcerName }}
+{{- end }}

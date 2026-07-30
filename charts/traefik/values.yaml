@@ -10,6 +10,26 @@ traefik:
     - secretRef:
         name: alidns
 
+  env:
+    - name: CASDOOR_ENFORCER_CLIENT_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: casdoor-traefik-auth
+          key: client-secret
+          optional: true
+
+  experimental:
+    plugins:
+      traefikoidc:
+        moduleName: github.com/lukaszraczylo/traefikoidc
+        version: v1.0.29
+    localPlugins:
+      casdoorEnforcer:
+        type: localPath
+        moduleName: github.com/because-of-you/casdoor-enforcer
+        volumeName: casdoor-enforcer-plugin
+        mountPath: /plugins-local/src/github.com/because-of-you/casdoor-enforcer
+
   ports:
     #  tcp-websecure:
     #    port: 443
@@ -74,6 +94,10 @@ traefik:
     enabled: true
 
   deployment:
+    additionalVolumes:
+      - name: casdoor-enforcer-plugin
+        configMap:
+          name: casdoor-enforcer-plugin
     initContainers:
       # The "volume-permissions" init container is required if you run into permission issues.
       # Related issue: https://github.com/traefik/traefik-helm-chart/issues/396
@@ -113,3 +137,24 @@ traefik:
       # -- Allows IngressRoute to reference resources in namespace other than theirs
       allowCrossNamespace: true
       enabled: true
+
+casdoorAuthorization:
+  enabled: false
+  providerURL: ""
+  enforceEndpoint: http://casdoor.infra.svc.cluster.local:8000
+  clientID: ""
+  permissionID: ""
+  oidc:
+    callbackURL: /oauth2/callback
+    logoutURL: /oauth2/logout
+    postLogoutRedirectURI: /
+    cookieDomain: ""
+    forceHTTPS: true
+    strictAudienceValidation: true
+  enforcer:
+    subjectHeader: X-Casdoor-Subject
+    timeout: 2s
+  middlewares:
+    oidcName: casdoor-oidc
+    enforcerName: casdoor-enforcer
+    chainName: casdoor-protected
