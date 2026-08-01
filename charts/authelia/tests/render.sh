@@ -6,3 +6,30 @@ chart_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 grep -Fq 'name: authelia' "$chart_dir/Chart.yaml"
 grep -Fq 'version: 0.11.6' "$chart_dir/Chart.yaml"
 grep -Fq 'repository: https://charts.authelia.com' "$chart_dir/Chart.yaml"
+
+fixture="$chart_dir/tests/values-valid.yaml"
+rendered="$(mktemp)"
+failure_output="$(mktemp)"
+trap 'rm -f "$rendered" "$failure_output"' EXIT
+
+helm template authelia "$chart_dir" --namespace infra --skip-schema-validation \
+  -f "$fixture" >"$rendered"
+
+grep -Fq 'kind: Secret' "$rendered"
+grep -Fq 'name: "authelia-secrets"' "$rendered"
+grep -Fq 'authentication.ldap.password.txt: "test-ldap-password"' "$rendered"
+grep -Fq "address: 'ldap://opendirectory.net'" "$rendered"
+grep -Fq "additional_users_dn: 'ou=public'" "$rendered"
+grep -Fq "username: 'uid'" "$rendered"
+grep -Fq "default_policy: 'one_factor'" "$rendered"
+grep -A1 '^    totp:' "$rendered" | grep -Fq 'disable: true'
+grep -A1 '^    webauthn:' "$rendered" | grep -Fq 'disable: true'
+grep -Fq 'kind: StatefulSet' "$rendered"
+grep -Fq 'kind: PersistentVolumeClaim' "$rendered"
+
+if helm template authelia "$chart_dir" --namespace infra --skip-schema-validation \
+  --set autheliaSecrets.enabled=true >"$failure_output" 2>&1; then
+  echo 'expected empty enabled secrets to fail rendering' >&2
+  exit 1
+fi
+grep -Fq 'autheliaSecrets.ldapPassword is required' "$failure_output"

@@ -1,4 +1,77 @@
-authelia: {}
+authelia:
+  pod:
+    kind: StatefulSet
+    replicas: 1
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  ingress:
+    enabled: false
+
+  configMap:
+    totp:
+      disable: true
+
+    webauthn:
+      disable: true
+
+    server:
+      endpoints:
+        automatic_authz_implementations:
+          - ForwardAuth
+
+    access_control:
+      default_policy: one_factor
+
+    authentication_backend:
+      password_reset:
+        disable: true
+      password_change:
+        disable: true
+      ldap:
+        enabled: true
+        implementation: custom
+        address: ldap://opendirectory.net
+        timeout: 5 seconds
+        start_tls: false
+        base_dn: dc=acitrus,dc=opendirectory,dc=net
+        additional_users_dn: ou=public
+        users_filter: '(&({username_attribute}={input})(objectClass=person))'
+        additional_groups_dn: ''
+        groups_filter: '(&(memberUid={username})(objectClass=posixGroup))'
+        user: cn=acitrus,ou=admins,dc=opendirectory,dc=net
+        attributes:
+          username: uid
+          display_name: cn
+          mail: mail
+          group_name: cn
+
+    session:
+      cookies:
+        - domain: acitrus.cn
+          subdomain: auth
+          default_redirection_url: https://auth.acitrus.cn
+
+    storage:
+      local:
+        enabled: true
+        path: /config/db.sqlite3
+
+    notifier:
+      filesystem:
+        enabled: true
+        filename: /config/notification.txt
+
+  secret:
+    existingSecret: authelia-secrets
+
+  persistence:
+    enabled: true
+    accessModes:
+      - ReadWriteOnce
+    size: 1Gi
 
 autheliaSecrets:
   enabled: false
@@ -9,7 +82,24 @@ autheliaSecrets:
   resetPasswordJwtSecret: ""
 
 autheliaIngress:
-  enabled: false
+  enabled: true
+  name: authelia
+  host: auth.acitrus.cn
+  entryPoints:
+    - websecure
+  service:
+    name: authelia
+    port: 80
+  tls:
+    certResolver: leresolver
 
 autheliaForwardAuth:
-  enabled: false
+  enabled: true
+  name: authelia-forwardauth
+  address: http://authelia.infra.svc.cluster.local/api/authz/forward-auth
+  trustForwardHeader: true
+  authResponseHeaders:
+    - Remote-User
+    - Remote-Name
+    - Remote-Email
+    - Remote-Groups
