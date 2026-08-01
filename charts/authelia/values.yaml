@@ -1,0 +1,15 @@
+authelia: {}
+
+autheliaSecrets:
+  enabled: false
+  name: authelia-secrets
+  ldapPassword: ""
+  sessionEncryptionKey: ""
+  storageEncryptionKey: ""
+  resetPasswordJwtSecret: ""
+
+autheliaIngress:
+  enabled: false
+
+autheliaForwardAuth:
+  enabled: false
