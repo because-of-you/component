@@ -65,7 +65,6 @@ username attribute: uid
 ```yaml
 autheliaSecrets:
   enabled: false
-  name: authelia-secrets
   ldapPassword: ""
   sessionEncryptionKey: ""
   storageEncryptionKey: ""
@@ -74,7 +73,7 @@ autheliaSecrets:
 
 用户在自己的环境 values 文件中填写明文值，并将 `enabled` 设为 `true`。本地 Secret 模板通过 `stringData` 生成 Kubernetes Secret。启用模板时，每个必要字段都使用 Helm `required` 校验，阻止空密钥被部署。
 
-Authelia 官方子 Chart 通过固定 Secret 名称和 key 挂载这些值。默认 values、dev values 和 prod values 均不包含用户提供的真实密码。
+Authelia 官方子 Chart 和本地模板都从 `authelia.secret.existingSecret` 读取 Secret 名称，避免覆盖名称时两者失配。默认 values、dev values 和 prod values 均不包含用户提供的真实密码。
 
 ## Traefik 资源
 

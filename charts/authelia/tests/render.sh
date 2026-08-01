@@ -11,7 +11,8 @@ grep -Fq 'repository: https://charts.authelia.com' "$chart_dir/Chart.yaml"
 fixture="$chart_dir/tests/values-valid.yaml"
 rendered="$(mktemp)"
 failure_output="$(mktemp)"
-trap 'rm -f "$rendered" "$failure_output"' EXIT
+custom_secret_rendered="$(mktemp)"
+trap 'rm -f "$rendered" "$failure_output" "$custom_secret_rendered"' EXIT
 
 helm template authelia "$chart_dir" --namespace infra --skip-schema-validation \
   -f "$fixture" >"$rendered"
@@ -23,6 +24,10 @@ grep -Fq "address: 'ldap://opendirectory.net'" "$rendered"
 grep -Fq "additional_users_dn: 'ou=public'" "$rendered"
 grep -Fq "username: 'uid'" "$rendered"
 grep -Fq "default_policy: 'one_factor'" "$rendered"
+if grep -Fq "default_redirection_url: 'https://auth.acitrus.cn'" "$rendered"; then
+  echo 'default_redirection_url must not equal the Authelia portal URL' >&2
+  exit 1
+fi
 grep -A1 '^    totp:' "$rendered" | grep -Fq 'disable: true'
 grep -A1 '^    webauthn:' "$rendered" | grep -Fq 'disable: true'
 grep -Fq 'kind: StatefulSet' "$rendered"
@@ -34,6 +39,13 @@ grep -Fq 'kind: Middleware' "$rendered"
 grep -Fq 'name: "authelia-forwardauth"' "$rendered"
 grep -Fq 'address: "http://authelia.infra.svc.cluster.local/api/authz/forward-auth"' "$rendered"
 grep -Fq -- '- Remote-Groups' "$rendered"
+
+helm template authelia "$chart_dir" --namespace infra --skip-schema-validation \
+  -f "$fixture" \
+  --set authelia.secret.existingSecret=custom-authelia-secrets \
+  >"$custom_secret_rendered"
+grep -Fq 'name: "custom-authelia-secrets"' "$custom_secret_rendered"
+grep -Fq 'secretName: custom-authelia-secrets' "$custom_secret_rendered"
 
 if helm template authelia "$chart_dir" --namespace infra --skip-schema-validation \
   --set autheliaSecrets.enabled=true >"$failure_output" 2>&1; then

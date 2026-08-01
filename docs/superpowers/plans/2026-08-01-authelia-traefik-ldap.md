@@ -83,7 +83,6 @@ authelia: {}
 
 autheliaSecrets:
   enabled: false
-  name: authelia-secrets
   ldapPassword: ""
   sessionEncryptionKey: ""
   storageEncryptionKey: ""
@@ -236,7 +235,6 @@ authelia:
       cookies:
         - domain: acitrus.cn
           subdomain: auth
-          default_redirection_url: https://auth.acitrus.cn
 
     storage:
       local:
@@ -259,7 +257,6 @@ authelia:
 
 autheliaSecrets:
   enabled: false
-  name: authelia-secrets
   ldapPassword: ""
   sessionEncryptionKey: ""
   storageEncryptionKey: ""
@@ -298,7 +295,7 @@ Create `charts/authelia/templates/secret.yaml`:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: {{ .Values.autheliaSecrets.name | quote }}
+  name: {{ required "authelia.secret.existingSecret is required when autheliaSecrets.enabled=true" .Values.authelia.secret.existingSecret | quote }}
   namespace: {{ .Release.Namespace | quote }}
 type: Opaque
 stringData:

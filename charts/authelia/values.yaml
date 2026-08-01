@@ -52,7 +52,6 @@ authelia:
       cookies:
         - domain: acitrus.cn
           subdomain: auth
-          default_redirection_url: https://auth.acitrus.cn
 
     storage:
       local:
@@ -75,7 +74,6 @@ authelia:
 
 autheliaSecrets:
   enabled: false
-  name: authelia-secrets
   ldapPassword: ""
   sessionEncryptionKey: ""
   storageEncryptionKey: ""
