@@ -52,6 +52,13 @@ releases:
     values:
       - ./environments/{{ .Environment.Name }}/casdoor/values.yaml
 
+  - name: authelia
+    namespace: infra
+    createNamespace: true
+    chart: ./charts/authelia
+    values:
+      - ./environments/{{ .Environment.Name }}/authelia/values.yaml
+
   - name: traefik
     namespace: traefik
     createNamespace: true

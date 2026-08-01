@@ -2,6 +2,7 @@
 set -euo pipefail
 
 chart_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+repo_root="$(cd "$chart_dir/../.." && pwd)"
 
 grep -Fq 'name: authelia' "$chart_dir/Chart.yaml"
 grep -Fq 'version: 0.11.6' "$chart_dir/Chart.yaml"
@@ -40,3 +41,9 @@ if helm template authelia "$chart_dir" --namespace infra --skip-schema-validatio
   exit 1
 fi
 grep -Fq 'autheliaSecrets.ldapPassword is required' "$failure_output"
+
+grep -Fq 'chart: ./charts/authelia' "$repo_root/helmfile.yaml"
+test -f "$repo_root/environments/dev/authelia/values.yaml"
+test -f "$repo_root/environments/prod/authelia/values.yaml"
+grep -Fq '# Authelia' "$chart_dir/README.md"
+grep -Fq 'authelia-forwardauth' "$chart_dir/README.md"

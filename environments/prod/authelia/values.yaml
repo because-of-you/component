@@ -1,0 +1,6 @@
+autheliaSecrets:
+  enabled: false
+  ldapPassword: ""
+  sessionEncryptionKey: ""
+  storageEncryptionKey: ""
+  resetPasswordJwtSecret: ""

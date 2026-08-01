@@ -93,6 +93,12 @@ helm upgrade --install casdoor oci://ghcr.io/because-of-you/charts/casdoor \
   --namespace infra \
   --create-namespace
 
+helm upgrade --install authelia oci://ghcr.io/because-of-you/charts/authelia \
+  --version 0.0.0-dev \
+  --namespace infra \
+  --create-namespace \
+  -f values.yaml
+
 helm upgrade --install traefik oci://ghcr.io/because-of-you/charts/traefik \
   --version 0.0.0-dev \
   --namespace traefik \
@@ -102,7 +108,7 @@ helm upgrade --install traefik oci://ghcr.io/because-of-you/charts/traefik \
 命名空间约定：
 
 ```text
-infra: redis, postgresql, rabbitmq, casdoor
+infra: redis, postgresql, rabbitmq, casdoor, authelia
 traefik: traefik
 ```
 
@@ -122,6 +128,12 @@ Traefik Chart 内置 Casdoor OIDC + Casbin Enforce Middleware Chain，可以让 
 charts/traefik/README.md
 ```
 
+Authelia Chart 使用 LDAP UID 完成一次认证，并提供 `auth.acitrus.cn` IngressRoute 与跨命名空间可引用的 ForwardAuth Middleware。密钥 values 和部署示例见：
+
+```text
+charts/authelia/README.md
+```
+
 ## 本地开发
 
 本仓库使用 Helmfile 管理本地环境渲染和部署。
@@ -130,6 +142,12 @@ charts/traefik/README.md
 
 ```bash
 helmfile -e dev template --selector name=redis --skip-deps
+```
+
+渲染 dev 环境的 Authelia：
+
+```bash
+helmfile -e dev template --selector name=authelia --skip-deps
 ```
 
 渲染 prod 环境的 Redis：
