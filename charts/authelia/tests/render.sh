@@ -26,6 +26,13 @@ grep -A1 '^    totp:' "$rendered" | grep -Fq 'disable: true'
 grep -A1 '^    webauthn:' "$rendered" | grep -Fq 'disable: true'
 grep -Fq 'kind: StatefulSet' "$rendered"
 grep -Fq 'kind: PersistentVolumeClaim' "$rendered"
+grep -Fq 'kind: IngressRoute' "$rendered"
+grep -Fq 'Host(`auth.acitrus.cn`)' "$rendered"
+grep -Fq 'certResolver: leresolver' "$rendered"
+grep -Fq 'kind: Middleware' "$rendered"
+grep -Fq 'name: "authelia-forwardauth"' "$rendered"
+grep -Fq 'address: "http://authelia.infra.svc.cluster.local/api/authz/forward-auth"' "$rendered"
+grep -Fq -- '- Remote-Groups' "$rendered"
 
 if helm template authelia "$chart_dir" --namespace infra --skip-schema-validation \
   --set autheliaSecrets.enabled=true >"$failure_output" 2>&1; then

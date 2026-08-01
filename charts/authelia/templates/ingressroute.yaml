@@ -1,0 +1,18 @@
+{{- if .Values.autheliaIngress.enabled }}
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ .Values.autheliaIngress.name | quote }}
+  namespace: {{ .Release.Namespace | quote }}
+spec:
+  entryPoints:
+    {{- toYaml .Values.autheliaIngress.entryPoints | nindent 4 }}
+  routes:
+    - kind: Rule
+      match: 'Host(`{{ required "autheliaIngress.host is required" .Values.autheliaIngress.host }}`)'
+      services:
+        - name: {{ required "autheliaIngress.service.name is required" .Values.autheliaIngress.service.name | quote }}
+          port: {{ required "autheliaIngress.service.port is required" .Values.autheliaIngress.service.port }}
+  tls:
+    {{- toYaml .Values.autheliaIngress.tls | nindent 4 }}
+{{- end }}
