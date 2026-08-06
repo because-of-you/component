@@ -4,3 +4,7 @@ dist/
 charts/**/charts/
 .helmfile/
 .idea
+.superpowers/
+.age-key.txt
+clusters/dev/kubeconfig.yaml
+environments/dev/**/secrets.dec.yaml
