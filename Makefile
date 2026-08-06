@@ -16,6 +16,7 @@ helmfile-template:
 	bash scripts/tests/render.sh helmfile-template
 
 test:
+	bash scripts/tests/render.sh fail-fast
 	@set -e; for test_script in scripts/tests/*.sh; do \
 		[ -f "$$test_script" ] || continue; \
 		bash "$$test_script"; \
