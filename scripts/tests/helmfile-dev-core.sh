@@ -55,6 +55,12 @@ else
   fail 'Helmfile v1 discovers only the gotmpl state file'
 fi
 
+if bash charts/authelia/tests/render.sh; then
+  pass 'Authelia chart test resolves the canonical Helmfile state'
+else
+  fail 'Authelia chart test resolves the canonical Helmfile state'
+fi
+
 built_state=""
 if built_state="$(HELMFILE_USE_SECRETS=false helmfile -e dev build --skip-deps)"; then
   pass 'Helmfile builds with secrets disabled'
