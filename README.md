@@ -9,7 +9,7 @@
 - 基于 Helm v3 维护 Kubernetes 组件
 - 支持封装第三方 Chart，并维护自己的默认 values
 - 支持为第三方 Chart 追加自定义资源
-- 支持 dev/prod 环境覆盖配置
+- 支持 dev 环境覆盖配置
 - 支持通过 Helmfile 在本地渲染和部署
 - 支持按变更的 Chart 自动执行 CI
 - 支持 dev 分支自动发布到 GHCR OCI Registry
@@ -150,12 +150,6 @@ helmfile -e dev template --selector name=redis --skip-deps
 helmfile -e dev template --selector name=authelia --skip-deps
 ```
 
-渲染 prod 环境的 Redis：
-
-```bash
-helmfile -e prod template --selector name=redis --skip-deps
-```
-
 部署到当前 kubeconfig 指向的集群：
 
 ```bash
@@ -227,11 +221,15 @@ PR 合并前会执行：
 ## dev 集群部署
 
 Push 到 `dev` 分支并修改 Redis、PostgreSQL 或 Traefik 的 Chart/values 后，
-[deploy-dev.yaml](./.github/workflows/deploy-dev.yaml) 会通过 Tailscale 连接 K3s，随后执行：
+[deploy-dev.yaml](./.github/workflows/deploy-dev.yaml) 会检测发生变化的组件，并为每个组件创建独立 Matrix Job。
+每个 Job 通过 Tailscale 连接 K3s，并按组件名执行 Helmfile。例如只修改 Redis 时只运行：
 
 ```bash
-helmfile -e dev --selector deployment=dev-core sync
+helmfile -e dev --selector name=redis sync
 ```
+
+同时修改多个组件时，各组件独立部署；一个组件失败不会取消其他组件 Job。
+需要重新部署未发生变化的组件时，可以通过 `workflow_dispatch` 手动选择一个组件运行。
 
 GitHub 的 `dev` Environment 只需要配置：
 
@@ -249,9 +247,10 @@ GitHub 的 `dev` Environment 只需要配置：
 - 每个组件一个独立 Chart
 - Chart 名称和 release 名称保持一致
 - Chart 默认值只放通用配置
-- dev/prod 差异放到环境 values
+- dev 差异放到环境 values
 - 第三方 Chart 通过 dependencies 引用
 - 追加资源放在本地 Chart 的 templates 中
+- 在 dev 部署 workflow 的路径过滤器和手动选项中注册组件
 
 新增后，在 [helmfile.yaml](./helmfile.yaml) 中注册 release：
 
