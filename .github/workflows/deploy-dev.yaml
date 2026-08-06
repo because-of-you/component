@@ -1,0 +1,56 @@
+name: Deploy Dev
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - charts/redis/**
+      - charts/postgresql/**
+      - charts/traefik/**
+      - environments/dev/redis/**
+      - environments/dev/postgresql/**
+      - environments/dev/traefik/**
+      - environments/dev/values.yaml
+      - helmfile.yaml
+      - .github/workflows/deploy-dev.yaml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Helmfile
+        uses: mamezou-tech/setup-helmfile@v2.2.0
+        with:
+          helmfile-version: v1.7.1
+
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci-deploy
+          ping: ${{ vars.K3S_TAILSCALE_HOST }}
+
+      - name: Set Kubernetes context
+        uses: azure/k8s-set-context@v5
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBECONFIG }}
+
+      - name: Deploy Redis, PostgreSQL and Traefik
+        run: helmfile -e dev --selector deployment=dev-core sync

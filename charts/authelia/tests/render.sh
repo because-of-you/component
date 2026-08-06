@@ -54,7 +54,7 @@ if helm template authelia "$chart_dir" --namespace infra --skip-schema-validatio
 fi
 grep -Fq 'autheliaSecrets.ldapPassword is required' "$failure_output"
 
-grep -Fq 'chart: ./charts/authelia' "$repo_root/helmfile.yaml.gotmpl"
+grep -Fq 'chart: ./charts/authelia' "$repo_root/helmfile.yaml"
 test -f "$repo_root/environments/dev/authelia/values.yaml"
 test -f "$repo_root/environments/prod/authelia/values.yaml"
 grep -Fq '# Authelia' "$chart_dir/README.md"

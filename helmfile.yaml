@@ -38,11 +38,6 @@ releases:
       deployment: dev-core
     values:
       - ./environments/{{ .Environment.Name }}/redis/values.yaml
-{{- if eq (env "HELMFILE_USE_SECRETS") "true" }}
-    missingFileHandler: Warn
-    secrets:
-      - ./environments/{{ .Environment.Name }}/redis/secrets.sops.yaml
-{{- end }}
 
   - name: postgresql
     namespace: infra
@@ -52,11 +47,6 @@ releases:
       deployment: dev-core
     values:
       - ./environments/{{ .Environment.Name }}/postgresql/values.yaml
-{{- if eq (env "HELMFILE_USE_SECRETS") "true" }}
-    missingFileHandler: Warn
-    secrets:
-      - ./environments/{{ .Environment.Name }}/postgresql/secrets.sops.yaml
-{{- end }}
 
   - name: rabbitmq
     namespace: infra
@@ -87,8 +77,3 @@ releases:
       deployment: dev-core
     values:
       - ./environments/{{ .Environment.Name }}/traefik/values.yaml
-{{- if eq (env "HELMFILE_USE_SECRETS") "true" }}
-    missingFileHandler: Warn
-    secrets:
-      - ./environments/{{ .Environment.Name }}/traefik/secrets.sops.yaml
-{{- end }}

@@ -224,6 +224,24 @@ PR 合并前会执行：
 
 正式版本发布流程暂未启用，后续可以按 tag 或 GitHub Release 规则补充。
 
+## dev 集群部署
+
+Push 到 `dev` 分支并修改 Redis、PostgreSQL 或 Traefik 的 Chart/values 后，
+[deploy-dev.yaml](./.github/workflows/deploy-dev.yaml) 会通过 Tailscale 连接 K3s，随后执行：
+
+```bash
+helmfile -e dev --selector deployment=dev-core sync
+```
+
+GitHub 的 `dev` Environment 只需要配置：
+
+- Secrets：`TS_OAUTH_CLIENT_ID`、`TS_AUDIENCE`、`KUBECONFIG`
+- Variable：`K3S_TAILSCALE_HOST`，填写 K3s 主机的 Tailscale IP 或 MagicDNS 名称
+
+`KUBECONFIG` 保存完整文件内容，其中 API Server 地址应使用 Tailscale 可以访问的地址。
+普通配置继续维护在 `environments/dev/*/values.yaml`；密码等敏感值不要写入公共仓库，
+可以预先创建为集群 Secret，或按需放入 GitHub Environment Secrets。
+
 ## 新增组件
 
 新增 Chart 时建议保持以下约定：
@@ -235,7 +253,7 @@ PR 合并前会执行：
 - 第三方 Chart 通过 dependencies 引用
 - 追加资源放在本地 Chart 的 templates 中
 
-新增后，在 [helmfile.yaml.gotmpl](./helmfile.yaml.gotmpl) 中注册 release：
+新增后，在 [helmfile.yaml](./helmfile.yaml) 中注册 release：
 
 ```yaml
 - name: <chart-name>
