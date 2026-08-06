@@ -4,6 +4,12 @@ repositories:
   - name: traefik
     url: https://traefik.github.io/charts
 
+helmDefaults:
+  atomic: true
+  wait: true
+  waitForJobs: true
+  timeout: 600
+
 ---
 
 environments:
@@ -28,15 +34,29 @@ releases:
     namespace: infra
     createNamespace: true
     chart: ./charts/redis
+    labels:
+      deployment: dev-core
     values:
       - ./environments/{{ .Environment.Name }}/redis/values.yaml
+{{- if eq (env "HELMFILE_USE_SECRETS") "true" }}
+    missingFileHandler: Warn
+    secrets:
+      - ./environments/{{ .Environment.Name }}/redis/secrets.sops.yaml
+{{- end }}
 
   - name: postgresql
     namespace: infra
     createNamespace: true
     chart: ./charts/postgresql
+    labels:
+      deployment: dev-core
     values:
       - ./environments/{{ .Environment.Name }}/postgresql/values.yaml
+{{- if eq (env "HELMFILE_USE_SECRETS") "true" }}
+    missingFileHandler: Warn
+    secrets:
+      - ./environments/{{ .Environment.Name }}/postgresql/secrets.sops.yaml
+{{- end }}
 
   - name: rabbitmq
     namespace: infra
@@ -63,5 +83,12 @@ releases:
     namespace: traefik
     createNamespace: true
     chart: ./charts/traefik
+    labels:
+      deployment: dev-core
     values:
       - ./environments/{{ .Environment.Name }}/traefik/values.yaml
+{{- if eq (env "HELMFILE_USE_SECRETS") "true" }}
+    missingFileHandler: Warn
+    secrets:
+      - ./environments/{{ .Environment.Name }}/traefik/secrets.sops.yaml
+{{- end }}

@@ -10,10 +10,7 @@ charts=(
   charts/traefik
 )
 
-selectors=()
-for chart in "${charts[@]}"; do
-  selectors+=(--selector "name=${chart##*/}")
-done
+selectors=(--selector deployment=dev-core)
 
 build_dependencies() {
   local chart dependency_status
@@ -56,7 +53,7 @@ render_helmfile() {
   local expected_releases selected_releases
 
   selected_releases="$(
-    helmfile -e dev "${selectors[@]}" list --skip-deps |
+    HELMFILE_USE_SECRETS=false helmfile -e dev "${selectors[@]}" list --skip-deps |
       awk 'NR > 1 && NF { print $1 }' |
       LC_ALL=C sort
   )"
@@ -71,7 +68,7 @@ render_helmfile() {
     return 1
   fi
 
-  helmfile -e dev "${selectors[@]}" template --skip-deps >/dev/null
+  HELMFILE_USE_SECRETS=false helmfile -e dev "${selectors[@]}" template --skip-deps >/dev/null
 }
 
 render_all() {
@@ -298,8 +295,8 @@ EOF
       printf 'make %s returned success after its render test failed\n' "$target" >&2
       return 1
     fi
-    expected_calls=2
-    [[ "$target" == verify ]] && expected_calls=3
+    expected_calls=3
+    [[ "$target" == verify ]] && expected_calls=4
     last_call="$(tail -n 1 "$call_log")"
     if [[ "$(wc -l <"$call_log")" -ne "$expected_calls" ]] ||
       [[ "$last_call" != 'scripts/tests/render.sh' ]]; then
