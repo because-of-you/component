@@ -16,9 +16,6 @@ environments:
   dev:
     values:
       - environments/dev/values.yaml
-  prod:
-    values:
-      - environments/prod/values.yaml
 
 ---
 
@@ -34,8 +31,6 @@ releases:
     namespace: infra
     createNamespace: true
     chart: ./charts/redis
-    labels:
-      deployment: dev-core
     values:
       - ./environments/{{ .Environment.Name }}/redis/values.yaml
 
@@ -43,8 +38,6 @@ releases:
     namespace: infra
     createNamespace: true
     chart: ./charts/postgresql
-    labels:
-      deployment: dev-core
     values:
       - ./environments/{{ .Environment.Name }}/postgresql/values.yaml
 
@@ -73,7 +66,5 @@ releases:
     namespace: traefik
     createNamespace: true
     chart: ./charts/traefik
-    labels:
-      deployment: dev-core
     values:
       - ./environments/{{ .Environment.Name }}/traefik/values.yaml

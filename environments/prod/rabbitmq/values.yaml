@@ -1,3 +1,0 @@
-rabbitmq:
-  persistence:
-    size: 2Gi
