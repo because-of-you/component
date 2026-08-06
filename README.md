@@ -235,7 +235,7 @@ PR 合并前会执行：
 - 第三方 Chart 通过 dependencies 引用
 - 追加资源放在本地 Chart 的 templates 中
 
-新增后，在 [helmfile.yaml](./helmfile.yaml) 中注册 release：
+新增后，在 [helmfile.yaml.gotmpl](./helmfile.yaml.gotmpl) 中注册 release：
 
 ```yaml
 - name: <chart-name>

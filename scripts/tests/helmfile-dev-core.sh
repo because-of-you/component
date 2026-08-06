@@ -28,31 +28,28 @@ assert_line() {
   fi
 }
 
-release_block() {
-  local release="$1"
-  [[ -f "$state_file" ]] || return 0
-  awk -v release="$release" '
-    /^releases:$/ { in_releases = 1; next }
-    in_releases && /^  - name: / {
-      current = $0
-      sub(/^  - name: /, "", current)
-    }
-    in_releases && current == release { print }
-  ' "$state_file"
-}
+assert_no_secret_wiring() {
+  local rendered_state="$1"
+  local description="$2"
 
-release_names() {
-  [[ -f "$state_file" ]] || return 0
-  awk '
-    /^releases:$/ { in_releases = 1; next }
-    in_releases && /^  - name: / { sub(/^  - name: /, ""); print }
-  ' "$state_file"
+  if grep -Eq '^[[:space:]]+(secrets|missingFileHandler):' <<<"$rendered_state"; then
+    fail "$description"
+  else
+    pass "$description"
+  fi
 }
 
 if [[ -f "$state_file" && ! -e helmfile.yaml ]]; then
   pass 'Helmfile v1 discovers only the gotmpl state file'
 else
   fail 'Helmfile v1 discovers only the gotmpl state file'
+fi
+
+if grep -Fq '[helmfile.yaml.gotmpl](./helmfile.yaml.gotmpl)' README.md &&
+  ! grep -Fq '[helmfile.yaml](./helmfile.yaml)' README.md; then
+  pass 'README links to the canonical Helmfile state'
+else
+  fail 'README links to the canonical Helmfile state'
 fi
 
 if bash charts/authelia/tests/render.sh; then
@@ -80,11 +77,15 @@ assert_line "$helm_defaults" '  wait: true' 'wait Helm default is enabled'
 assert_line "$helm_defaults" '  waitForJobs: true' 'waitForJobs Helm default is enabled'
 assert_line "$helm_defaults" '  timeout: 600' 'Helm timeout default is 600 seconds'
 
-if grep -Eq '^[[:space:]]+(secrets|missingFileHandler):' <<<"$built_state"; then
-  fail 'disabled secret mode omits all release secret wiring'
+assert_no_secret_wiring "$built_state" 'false secret mode omits all release secret wiring'
+
+unset_state=""
+if unset_state="$(env -u HELMFILE_USE_SECRETS helmfile -e dev build --skip-deps)"; then
+  pass 'Helmfile builds with HELMFILE_USE_SECRETS unset'
 else
-  pass 'disabled secret mode omits all release secret wiring'
+  fail 'Helmfile builds with HELMFILE_USE_SECRETS unset'
 fi
+assert_no_secret_wiring "$unset_state" 'unset secret mode omits all release secret wiring'
 
 enabled_state=""
 if enabled_state="$(HELMFILE_USE_SECRETS=true helmfile -e dev build --skip-deps)"; then
@@ -94,54 +95,35 @@ else
 fi
 
 core_releases=(redis postgresql traefik)
-for release in "${core_releases[@]}"; do
-  block="$(release_block "$release")"
-  assert_line "$block" '      deployment: dev-core' "$release has the dev-core deployment label"
-  assert_line "$enabled_state" "      - ./environments/dev/$release/secrets.sops.yaml" \
-    "$release SOPS path renders only in the enabled state"
-
-  if awk -v expected_path="./environments/{{ .Environment.Name }}/$release/secrets.sops.yaml" '
-    /if eq \(env "HELMFILE_USE_SECRETS"\) "true"/ { conditional = NR }
-    /^[[:space:]]+missingFileHandler: Warn$/ { handler = NR }
-    /^[[:space:]]+secrets:$/ { secrets = NR }
-    {
-      line = $0
-      sub(/^[[:space:]]+-[[:space:]]+/, "", line)
-      if (line == expected_path) { path = NR }
+expected_secret_paths="$(
+  for release in "${core_releases[@]}"; do
+    printf './environments/dev/%s/secrets.sops.yaml\n' "$release"
+  done | LC_ALL=C sort
+)"
+actual_secret_paths="$(
+  awk '
+    /^    secrets:$/ { in_secrets = 1; next }
+    in_secrets && /^      - / {
+      sub(/^      - /, "")
+      print
+      next
     }
-    conditional && /^{{-?[[:space:]]*end[[:space:]]*-?}}$/ { ending = NR }
-    END {
-      exit !(conditional < handler && handler < secrets && secrets < path && path < ending)
-    }
-  ' <<<"$block"; then
-    pass "$release has conditional SOPS wiring with a warning handler"
-  else
-    fail "$release has conditional SOPS wiring with a warning handler"
-  fi
-done
-
-if [[ "$(grep -Ec '^[[:space:]]+missingFileHandler: Warn$' <<<"$enabled_state")" -eq 3 ]] &&
-  [[ "$(grep -Ec '^[[:space:]]+secrets:$' <<<"$enabled_state")" -eq 3 ]]; then
-  pass 'enabled secret mode wires exactly three warning-tolerant secret lists'
+    in_secrets { in_secrets = 0 }
+  ' <<<"$enabled_state" | LC_ALL=C sort
+)"
+if [[ "$actual_secret_paths" == "$expected_secret_paths" ]]; then
+  pass 'enabled secret mode renders exactly the three dev-core SOPS paths'
 else
-  fail 'enabled secret mode wires exactly three warning-tolerant secret lists'
+  printf 'rendered secret paths:\n%s\n' "$actual_secret_paths" >&2
+  fail 'enabled secret mode renders exactly the three dev-core SOPS paths'
 fi
 
-while IFS= read -r release; do
-  [[ -n "$release" ]] || continue
-  case "$release" in
-    redis | postgresql | traefik)
-      continue
-      ;;
-  esac
-
-  block="$(release_block "$release")"
-  if grep -Eq 'deployment: dev-core|missingFileHandler:|^[[:space:]]+secrets:' <<<"$block"; then
-    fail "$release is unchanged by dev-core deployment and secret wiring"
-  else
-    pass "$release is unchanged by dev-core deployment and secret wiring"
-  fi
-done < <(release_names)
+if [[ "$(grep -Ec '^    missingFileHandler:' <<<"$enabled_state")" -eq 3 ]] &&
+  [[ "$(grep -Ec '^    missingFileHandler: Warn$' <<<"$enabled_state")" -eq 3 ]]; then
+  pass 'enabled secret mode renders exactly three Warn handlers'
+else
+  fail 'enabled secret mode renders exactly three Warn handlers'
+fi
 
 list_output=""
 if list_output="$(
