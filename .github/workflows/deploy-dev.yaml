@@ -5,29 +5,79 @@ on:
     branches:
       - dev
     paths:
-      - charts/redis/**
-      - charts/postgresql/**
-      - charts/traefik/**
-      - environments/dev/redis/**
-      - environments/dev/postgresql/**
-      - environments/dev/traefik/**
-      - environments/dev/values.yaml
-      - helmfile.yaml
-      - .github/workflows/deploy-dev.yaml
+      - 'charts/redis/**'
+      - 'charts/postgresql/**'
+      - 'charts/traefik/**'
+      - 'environments/dev/redis/**'
+      - 'environments/dev/postgresql/**'
+      - 'environments/dev/traefik/**'
+      - 'environments/dev/values.yaml'
+      - 'helmfile.yaml'
+      - '.github/workflows/deploy-dev.yaml'
   workflow_dispatch:
-
-permissions:
-  contents: read
-  id-token: write
-
-concurrency:
-  group: deploy-dev
-  cancel-in-progress: false
+    inputs:
+      component:
+        description: Component to deploy
+        required: true
+        type: choice
+        options:
+          - redis
+          - postgresql
+          - traefik
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      components: ${{ github.event_name == 'workflow_dispatch' && format('["{0}"]', inputs.component) || steps.filter.outputs.changes }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Detect changed components
+        if: github.event_name == 'push'
+        id: filter
+        uses: dorny/paths-filter@v4
+        with:
+          base: ${{ github.ref }}
+          filters: |
+            redis:
+              - 'charts/redis/**'
+              - 'environments/dev/redis/**'
+              - 'environments/dev/values.yaml'
+              - 'helmfile.yaml'
+              - '.github/workflows/deploy-dev.yaml'
+            postgresql:
+              - 'charts/postgresql/**'
+              - 'environments/dev/postgresql/**'
+              - 'environments/dev/values.yaml'
+              - 'helmfile.yaml'
+              - '.github/workflows/deploy-dev.yaml'
+            traefik:
+              - 'charts/traefik/**'
+              - 'environments/dev/traefik/**'
+              - 'environments/dev/values.yaml'
+              - 'helmfile.yaml'
+              - '.github/workflows/deploy-dev.yaml'
+
   deploy:
+    needs: changes
+    if: needs.changes.outputs.components != '' && needs.changes.outputs.components != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        component: ${{ fromJSON(needs.changes.outputs.components) }}
+    concurrency:
+      group: deploy-dev-${{ matrix.component }}
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     environment: dev
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - name: Checkout
@@ -52,5 +102,5 @@ jobs:
           method: kubeconfig
           kubeconfig: ${{ secrets.KUBECONFIG }}
 
-      - name: Deploy Redis, PostgreSQL and Traefik
-        run: helmfile -e dev --selector deployment=dev-core sync
+      - name: Deploy ${{ matrix.component }}
+        run: helmfile -e dev --selector name=${{ matrix.component }} sync

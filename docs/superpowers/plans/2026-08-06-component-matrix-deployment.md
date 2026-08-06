@@ -58,7 +58,7 @@ The `changes` job checks out the repository, runs `dorny/paths-filter@v4` only f
 components: ${{ github.event_name == 'workflow_dispatch' && format('["{0}"]', inputs.component) || steps.filter.outputs.changes }}
 ```
 
-Its filters map each component's Chart and dev values paths. The shared paths `helmfile.yaml`, `environments/dev/values.yaml`, and `.github/workflows/deploy-dev.yaml` are included in all three filters.
+Its filters use `base: ${{ github.ref }}` so a push to the long-lived `dev` branch is compared with its previous commit. They map each component's Chart and dev values paths. The shared paths `helmfile.yaml`, `environments/dev/values.yaml`, and `.github/workflows/deploy-dev.yaml` are included in all three filters.
 
 The `deploy` job uses:
 
