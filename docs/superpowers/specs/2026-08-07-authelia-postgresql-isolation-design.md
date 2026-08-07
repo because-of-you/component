@@ -49,4 +49,3 @@ The existing render test must assert the dedicated database and username, and
 must assert that the deployment workflow consumes
 `AUTHELIA_POSTGRES_PASSWORD` rather than reusing `POSTGRES_PASSWORD` in the
 Authelia credential-sync step. Helm lint and rendering must remain successful.
-
