@@ -37,9 +37,9 @@ authelia:
         enabled: true
         deploy: false
         address: tcp://postgresql.infra.svc.cluster.local:5432
-        database: postgres
+        database: authelia
         schema: public
-        username: postgres
+        username: authelia
 
   secret:
     existingSecret: authelia-secrets
