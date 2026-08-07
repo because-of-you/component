@@ -1,0 +1,53 @@
+{{- if .Values.databaseBootstrap.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "lldap-wrapper.fullname" . }}-database
+  labels:
+    {{- include "lldap-wrapper.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "-10"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: {{ .Values.databaseBootstrap.backoffLimit }}
+  template:
+    metadata:
+      labels:
+        {{- include "lldap-wrapper.labels" . | nindent 8 }}
+        app.kubernetes.io/component: database-bootstrap
+    spec:
+      restartPolicy: OnFailure
+      automountServiceAccountToken: false
+      containers:
+        - name: create-database
+          image: "{{ .Values.databaseBootstrap.image.repository }}:{{ .Values.databaseBootstrap.image.tag }}"
+          imagePullPolicy: {{ .Values.databaseBootstrap.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          env:
+            - name: PGHOST
+              value: {{ required "databaseBootstrap.host is required" .Values.databaseBootstrap.host | quote }}
+            - name: PGPORT
+              value: {{ .Values.databaseBootstrap.port | quote }}
+            - name: PGUSER
+              value: {{ required "databaseBootstrap.adminUser is required" .Values.databaseBootstrap.adminUser | quote }}
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "databaseBootstrap.existingSecret is required" .Values.databaseBootstrap.existingSecret | quote }}
+                  key: {{ required "databaseBootstrap.passwordKey is required" .Values.databaseBootstrap.passwordKey | quote }}
+            - name: PGDATABASE
+              value: postgres
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              database_name={{ required "databaseBootstrap.database is required" .Values.databaseBootstrap.database | quote }}
+              if ! psql -v ON_ERROR_STOP=1 -tAc "SELECT 1 FROM pg_database WHERE datname='$database_name'" | grep -q 1; then
+                createdb "$database_name"
+              fi
+{{- end }}

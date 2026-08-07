@@ -1,0 +1,79 @@
+{{- if .Values.directoryBootstrap.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "lldap-wrapper.fullname" . }}-bootstrap
+  labels:
+    {{- include "lldap-wrapper.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "10"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: {{ .Values.directoryBootstrap.backoffLimit }}
+  template:
+    metadata:
+      labels:
+        {{- include "lldap-wrapper.labels" . | nindent 8 }}
+        app.kubernetes.io/component: directory-bootstrap
+    spec:
+      restartPolicy: OnFailure
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: bootstrap
+          image: "{{ .Values.lldap.image.repository }}:{{ .Values.lldap.image.tag }}"
+          imagePullPolicy: {{ .Values.lldap.image.pullPolicy }}
+          command:
+            - /app/bootstrap.sh
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          env:
+            - name: LLDAP_URL
+              value: {{ required "directoryBootstrap.url is required" .Values.directoryBootstrap.url | quote }}
+            - name: LLDAP_ADMIN_USERNAME
+              value: {{ .Values.directoryBootstrap.adminUsername | quote }}
+            - name: LLDAP_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "directoryBootstrap.existingSecret is required" .Values.directoryBootstrap.existingSecret | quote }}
+                  key: {{ required "directoryBootstrap.adminPasswordKey is required" .Values.directoryBootstrap.adminPasswordKey | quote }}
+            - name: USER_CONFIGS_DIR
+              value: /bootstrap/configs/user-configs
+            - name: GROUP_CONFIGS_DIR
+              value: /bootstrap/configs/group-configs
+            - name: DO_CLEANUP
+              value: {{ .Values.directoryBootstrap.cleanup | quote }}
+          volumeMounts:
+            - name: configs
+              mountPath: /bootstrap/configs
+              readOnly: true
+            - name: credentials
+              mountPath: /secrets
+              readOnly: true
+      volumes:
+        - name: configs
+          projected:
+            sources:
+              - configMap:
+                  name: {{ include "lldap-wrapper.fullname" . }}-bootstrap
+                  items:
+                    - key: user-configs.json
+                      path: user-configs/user-configs.json
+                    - key: group-configs.json
+                      path: group-configs/group-configs.json
+        - name: credentials
+          secret:
+            secretName: {{ .Values.directoryBootstrap.existingSecret | quote }}
+            items:
+              - key: {{ required "directoryBootstrap.autheliaPasswordKey is required" .Values.directoryBootstrap.autheliaPasswordKey }}
+                path: authelia-password
+{{- end }}

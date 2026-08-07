@@ -1,0 +1,25 @@
+{{- if .Values.directoryBootstrap.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "lldap-wrapper.fullname" . }}-bootstrap
+  labels:
+    {{- include "lldap-wrapper.labels" . | nindent 4 }}
+data:
+  group-configs.json: |
+    [
+      {
+        "name": {{ .Values.directoryBootstrap.group | quote }}
+      }
+    ]
+  user-configs.json: |
+    [
+      {
+        "id": {{ .Values.directoryBootstrap.user.id | quote }},
+        "email": {{ .Values.directoryBootstrap.user.email | quote }},
+        "displayName": {{ .Values.directoryBootstrap.user.displayName | quote }},
+        "password_file": "/secrets/authelia-password",
+        "groups": [{{ .Values.directoryBootstrap.group | quote }}]
+      }
+    ]
+{{- end }}

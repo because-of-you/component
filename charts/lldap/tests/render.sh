@@ -36,3 +36,23 @@ for forbidden_kind in HorizontalPodAutoscaler PersistentVolumeClaim Certificate 
     exit 1
   fi
 done
+
+test "$(grep -c '^kind: Job$' "$rendered")" -eq 2
+grep -Fq 'helm.sh/hook: pre-install,pre-upgrade' "$rendered"
+grep -Fq 'image: "postgres:18.4-alpine"' "$rendered"
+grep -Fq 'database_name="lldap"' "$rendered"
+grep -Fq "SELECT 1 FROM pg_database WHERE datname='\$database_name'" "$rendered"
+grep -Fq 'createdb "$database_name"' "$rendered"
+grep -Fq 'name: "postgresql-auth"' "$rendered"
+grep -Fq 'key: "postgres-password"' "$rendered"
+
+grep -Fq 'helm.sh/hook: post-install,post-upgrade' "$rendered"
+grep -Fq '"id": "authelia"' "$rendered"
+grep -Fq '"password_file": "/secrets/authelia-password"' "$rendered"
+grep -Fq 'lldap_strict_readonly' "$rendered"
+grep -Fq 'value: "http://lldap:17170"' "$rendered"
+grep -Fq 'name: DO_CLEANUP' "$rendered"
+grep -Fq 'value: "false"' "$rendered"
+grep -Fq '/app/bootstrap.sh' "$rendered"
+grep -Fq 'key: lldap-ldap-user-pass' "$rendered"
+grep -Fq 'key: authelia-password' "$rendered"

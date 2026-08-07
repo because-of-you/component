@@ -57,3 +57,32 @@ lldap:
     create: false
     name: lldap-secrets
     useExisting: true
+
+databaseBootstrap:
+  enabled: true
+  image:
+    repository: postgres
+    tag: 18.4-alpine
+    pullPolicy: IfNotPresent
+  host: postgresql.infra.svc.cluster.local
+  port: 5432
+  database: lldap
+  adminUser: postgres
+  existingSecret: postgresql-auth
+  passwordKey: postgres-password
+  backoffLimit: 6
+
+directoryBootstrap:
+  enabled: true
+  url: http://lldap:17170
+  adminUsername: admin
+  existingSecret: lldap-secrets
+  adminPasswordKey: lldap-ldap-user-pass
+  autheliaPasswordKey: authelia-password
+  user:
+    id: authelia
+    email: authelia@acitrus.cn
+    displayName: Authelia
+  group: lldap_strict_readonly
+  cleanup: false
+  backoffLimit: 6
