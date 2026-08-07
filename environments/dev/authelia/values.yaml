@@ -39,7 +39,7 @@ authelia:
         address: tcp://postgresql.infra.svc.cluster.local:5432
         database: authelia
         schema: public
-        username: authelia
+        username: postgres
 
   secret:
     existingSecret: authelia-secrets

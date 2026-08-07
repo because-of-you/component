@@ -41,7 +41,7 @@ grep -Fq 'database_index: 1' "$rendered"
 grep -Fq "address: 'tcp://postgresql.infra.svc.cluster.local:5432'" "$rendered"
 grep -Fq "database: 'authelia'" "$rendered"
 grep -Fq "schema: 'public'" "$rendered"
-grep -Fq "username: 'authelia'" "$rendered"
+grep -Fq "username: 'postgres'" "$rendered"
 grep -Fq 'AUTHELIA_SESSION_REDIS_PASSWORD_FILE' "$rendered"
 grep -Fq 'AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE' "$rendered"
 grep -Fq 'kind: IngressRoute' "$rendered"
@@ -78,9 +78,9 @@ grep -Fq 'chart: ./charts/authelia' "$repo_root/helmfile.yaml"
 grep -Fq "'charts/authelia/**'" "$repo_root/.github/workflows/deploy-dev.yaml"
 grep -Fq 'AUTHELIA_LDAP_PASSWORD' "$repo_root/.github/workflows/deploy-dev.yaml"
 authelia_sync_step="$(sed -n '/- name: Sync Authelia credentials/,/- name: Sync Aliyun DNS credentials/p' "$repo_root/.github/workflows/deploy-dev.yaml")"
-grep -Fq 'AUTHELIA_POSTGRES_PASSWORD: ${{ secrets.AUTHELIA_POSTGRES_PASSWORD }}' <<<"$authelia_sync_step"
-if grep -Fq 'POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}' <<<"$authelia_sync_step"; then
-  echo 'Authelia credential sync must not consume the PostgreSQL administrator password' >&2
+grep -Fq 'POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}' <<<"$authelia_sync_step"
+if grep -Fq 'AUTHELIA_POSTGRES_PASSWORD' <<<"$authelia_sync_step"; then
+  echo 'Authelia credential sync must reuse POSTGRES_PASSWORD' >&2
   exit 1
 fi
 test -f "$dev_values"

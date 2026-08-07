@@ -154,14 +154,14 @@ jobs:
           AUTHELIA_STORAGE_ENCRYPTION_KEY: ${{ secrets.AUTHELIA_STORAGE_ENCRYPTION_KEY }}
           AUTHELIA_RESET_PASSWORD_JWT_SECRET: ${{ secrets.AUTHELIA_RESET_PASSWORD_JWT_SECRET }}
           REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
-          AUTHELIA_POSTGRES_PASSWORD: ${{ secrets.AUTHELIA_POSTGRES_PASSWORD }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         run: |
           test -n "$AUTHELIA_LDAP_PASSWORD"
           test -n "$AUTHELIA_SESSION_ENCRYPTION_KEY"
           test -n "$AUTHELIA_STORAGE_ENCRYPTION_KEY"
           test -n "$AUTHELIA_RESET_PASSWORD_JWT_SECRET"
           test -n "$REDIS_PASSWORD"
-          test -n "$AUTHELIA_POSTGRES_PASSWORD"
+          test -n "$POSTGRES_PASSWORD"
           umask 077
           credentials_dir="$(mktemp -d)"
           trap 'rm -rf "$credentials_dir"' EXIT
@@ -170,7 +170,7 @@ jobs:
           printf '%s' "$AUTHELIA_STORAGE_ENCRYPTION_KEY" > "$credentials_dir/storage.encryption.key"
           printf '%s' "$AUTHELIA_RESET_PASSWORD_JWT_SECRET" > "$credentials_dir/identity_validation.reset_password.jwt.hmac.key"
           printf '%s' "$REDIS_PASSWORD" > "$credentials_dir/session.redis.password.txt"
-          printf '%s' "$AUTHELIA_POSTGRES_PASSWORD" > "$credentials_dir/storage.postgres.password.txt"
+          printf '%s' "$POSTGRES_PASSWORD" > "$credentials_dir/storage.postgres.password.txt"
           kubectl -n infra create secret generic authelia-secrets \
             --from-file=authentication.ldap.password.txt="$credentials_dir/authentication.ldap.password.txt" \
             --from-file=session.encryption.key="$credentials_dir/session.encryption.key" \
