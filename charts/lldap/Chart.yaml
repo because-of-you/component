@@ -1,6 +1,10 @@
 apiVersion: v2
 name: lldap
-description: Lightweight LDAP directory for Authelia
+description: Wrapper chart for the Kubernetes chart recommended by LLDAP
 type: application
 version: 0.1.0
-appVersion: "0.6.3"
+appVersion: "0.6.2"
+dependencies:
+  - name: lldap
+    version: 0.4.0
+    repository: https://evantage-ws.github.io/lldap-kubernetes/

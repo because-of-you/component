@@ -1,0 +1,6 @@
+dependencies:
+- name: lldap
+  repository: https://evantage-ws.github.io/lldap-kubernetes/
+  version: 0.4.0
+digest: sha256:4361213e124e77464b6bf6972c0c948027d916c43219d1fe44b374f6db348ec5
+generated: "2026-08-08T00:00:09.0952212+08:00"

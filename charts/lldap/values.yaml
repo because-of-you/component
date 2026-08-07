@@ -1,74 +1,59 @@
-replicaCount: 1
+lldap:
+  replicaCount: 1
 
-image:
-  repository: lldap/lldap
-  tag: stable-alpine-rootless
-  pullPolicy: IfNotPresent
+  image:
+    repository: lldap/lldap
+    tag: stable-alpine-rootless
+    pullPolicy: IfNotPresent
 
-imagePullSecrets: []
-nameOverride: ""
-fullnameOverride: ""
+  env:
+    TZ: UTC
+    UID: "1000"
+    GID: "1000"
+    LDAPS_OPTIONS__ENABLED: false
 
-secret:
-  existingSecret: lldap-secrets
-  keys:
-    jwtSecret: jwt-secret
-    keySeed: key-seed
-    adminPassword: admin-password
-    databaseUrl: database-url
+  extraEnv:
+    - name: LLDAP_DATABASE_URL
+      valueFrom:
+        secretKeyRef:
+          name: lldap-secrets
+          key: database-url
+    - name: LLDAP_HTTP_URL
+      value: http://localhost:17170
 
-config:
-  baseDn: dc=example,dc=com
-  httpUrl: http://localhost:17170
-  timezone: UTC
+  persistence:
+    enabled: false
 
-service:
-  type: ClusterIP
-  ldapPort: 3890
-  webPort: 17170
+  hpa:
+    enabled: false
 
-ingress:
-  enabled: false
-  name: lldap
-  host: ""
-  entryPoints:
-    - websecure
-  tls: {}
+  service:
+    type: ClusterIP
 
-podAnnotations: {}
-podLabels: {}
+  ingress:
+    enabled: false
 
-podSecurityContext:
-  runAsNonRoot: true
-  runAsUser: 1000
-  runAsGroup: 1000
-  fsGroup: 1000
-  seccompProfile:
-    type: RuntimeDefault
+  certmanager:
+    enabled: false
 
-securityContext:
-  allowPrivilegeEscalation: false
-  capabilities:
-    drop:
-      - ALL
+  serviceAccount:
+    create: false
 
-resources:
-  limits:
-    cpu: 250m
-    memory: 256Mi
-  requests:
-    cpu: 10m
-    memory: 64Mi
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
 
-probes:
-  startup:
-    failureThreshold: 30
-    periodSeconds: 2
-  readiness:
-    periodSeconds: 10
-  liveness:
-    periodSeconds: 10
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
 
-nodeSelector: {}
-tolerations: []
-affinity: {}
+  secret:
+    create: false
+    name: lldap-secrets
+    useExisting: true

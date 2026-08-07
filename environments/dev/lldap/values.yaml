@@ -1,15 +1,63 @@
-config:
-  baseDn: dc=acitrus,dc=cn
-  httpUrl: https://ldap.acitrus.cn
-  timezone: Asia/Shanghai
+lldap:
+  env:
+    TZ: Asia/Shanghai
+    UID: "1000"
+    GID: "1000"
+    LDAPS_OPTIONS__ENABLED: false
 
-secret:
-  existingSecret: lldap-secrets
+  extraEnv:
+    - name: LLDAP_DATABASE_URL
+      valueFrom:
+        secretKeyRef:
+          name: lldap-secrets
+          key: database-url
+    - name: LLDAP_HTTP_URL
+      value: https://ldap.acitrus.cn
 
-ingress:
-  enabled: true
-  host: ldap.acitrus.cn
-  entryPoints:
-    - websecure
-  tls:
-    certResolver: leresolver
+  persistence:
+    enabled: false
+
+  hpa:
+    enabled: false
+
+  service:
+    type: ClusterIP
+
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    annotations:
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+      traefik.ingress.kubernetes.io/router.tls: "true"
+      traefik.ingress.kubernetes.io/router.tls.certresolver: leresolver
+    hosts:
+      - host: ldap.acitrus.cn
+        paths:
+          - path: /
+            pathType: Prefix
+    tls: []
+
+  certmanager:
+    enabled: false
+
+  serviceAccount:
+    create: false
+
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+
+  secret:
+    create: false
+    name: lldap-secrets
+    useExisting: true
