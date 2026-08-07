@@ -31,8 +31,9 @@ LDAP 地址、Bind DN、Cookie 域名、Traefik IngressRoute、ForwardAuth 地�
 - `AUTHELIA_SESSION_ENCRYPTION_KEY`，至少 32 个字符
 - `AUTHELIA_STORAGE_ENCRYPTION_KEY`，至少 20 个字符
 - `AUTHELIA_RESET_PASSWORD_JWT_SECRET`，至少 32 个字符
+- `AUTHELIA_POSTGRES_PASSWORD`
 
-部署工作流还会复用已有的 `REDIS_PASSWORD` 和 `POSTGRES_PASSWORD`。六项值会被同步为
+部署工作流还会复用已有的 `REDIS_PASSWORD`。六项值会被同步为
 `infra/authelia-secrets` Kubernetes Secret，并映射为 Authelia 官方 Chart 所需的键名。
 dev values 通过以下配置引用：
 
@@ -50,15 +51,66 @@ authelia:
 dev 环境不使用 SQLite 或内存 Session，直接连接仓库已部署的服务：
 
 ```text
-PostgreSQL: postgresql.infra.svc.cluster.local:5432 / postgres / postgres
+PostgreSQL: postgresql.infra.svc.cluster.local:5432 / authelia / authelia
 Redis:      redis-master.infra.svc.cluster.local:6379 / database 1
 ```
 
-PostgreSQL 密码复用 `POSTGRES_PASSWORD`，Redis 密码复用 `REDIS_PASSWORD`。Authelia 使用
+PostgreSQL 使用独立的 `AUTHELIA_POSTGRES_PASSWORD`，Redis 密码复用 `REDIS_PASSWORD`。Authelia 使用
 `Deployment` 且关闭 PVC，Pod 重建不会丢失数据库或 Session 状态。
 
-当前 dev 配置使用 PostgreSQL 的 `postgres` 管理员账号和默认数据库，部署简单但权限较大；后续
-可再创建独立的 `authelia` 数据库和最小权限用户。
+### 首次创建数据库
+
+现有 PostgreSQL 已使用持久卷，Bitnami 初始化脚本不会为已有数据目录重新运行。首次切换前，使用
+`postgres` 管理员连接数据库并执行：
+
+```sql
+CREATE ROLE authelia LOGIN;
+\password authelia
+CREATE DATABASE authelia OWNER authelia;
+```
+
+`\password` 会交互式读取两次密码，不会把密码写入 Shell 历史。把同一个值保存为 GitHub `dev`
+Environment Secret `AUTHELIA_POSTGRES_PASSWORD`，然后再部署 Authelia。Authelia 启动时会在专用
+数据库的 `public` schema 中自动创建空表。
+
+### 备份与还原
+
+下面的命令假设连接地址、端口和密码已通过常规 libpq 参数或环境变量提供：
+
+```bash
+pg_dump --format=custom --no-owner --dbname=authelia --file=authelia.dump
+pg_restore --clean --if-exists --no-owner --role=authelia --dbname=authelia authelia.dump
+```
+
+还原前必须先创建由 `authelia` 拥有的目标数据库。`--clean --if-exists` 会替换目标库中的现有对象，
+因此不要把还原命令指向 `postgres` 数据库。
+
+### 清理旧的 `postgres.public`
+
+新数据库验证完成后，先在 `postgres` 数据库中盘点旧 schema：
+
+```sql
+\connect postgres
+\dt public.*
+\dv public.*
+\ds public.*
+\df public.*
+
+SELECT e.extname
+FROM pg_extension AS e
+JOIN pg_namespace AS n ON n.oid = e.extnamespace
+WHERE n.nspname = 'public';
+```
+
+只有确认其中所有表、视图、序列、函数和扩展对象都可以丢弃后，才能手动执行以下破坏性操作：
+
+```sql
+DROP SCHEMA public CASCADE;
+CREATE SCHEMA public AUTHORIZATION pg_database_owner;
+GRANT USAGE ON SCHEMA public TO PUBLIC;
+```
+
+Helm 和部署工作流不会自动执行旧 schema 清理。
 
 ## LDAP 与入口
 

@@ -104,29 +104,7 @@ git commit -m "fix: isolate authelia postgres storage"
 - Consumes: PostgreSQL administrator access for one-time provisioning and the operator-selected `AUTHELIA_POSTGRES_PASSWORD`.
 - Produces: Exact runbook for creating the role/database, deploying Authelia, dumping/restoring the dedicated database, and safely inspecting old objects.
 
-- [ ] **Step 1: Add documentation contract assertions**
-
-Append these assertions to `charts/authelia/tests/render.sh`:
-
-```bash
-grep -Fq 'AUTHELIA_POSTGRES_PASSWORD' "$chart_dir/README.md"
-grep -Fq 'CREATE ROLE authelia LOGIN' "$chart_dir/README.md"
-grep -Fq 'CREATE DATABASE authelia OWNER authelia' "$chart_dir/README.md"
-grep -Fq 'pg_dump' "$chart_dir/README.md"
-grep -Fq 'pg_restore' "$chart_dir/README.md"
-```
-
-- [ ] **Step 2: Run the focused test and verify RED**
-
-Run:
-
-```bash
-bash charts/authelia/tests/render.sh
-```
-
-Expected: FAIL because the runbook does not yet contain the dedicated secret, provisioning SQL, or backup and restore commands.
-
-- [ ] **Step 3: Update the operator documentation**
+- [ ] **Step 1: Update the operator documentation**
 
 Document this one-time interactive SQL workflow in `charts/authelia/README.md`:
 
@@ -149,7 +127,14 @@ Document that the restore target database must already exist and be owned by `au
 
 Update the root `README.md` secret list and secret-flow description to name `AUTHELIA_POSTGRES_PASSWORD` instead of saying Authelia reuses `POSTGRES_PASSWORD`.
 
-- [ ] **Step 4: Run the focused test and full chart validation**
+- [ ] **Step 2: Review the runbook content**
+
+Read both changed README files and confirm that the documented sequence is
+unambiguous: provision the role and database, save the application password,
+deploy Authelia, back up or restore only the `authelia` database, and inspect
+`postgres.public` before any separate destructive cleanup.
+
+- [ ] **Step 3: Run the focused test and full chart validation**
 
 Run:
 
@@ -161,7 +146,7 @@ helmfile -e dev template --selector name=authelia --skip-deps
 
 Expected: all three commands exit 0; the rendered Authelia configuration uses the dedicated database identity and the existing Secret reference.
 
-- [ ] **Step 5: Inspect the final diff and commit documentation**
+- [ ] **Step 4: Inspect the final diff and commit documentation**
 
 ```bash
 git diff --check
@@ -169,4 +154,3 @@ git diff -- charts/authelia/README.md README.md charts/authelia/tests/render.sh
 git add charts/authelia/README.md README.md charts/authelia/tests/render.sh
 git commit -m "docs: add authelia postgres operations"
 ```
-
