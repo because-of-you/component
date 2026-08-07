@@ -1,6 +1,0 @@
-dependencies:
-- name: casdoor-helm-charts
-  repository: oci://registry-1.docker.io/casbin
-  version: 3.125.0
-digest: sha256:9b3dc2e100569239b6f3ef5e86ad7aacda0816e37a08f81af7059a449c93c08f
-generated: "2026-07-29T21:39:58.769529+08:00"

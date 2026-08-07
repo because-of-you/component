@@ -4,7 +4,7 @@
 
 仓库只维护 dev 环境。Push 到 `dev` 分支后，只部署本次发生配置或 Chart 变化的组件；多个组件发生变化时，每个组件使用独立 GitHub Actions Matrix Job 部署。保留从 GitHub 页面手动选择单个组件重新部署的能力。
 
-初始接入组件为 Redis、PostgreSQL 和 Traefik。未来新增组件沿用同一结构。
+接入组件为 Redis、PostgreSQL、Authelia 和 Traefik。未来新增组件沿用同一结构。
 
 ## GitHub Actions 结构
 
@@ -19,11 +19,12 @@
 | --- | --- |
 | redis | `charts/redis/**`、`environments/dev/redis/**` |
 | postgresql | `charts/postgresql/**`、`environments/dev/postgresql/**` |
+| authelia | `charts/authelia/**`、`environments/dev/authelia/**` |
 | traefik | `charts/traefik/**`、`environments/dev/traefik/**` |
 
-修改 `helmfile.yaml`、`environments/dev/values.yaml` 或部署 workflow 时，三个已接入组件全部进入 Matrix。单次 push 中同一组件匹配多个路径时仍只部署一次。
+修改 `helmfile.yaml`、`environments/dev/values.yaml` 或部署 workflow 时，四个已接入组件全部进入 Matrix。单次 push 中同一组件匹配多个路径时仍只部署一次。
 
-手动触发使用 `workflow_dispatch` 的 `choice` 输入，初始选项为 `redis`、`postgresql` 和 `traefik`。手动触发只创建所选组件的 Matrix Job，不提供“全部部署”选项。
+手动触发使用 `workflow_dispatch` 的 `choice` 输入，选项为 `redis`、`postgresql`、`authelia` 和 `traefik`。手动触发只创建所选组件的 Matrix Job，不提供“全部部署”选项。
 
 ## 单组件部署 Job
 
@@ -45,12 +46,15 @@ Helmfile 不再使用 `deployment: dev-core` 标签。自动和手动部署都�
 
 所有组件共用 GitHub `dev` Environment 中的以下配置：
 
-- Secrets：`KUBECONFIG`、`REDIS_PASSWORD`、`POSTGRES_PASSWORD`、`ALIYUN_DNS_KEY`、`ALIYUN_DNS_SECRET`
+- Secrets：`KUBECONFIG`、`REDIS_PASSWORD`、`POSTGRES_PASSWORD`、`AUTHELIA_LDAP_PASSWORD`、`AUTHELIA_SESSION_ENCRYPTION_KEY`、`AUTHELIA_STORAGE_ENCRYPTION_KEY`、`AUTHELIA_RESET_PASSWORD_JWT_SECRET`、`ALIYUN_DNS_KEY`、`ALIYUN_DNS_SECRET`
 - Variables：`TS_OAUTH_CLIENT_ID`、`TS_AUDIENCE`、`K3S_TAILSCALE_HOST`
 
 Tailscale OIDC Client ID 和 Audience 是非敏感标识，工作流通过 `vars` 引用。Redis 和
 PostgreSQL 密码通过 `secrets` 引用，并在部署对应组件前同步到 `infra` 命名空间中的固定
 Kubernetes Secret。
+Authelia 的四项专用密钥以及已有的 Redis、PostgreSQL 密码通过 `secrets` 引用，并在部署前
+同步为 `infra/authelia-secrets`，由官方 Chart 通过 `existingSecret` 引用。Authelia 使用现有
+PostgreSQL 保存持久数据、使用现有 Redis 保存 Session，自身以无 PVC 的 Deployment 运行。
 Traefik 的 Aliyun DNS 凭据同样通过 `secrets` 引用，并在部署 Traefik 前同步为 `traefik`
 命名空间中的 `alidns` Kubernetes Secret；其中键名映射为 provider 所需的
 `ALICLOUD_ACCESS_KEY` 和 `ALICLOUD_SECRET_KEY`。
@@ -78,8 +82,8 @@ Helmfile 全局保持 `atomic: true`、`wait: true`、`waitForJobs: true` 和 60
 
 - 只修改 Redis Chart 或 dev values 时，只创建 Redis 部署 Job。
 - 同时修改 Redis 和 Traefik 时，只创建两个相互独立的部署 Job。
-- 修改共享 Helmfile、dev 公共 values 或部署 workflow 时，三个已接入组件分别部署。
+- 修改共享 Helmfile、dev 公共 values 或部署 workflow 时，四个已接入组件分别部署。
 - 手动选择 PostgreSQL 时，只部署 PostgreSQL。
 - 同一组件的部署不会并发执行，不同组件可以并行。
 - 仓库不存在 `environments/prod/`，Helmfile 只声明 dev environment。
-- 三个组件分别通过 Helmfile selector 成功渲染。
+- 四个组件分别通过 Helmfile selector 成功渲染。

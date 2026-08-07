@@ -60,6 +60,3 @@ traefik:
     kubernetesCRD:
       allowCrossNamespace: true
       enabled: true
-
-casdoorAuthorization:
-  enforceEndpoint: http://casdoor.infra.svc.cluster.local:8000

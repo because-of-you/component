@@ -1,6 +1,57 @@
-autheliaSecrets:
-  enabled: false
-  ldapPassword: ""
-  sessionEncryptionKey: ""
-  storageEncryptionKey: ""
-  resetPasswordJwtSecret: ""
+authelia:
+  configMap:
+    authentication_backend:
+      ldap:
+        enabled: true
+        implementation: custom
+        address: ldap://opendirectory.net
+        timeout: 5 seconds
+        start_tls: false
+        base_dn: dc=acitrus,dc=opendirectory,dc=net
+        additional_users_dn: ou=public
+        users_filter: '(&({username_attribute}={input})(objectClass=person))'
+        additional_groups_dn: ""
+        groups_filter: '(&(memberUid={username})(objectClass=posixGroup))'
+        user: cn=acitrus,ou=admins,dc=opendirectory,dc=net
+        attributes:
+          username: uid
+          display_name: cn
+          mail: mail
+          group_name: cn
+
+    session:
+      cookies:
+        - domain: acitrus.cn
+          subdomain: auth
+      redis:
+        enabled: true
+        deploy: false
+        host: redis-master.infra.svc.cluster.local
+        port: 6379
+        database_index: 1
+
+    storage:
+      local:
+        enabled: false
+      postgres:
+        enabled: true
+        deploy: false
+        address: tcp://postgresql.infra.svc.cluster.local:5432
+        database: postgres
+        schema: public
+        username: postgres
+
+  secret:
+    existingSecret: authelia-secrets
+
+autheliaIngress:
+  enabled: true
+  host: auth.acitrus.cn
+  entryPoints:
+    - websecure
+  tls:
+    certResolver: leresolver
+
+autheliaForwardAuth:
+  enabled: true
+  address: http://authelia.infra.svc.cluster.local/api/authz/forward-auth

@@ -4,3 +4,5 @@ autheliaSecrets:
   sessionEncryptionKey: test-session-encryption-key-with-at-least-thirty-two-characters
   storageEncryptionKey: test-storage-encryption-key-with-at-least-twenty-characters
   resetPasswordJwtSecret: test-reset-password-jwt-secret-with-at-least-thirty-two-characters
+  redisPassword: test-redis-password
+  postgresPassword: test-postgres-password

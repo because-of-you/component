@@ -1,6 +1,6 @@
 authelia:
   pod:
-    kind: StatefulSet
+    kind: Deployment
     replicas: 1
 
   service:
@@ -30,47 +30,18 @@ authelia:
         disable: true
       password_change:
         disable: true
-      ldap:
-        enabled: true
-        implementation: custom
-        address: ldap://opendirectory.net
-        timeout: 5 seconds
-        start_tls: false
-        base_dn: dc=acitrus,dc=opendirectory,dc=net
-        additional_users_dn: ou=public
-        users_filter: '(&({username_attribute}={input})(objectClass=person))'
-        additional_groups_dn: ''
-        groups_filter: '(&(memberUid={username})(objectClass=posixGroup))'
-        user: cn=acitrus,ou=admins,dc=opendirectory,dc=net
-        attributes:
-          username: uid
-          display_name: cn
-          mail: mail
-          group_name: cn
-
-    session:
-      cookies:
-        - domain: acitrus.cn
-          subdomain: auth
 
     storage:
       local:
-        enabled: true
-        path: /config/db.sqlite3
+        enabled: false
 
     notifier:
       filesystem:
         enabled: true
         filename: /config/notification.txt
 
-  secret:
-    existingSecret: authelia-secrets
-
   persistence:
-    enabled: true
-    accessModes:
-      - ReadWriteOnce
-    size: 1Gi
+    enabled: false
 
 autheliaSecrets:
   enabled: false
@@ -78,23 +49,23 @@ autheliaSecrets:
   sessionEncryptionKey: ""
   storageEncryptionKey: ""
   resetPasswordJwtSecret: ""
+  redisPassword: ""
+  postgresPassword: ""
 
 autheliaIngress:
-  enabled: true
+  enabled: false
   name: authelia
-  host: auth.acitrus.cn
-  entryPoints:
-    - websecure
+  host: ""
+  entryPoints: []
   service:
     name: authelia
     port: 80
-  tls:
-    certResolver: leresolver
+  tls: {}
 
 autheliaForwardAuth:
-  enabled: true
+  enabled: false
   name: authelia-forwardauth
-  address: http://authelia.infra.svc.cluster.local/api/authz/forward-auth
+  address: ""
   trustForwardHeader: true
   authResponseHeaders:
     - Remote-User

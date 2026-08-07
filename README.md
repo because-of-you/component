@@ -88,11 +88,6 @@ helm upgrade --install rabbitmq oci://ghcr.io/because-of-you/charts/rabbitmq \
   --namespace infra \
   --create-namespace
 
-helm upgrade --install casdoor oci://ghcr.io/because-of-you/charts/casdoor \
-  --version 0.0.0-dev \
-  --namespace infra \
-  --create-namespace
-
 helm upgrade --install authelia oci://ghcr.io/because-of-you/charts/authelia \
   --version 0.0.0-dev \
   --namespace infra \
@@ -108,7 +103,7 @@ helm upgrade --install traefik oci://ghcr.io/because-of-you/charts/traefik \
 命名空间约定：
 
 ```text
-infra: redis, postgresql, rabbitmq, casdoor, authelia
+infra: redis, postgresql, rabbitmq, authelia
 traefik: traefik
 ```
 
@@ -122,13 +117,9 @@ kubectl -n infra get secret postgresql-auth \
   -o go-template='{{ index .data "postgres-password" | base64decode }}{{ "\n" }}'
 ```
 
-Traefik Chart 内置 Casdoor OIDC + Casbin Enforce Middleware Chain，可以让 Casdoor 统一管理不同角色对 Host、Path 和 HTTP Method 的访问权限，并且不新增授权服务。Secret 创建、Helm values、IngressRoute 和 Casdoor Model 示例见：
-
-```text
-charts/traefik/README.md
-```
-
-Authelia Chart 使用 LDAP UID 完成一次认证，并提供 `auth.acitrus.cn` IngressRoute 与跨命名空间可引用的 ForwardAuth Middleware。密钥 values 和部署示例见：
+Authelia Chart 使用 LDAP UID 完成认证，复用 `infra` 中的 PostgreSQL 和 Redis，并以无 PVC 的
+Deployment 运行；同时提供 `auth.acitrus.cn` IngressRoute 与跨命名空间可引用的 ForwardAuth
+Middleware。密钥 values 和部署示例见：
 
 ```text
 charts/authelia/README.md
@@ -220,7 +211,7 @@ PR 合并前会执行：
 
 ## dev 集群部署
 
-Push 到 `dev` 分支并修改 Redis、PostgreSQL 或 Traefik 的 Chart/values 后，
+Push 到 `dev` 分支并修改 Redis、PostgreSQL、Authelia 或 Traefik 的 Chart/values 后，
 [deploy-dev.yaml](./.github/workflows/deploy-dev.yaml) 会检测发生变化的组件，并为每个组件创建独立 Matrix Job。
 每个 Job 通过 Tailscale 连接 K3s，并按组件名执行 Helmfile。例如只修改 Redis 时只运行：
 
@@ -233,7 +224,9 @@ helmfile -e dev --selector name=redis sync
 
 GitHub 的 `dev` Environment 只需要配置：
 
-- Secrets：`KUBECONFIG`、`REDIS_PASSWORD`、`POSTGRES_PASSWORD`、`ALIYUN_DNS_KEY`、`ALIYUN_DNS_SECRET`
+- Secrets：`KUBECONFIG`、`REDIS_PASSWORD`、`POSTGRES_PASSWORD`、`AUTHELIA_LDAP_PASSWORD`、
+  `AUTHELIA_SESSION_ENCRYPTION_KEY`、`AUTHELIA_STORAGE_ENCRYPTION_KEY`、
+  `AUTHELIA_RESET_PASSWORD_JWT_SECRET`、`ALIYUN_DNS_KEY`、`ALIYUN_DNS_SECRET`
 - Variables：`TS_OAUTH_CLIENT_ID`、`TS_AUDIENCE`、`K3S_TAILSCALE_HOST`
 
 `KUBECONFIG` 保存完整文件内容，其中 API Server 地址应使用 Tailscale 可以访问的地址。
@@ -241,6 +234,9 @@ GitHub 的 `dev` Environment 只需要配置：
 `K3S_TAILSCALE_HOST` 填写 K3s 主机的 Tailscale IP 或 MagicDNS 名称。
 Redis 和 PostgreSQL 部署任务会分别把对应的 Environment Secret 同步为 `infra` 命名空间中的
 `redis-auth` 和 `postgresql-auth` Kubernetes Secret，再由 Chart 通过 `existingSecret` 引用。
+Authelia 部署任务会把四项专用 Environment Secret 加上已有的 `REDIS_PASSWORD`、
+`POSTGRES_PASSWORD` 同步为 `infra/authelia-secrets`，并映射为官方 Chart 所需的 LDAP、
+Session、Storage、Reset Password JWT、Redis 和 PostgreSQL Secret 键名。
 Traefik 部署任务会把 `ALIYUN_DNS_KEY` 和 `ALIYUN_DNS_SECRET` 同步为 `traefik` 命名空间中的
 `alidns` Kubernetes Secret，并映射为 DNS provider 所需的 `ALICLOUD_ACCESS_KEY` 和
 `ALICLOUD_SECRET_KEY`；Traefik 通过 `envFrom` 引用它们。

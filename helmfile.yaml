@@ -48,13 +48,6 @@ releases:
     values:
       - ./environments/{{ .Environment.Name }}/rabbitmq/values.yaml
 
-  - name: casdoor
-    namespace: infra
-    createNamespace: true
-    chart: ./charts/casdoor
-    values:
-      - ./environments/{{ .Environment.Name }}/casdoor/values.yaml
-
   - name: authelia
     namespace: infra
     createNamespace: true

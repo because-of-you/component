@@ -1,8 +1,68 @@
 # Authelia
 
-这个 Chart 封装 Authelia 官方 Helm Chart，使用 LDAP 完成一次认证，并创建 `auth.acitrus.cn` 的 Traefik IngressRoute 与可复用 ForwardAuth Middleware。
+这个 Chart 封装 Authelia 官方 Helm Chart。当前依赖固定为 Chart `0.11.6`、Authelia
+`4.39.20`。
 
-官方依赖固定为 Chart `0.11.6`、Authelia `4.39.20`。默认 LDAP 配置为：
+## Values 结构
+
+通用默认值维护在：
+
+```text
+charts/authelia/values.yaml
+```
+
+这里仅保存 Deployment、ClusterIP、filesystem notifier 和资源功能等通用配置。Authelia Pod
+本身不创建 PVC。
+
+dev 环境配置维护在：
+
+```text
+environments/dev/authelia/values.yaml
+```
+
+LDAP 地址、Bind DN、Cookie 域名、Traefik IngressRoute、ForwardAuth 地址和现有 Secret 引用都
+属于环境配置，不会被打包进 OCI Chart。
+
+## dev 密钥配置
+
+在 GitHub `dev` Environment Secrets 中配置：
+
+- `AUTHELIA_LDAP_PASSWORD`
+- `AUTHELIA_SESSION_ENCRYPTION_KEY`，至少 32 个字符
+- `AUTHELIA_STORAGE_ENCRYPTION_KEY`，至少 20 个字符
+- `AUTHELIA_RESET_PASSWORD_JWT_SECRET`，至少 32 个字符
+
+部署工作流还会复用已有的 `REDIS_PASSWORD` 和 `POSTGRES_PASSWORD`。六项值会被同步为
+`infra/authelia-secrets` Kubernetes Secret，并映射为 Authelia 官方 Chart 所需的键名。
+dev values 通过以下配置引用：
+
+```yaml
+authelia:
+  secret:
+    existingSecret: authelia-secrets
+```
+
+真实密钥不会写入 values 或通过 Helm 命令行传递。Chart 仍保留默认关闭的
+`autheliaSecrets` 模板，供独立 OCI 使用方按需启用；不要把真实值提交到仓库。
+
+## 外部 PostgreSQL 与 Redis
+
+dev 环境不使用 SQLite 或内存 Session，直接连接仓库已部署的服务：
+
+```text
+PostgreSQL: postgresql.infra.svc.cluster.local:5432 / postgres / postgres
+Redis:      redis-master.infra.svc.cluster.local:6379 / database 1
+```
+
+PostgreSQL 密码复用 `POSTGRES_PASSWORD`，Redis 密码复用 `REDIS_PASSWORD`。Authelia 使用
+`Deployment` 且关闭 PVC，Pod 重建不会丢失数据库或 Session 状态。
+
+当前 dev 配置使用 PostgreSQL 的 `postgres` 管理员账号和默认数据库，部署简单但权限较大；后续
+可再创建独立的 `authelia` 数据库和最小权限用户。
+
+## LDAP 与入口
+
+dev 环境使用以下 LDAP 结构：
 
 ```text
 ldap://opendirectory.net
@@ -11,49 +71,10 @@ ou=public
 uid
 ```
 
-用户通过 `uid` 登录，组查询使用 RFC2307 `posixGroup.memberUid`。当前 LDAP 连接未加密，只适合用户确认的内网部署环境。
+用户通过 `uid` 登录，组查询使用 RFC2307 `posixGroup.memberUid`。当前 LDAP 连接未加密，只适合
+已确认可信的内网环境。
 
-## 填写密钥
-
-部署前在对应环境的 `authelia/values.yaml` 中填写：
-
-```yaml
-autheliaSecrets:
-  enabled: true
-  ldapPassword: "example-only-ldap-password"
-  sessionEncryptionKey: "example-only-session-key-at-least-32-characters"
-  storageEncryptionKey: "example-only-storage-key-at-least-20-characters"
-  resetPasswordJwtSecret: "example-only-reset-key-at-least-32-characters"
-```
-
-不要把包含真实密钥的环境 values 提交到公共仓库。
-
-- `ldapPassword`：LDAP Bind DN 的密码。
-- `sessionEncryptionKey`：会话加密密钥，至少 32 个字符。
-- `storageEncryptionKey`：Authelia 存储加密密钥，至少 20 个字符。
-- `resetPasswordJwtSecret`：密码重置 JWT 签名密钥；当前虽关闭密码重置，Authelia 配置仍保留该必需密钥。
-
-## 渲染与部署
-
-```bash
-helm dependency update charts/authelia
-helmfile -e dev template --selector name=authelia --skip-deps
-helmfile -e dev apply --selector name=authelia
-```
-
-通过 OCI 安装时，把相同字段写入自己的 `values.yaml`：
-
-```bash
-helm upgrade --install authelia oci://ghcr.io/because-of-you/charts/authelia \
-  --version 0.0.0-dev \
-  --namespace infra \
-  --create-namespace \
-  -f values.yaml
-```
-
-## 保护其他 IngressRoute
-
-Traefik 已允许跨命名空间引用时，在目标路由中加入：
+Traefik IngressRoute 暴露 `auth.acitrus.cn`。保护其他 IngressRoute 时引用：
 
 ```yaml
 middlewares:
@@ -63,6 +84,26 @@ middlewares:
 
 ForwardAuth 成功后会传递 `Remote-User`、`Remote-Name`、`Remote-Email` 和 `Remote-Groups`。
 
-## 存储限制
+## 渲染与部署
 
-默认使用 SQLite、filesystem notifier 和单副本 StatefulSet，数据保存在 1Gi PVC 中。该模式不支持多副本；需要高可用时应迁移到 PostgreSQL 和 Redis。
+```bash
+helm dependency update charts/authelia
+helm lint charts/authelia -f environments/dev/authelia/values.yaml
+helmfile -e dev template --selector name=authelia --skip-deps
+helmfile -e dev apply --selector name=authelia
+```
+
+OCI 安装示例：
+
+```bash
+helm upgrade --install authelia oci://ghcr.io/because-of-you/charts/authelia \
+  --version 0.0.0-dev \
+  --namespace infra \
+  --create-namespace \
+  -f values.yaml
+```
+
+## 无状态范围
+
+数据库和 Session 已外置，因此 Authelia Pod 不需要持久卷。当前 filesystem notifier 仍写入 Pod
+临时目录，但密码重置功能已关闭；若以后启用通知或多副本，应改用外部 SMTP notifier。

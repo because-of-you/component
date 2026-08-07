@@ -105,7 +105,6 @@ git commit -m "feat: deploy changed components independently"
 - Modify: `helmfile.yaml`
 - Delete: `environments/prod/values.yaml`
 - Delete: `environments/prod/authelia/values.yaml`
-- Delete: `environments/prod/casdoor/values.yaml`
 - Delete: `environments/prod/postgresql/values.yaml`
 - Delete: `environments/prod/rabbitmq/values.yaml`
 - Delete: `environments/prod/redis/values.yaml`

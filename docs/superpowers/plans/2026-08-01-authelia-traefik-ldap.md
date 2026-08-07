@@ -536,7 +536,7 @@ ForwardAuth 成功后会传递 `Remote-User`、`Remote-Name`、`Remote-Email` �
 
 - [ ] **Step 4: Update the repository README**
 
-Add Authelia to the component list and namespace list. Insert this complete OCI example after the Casdoor example:
+Add Authelia to the component list and namespace list. Insert this complete OCI example beside the other component examples:
 
 ```bash
 helm upgrade --install authelia oci://ghcr.io/because-of-you/charts/authelia \

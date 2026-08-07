@@ -1,6 +1,6 @@
 apiVersion: v2
 name: authelia
-description: Wrapper chart for Authelia with LDAP and Traefik defaults
+description: Wrapper chart for Authelia with repository-owned defaults
 type: application
 version: 0.1.0
 appVersion: "4.39.20"

@@ -7,9 +7,11 @@ on:
     paths:
       - 'charts/redis/**'
       - 'charts/postgresql/**'
+      - 'charts/authelia/**'
       - 'charts/traefik/**'
       - 'environments/dev/redis/**'
       - 'environments/dev/postgresql/**'
+      - 'environments/dev/authelia/**'
       - 'environments/dev/traefik/**'
       - 'environments/dev/values.yaml'
       - 'helmfile.yaml'
@@ -23,6 +25,7 @@ on:
         options:
           - redis
           - postgresql
+          - authelia
           - traefik
 
 jobs:
@@ -53,6 +56,12 @@ jobs:
             postgresql:
               - 'charts/postgresql/**'
               - 'environments/dev/postgresql/**'
+              - 'environments/dev/values.yaml'
+              - 'helmfile.yaml'
+              - '.github/workflows/deploy-dev.yaml'
+            authelia:
+              - 'charts/authelia/**'
+              - 'environments/dev/authelia/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
               - '.github/workflows/deploy-dev.yaml'
@@ -103,7 +112,7 @@ jobs:
           kubeconfig: ${{ secrets.KUBECONFIG }}
 
       - name: Ensure infra namespace
-        if: matrix.component == 'redis' || matrix.component == 'postgresql'
+        if: matrix.component == 'redis' || matrix.component == 'postgresql' || matrix.component == 'authelia'
         run: kubectl create namespace infra --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Ensure traefik namespace
@@ -134,6 +143,42 @@ jobs:
             | kubectl -n infra create secret generic postgresql-auth \
                 --from-file=postgres-password=/dev/stdin \
                 --dry-run=client -o yaml \
+            | kubectl apply -f -
+
+      - name: Sync Authelia credentials
+        if: matrix.component == 'authelia'
+        shell: bash
+        env:
+          AUTHELIA_LDAP_PASSWORD: ${{ secrets.AUTHELIA_LDAP_PASSWORD }}
+          AUTHELIA_SESSION_ENCRYPTION_KEY: ${{ secrets.AUTHELIA_SESSION_ENCRYPTION_KEY }}
+          AUTHELIA_STORAGE_ENCRYPTION_KEY: ${{ secrets.AUTHELIA_STORAGE_ENCRYPTION_KEY }}
+          AUTHELIA_RESET_PASSWORD_JWT_SECRET: ${{ secrets.AUTHELIA_RESET_PASSWORD_JWT_SECRET }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        run: |
+          test -n "$AUTHELIA_LDAP_PASSWORD"
+          test -n "$AUTHELIA_SESSION_ENCRYPTION_KEY"
+          test -n "$AUTHELIA_STORAGE_ENCRYPTION_KEY"
+          test -n "$AUTHELIA_RESET_PASSWORD_JWT_SECRET"
+          test -n "$REDIS_PASSWORD"
+          test -n "$POSTGRES_PASSWORD"
+          umask 077
+          credentials_dir="$(mktemp -d)"
+          trap 'rm -rf "$credentials_dir"' EXIT
+          printf '%s' "$AUTHELIA_LDAP_PASSWORD" > "$credentials_dir/authentication.ldap.password.txt"
+          printf '%s' "$AUTHELIA_SESSION_ENCRYPTION_KEY" > "$credentials_dir/session.encryption.key"
+          printf '%s' "$AUTHELIA_STORAGE_ENCRYPTION_KEY" > "$credentials_dir/storage.encryption.key"
+          printf '%s' "$AUTHELIA_RESET_PASSWORD_JWT_SECRET" > "$credentials_dir/identity_validation.reset_password.jwt.hmac.key"
+          printf '%s' "$REDIS_PASSWORD" > "$credentials_dir/session.redis.password.txt"
+          printf '%s' "$POSTGRES_PASSWORD" > "$credentials_dir/storage.postgres.password.txt"
+          kubectl -n infra create secret generic authelia-secrets \
+            --from-file=authentication.ldap.password.txt="$credentials_dir/authentication.ldap.password.txt" \
+            --from-file=session.encryption.key="$credentials_dir/session.encryption.key" \
+            --from-file=storage.encryption.key="$credentials_dir/storage.encryption.key" \
+            --from-file=identity_validation.reset_password.jwt.hmac.key="$credentials_dir/identity_validation.reset_password.jwt.hmac.key" \
+            --from-file=session.redis.password.txt="$credentials_dir/session.redis.password.txt" \
+            --from-file=storage.postgres.password.txt="$credentials_dir/storage.postgres.password.txt" \
+            --dry-run=client -o yaml \
             | kubectl apply -f -
 
       - name: Sync Aliyun DNS credentials
