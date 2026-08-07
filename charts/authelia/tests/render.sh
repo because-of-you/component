@@ -25,6 +25,7 @@ if grep -Fq 'kind: Secret' "$rendered"; then
 fi
 grep -Fq 'secretName: authelia-secrets' "$rendered"
 grep -Fq "address: 'ldap://opendirectory.net'" "$rendered"
+grep -Fq 'start_tls: true' "$rendered"
 grep -Fq "additional_users_dn: 'ou=public'" "$rendered"
 grep -Fq "username: 'uid'" "$rendered"
 grep -Fq "default_policy: 'one_factor'" "$rendered"

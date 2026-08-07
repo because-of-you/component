@@ -6,7 +6,7 @@ authelia:
         implementation: custom
         address: ldap://opendirectory.net
         timeout: 5 seconds
-        start_tls: false
+        start_tls: true
         base_dn: dc=acitrus,dc=opendirectory,dc=net
         additional_users_dn: ou=public
         users_filter: '(&({username_attribute}={input})(objectClass=person))'
