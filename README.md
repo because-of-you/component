@@ -115,10 +115,10 @@ traefik: traefik
 获取默认密码：
 
 ```bash
-kubectl -n infra get secret redis \
+kubectl -n infra get secret redis-auth \
   -o go-template='{{ index .data "redis-password" | base64decode }}{{ "\n" }}'
 
-kubectl -n infra get secret postgresql \
+kubectl -n infra get secret postgresql-auth \
   -o go-template='{{ index .data "postgres-password" | base64decode }}{{ "\n" }}'
 ```
 
@@ -185,8 +185,8 @@ Chart 默认 values + dev 环境 values
 ```yaml
 dependencies:
   - name: redis
-    version: 19.6.4
-    repository: https://charts.bitnami.com/bitnami
+    version: 27.0.18
+    repository: oci://registry-1.docker.io/bitnamicharts
 ```
 
 由于 Redis 是子 Chart，覆盖上游 values 时必须放在依赖名下面：
@@ -233,10 +233,19 @@ helmfile -e dev --selector name=redis sync
 
 GitHub 的 `dev` Environment 只需要配置：
 
-- Secrets：`TS_OAUTH_CLIENT_ID`、`TS_AUDIENCE`、`KUBECONFIG`
-- Variable：`K3S_TAILSCALE_HOST`，填写 K3s 主机的 Tailscale IP 或 MagicDNS 名称
+- Secrets：`KUBECONFIG`、`REDIS_PASSWORD`、`POSTGRES_PASSWORD`、`ALIYUN_DNS_KEY`、`ALIYUN_DNS_SECRET`
+- Variables：`TS_OAUTH_CLIENT_ID`、`TS_AUDIENCE`、`K3S_TAILSCALE_HOST`
 
 `KUBECONFIG` 保存完整文件内容，其中 API Server 地址应使用 Tailscale 可以访问的地址。
+`TS_OAUTH_CLIENT_ID` 和 `TS_AUDIENCE` 是 Tailscale OIDC 联合身份的非敏感标识；
+`K3S_TAILSCALE_HOST` 填写 K3s 主机的 Tailscale IP 或 MagicDNS 名称。
+Redis 和 PostgreSQL 部署任务会分别把对应的 Environment Secret 同步为 `infra` 命名空间中的
+`redis-auth` 和 `postgresql-auth` Kubernetes Secret，再由 Chart 通过 `existingSecret` 引用。
+Traefik 部署任务会把 `ALIYUN_DNS_KEY` 和 `ALIYUN_DNS_SECRET` 同步为 `traefik` 命名空间中的
+`alidns` Kubernetes Secret，并映射为 DNS provider 所需的 `ALICLOUD_ACCESS_KEY` 和
+`ALICLOUD_SECRET_KEY`；Traefik 通过 `envFrom` 引用它们。
+已有持久化数据时，首次配置必须使用服务当前密码；更新 `POSTGRES_PASSWORD` 不会自动修改
+PostgreSQL 数据库内部的用户密码，轮换时还需要同步执行数据库密码变更。
 普通配置继续维护在 `environments/dev/*/values.yaml`；密码等敏感值不要写入公共仓库，
 可以预先创建为集群 Secret，或按需放入 GitHub Environment Secrets。
 

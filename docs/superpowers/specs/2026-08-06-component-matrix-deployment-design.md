@@ -45,8 +45,15 @@ Helmfile 不再使用 `deployment: dev-core` 标签。自动和手动部署都�
 
 所有组件共用 GitHub `dev` Environment 中的以下配置：
 
-- Secrets：`TS_OAUTH_CLIENT_ID`、`TS_AUDIENCE`、`KUBECONFIG`
-- Variable：`K3S_TAILSCALE_HOST`
+- Secrets：`KUBECONFIG`、`REDIS_PASSWORD`、`POSTGRES_PASSWORD`、`ALIYUN_DNS_KEY`、`ALIYUN_DNS_SECRET`
+- Variables：`TS_OAUTH_CLIENT_ID`、`TS_AUDIENCE`、`K3S_TAILSCALE_HOST`
+
+Tailscale OIDC Client ID 和 Audience 是非敏感标识，工作流通过 `vars` 引用。Redis 和
+PostgreSQL 密码通过 `secrets` 引用，并在部署对应组件前同步到 `infra` 命名空间中的固定
+Kubernetes Secret。
+Traefik 的 Aliyun DNS 凭据同样通过 `secrets` 引用，并在部署 Traefik 前同步为 `traefik`
+命名空间中的 `alidns` Kubernetes Secret；其中键名映射为 provider 所需的
+`ALICLOUD_ACCESS_KEY` 和 `ALICLOUD_SECRET_KEY`。
 
 ## 并发和失败处理
 

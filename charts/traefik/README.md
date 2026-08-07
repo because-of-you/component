@@ -47,10 +47,14 @@ charts/traefik/values.yaml
 
 ```text
 environments/dev/traefik/values.yaml
-environments/prod/traefik/values.yaml
 ```
 
-这些环境配置不会被打包进 OCI Chart，只会在本仓库通过 Helmfile 渲染或部署时使用。
+`charts/traefik/values.yaml` 只维护插件、可选 Secret 模板和授权参数等通用能力；域名、
+ACME DNS Challenge、入口端口、Dashboard、持久化和跨命名空间策略维护在 dev values。
+环境配置不会被打包进 OCI Chart，只会在本仓库通过 Helmfile 渲染或部署时使用。
+
+Traefik 保持部署在独立的 `traefik` 命名空间，不与 `infra` 中的数据服务混放。这样可以隔离
+入口控制器的 RBAC、凭据、证书状态和故障边界。
 
 ## Aliyun DNS Secret
 
@@ -65,6 +69,11 @@ aliyunSecret:
   accessKey: ""
   secretKey: ""
 ```
+
+本仓库的 dev 自动部署保持 `aliyunSecret.enabled=false`。请在 GitHub `dev` Environment Secrets
+中配置 `ALIYUN_DNS_KEY` 和 `ALIYUN_DNS_SECRET`；工作流会在部署 Traefik 前把它们同步为
+`traefik/alidns` Kubernetes Secret，并分别映射为 `ALICLOUD_ACCESS_KEY` 和
+`ALICLOUD_SECRET_KEY`。真实凭据不会写入 values 或提交到仓库。
 
 如果需要让 Chart 创建 Secret，可以在自己的 values 中启用：
 

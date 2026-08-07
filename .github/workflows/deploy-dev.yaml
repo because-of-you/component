@@ -91,8 +91,8 @@ jobs:
       - name: Connect to Tailscale
         uses: tailscale/github-action@v4
         with:
-          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
-          audience: ${{ secrets.TS_AUDIENCE }}
+          oauth-client-id: ${{ vars.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ vars.TS_AUDIENCE }}
           tags: tag:ci-deploy
           ping: ${{ vars.K3S_TAILSCALE_HOST }}
 
@@ -101,6 +101,60 @@ jobs:
         with:
           method: kubeconfig
           kubeconfig: ${{ secrets.KUBECONFIG }}
+
+      - name: Ensure infra namespace
+        if: matrix.component == 'redis' || matrix.component == 'postgresql'
+        run: kubectl create namespace infra --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Ensure traefik namespace
+        if: matrix.component == 'traefik'
+        run: kubectl create namespace traefik --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Sync Redis credentials
+        if: matrix.component == 'redis'
+        shell: bash
+        env:
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+        run: |
+          test -n "$REDIS_PASSWORD"
+          printf '%s' "$REDIS_PASSWORD" \
+            | kubectl -n infra create secret generic redis-auth \
+                --from-file=redis-password=/dev/stdin \
+                --dry-run=client -o yaml \
+            | kubectl apply -f -
+
+      - name: Sync PostgreSQL credentials
+        if: matrix.component == 'postgresql'
+        shell: bash
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        run: |
+          test -n "$POSTGRES_PASSWORD"
+          printf '%s' "$POSTGRES_PASSWORD" \
+            | kubectl -n infra create secret generic postgresql-auth \
+                --from-file=postgres-password=/dev/stdin \
+                --dry-run=client -o yaml \
+            | kubectl apply -f -
+
+      - name: Sync Aliyun DNS credentials
+        if: matrix.component == 'traefik'
+        shell: bash
+        env:
+          ALIYUN_DNS_KEY: ${{ secrets.ALIYUN_DNS_KEY }}
+          ALIYUN_DNS_SECRET: ${{ secrets.ALIYUN_DNS_SECRET }}
+        run: |
+          test -n "$ALIYUN_DNS_KEY"
+          test -n "$ALIYUN_DNS_SECRET"
+          umask 077
+          credentials_dir="$(mktemp -d)"
+          trap 'rm -rf "$credentials_dir"' EXIT
+          printf '%s' "$ALIYUN_DNS_KEY" > "$credentials_dir/ALICLOUD_ACCESS_KEY"
+          printf '%s' "$ALIYUN_DNS_SECRET" > "$credentials_dir/ALICLOUD_SECRET_KEY"
+          kubectl -n traefik create secret generic alidns \
+            --from-file=ALICLOUD_ACCESS_KEY="$credentials_dir/ALICLOUD_ACCESS_KEY" \
+            --from-file=ALICLOUD_SECRET_KEY="$credentials_dir/ALICLOUD_SECRET_KEY" \
+            --dry-run=client -o yaml \
+            | kubectl apply -f -
 
       - name: Deploy ${{ matrix.component }}
         run: helmfile -e dev --selector name=${{ matrix.component }} sync

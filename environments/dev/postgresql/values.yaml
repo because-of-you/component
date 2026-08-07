@@ -1,4 +1,20 @@
+postgresqlIngress:
+  enabled: true
+  host: postgresql.tcp.acitrus.cn
+  entryPoints:
+    - gravitation
+  tls:
+    domains:
+      - main: acitrus.cn
+        sans:
+          - postgresql.tcp.acitrus.cn
+
 postgresql:
+  auth:
+    existingSecret: postgresql-auth
+    secretKeys:
+      adminPasswordKey: postgres-password
   primary:
-    persistence:
-      size: 10Gi
+    extraEnvVars:
+      - name: TZ
+        value: Asia/Shanghai

@@ -48,10 +48,28 @@ charts/postgresql/values.yaml
 
 ```text
 environments/dev/postgresql/values.yaml
-environments/prod/postgresql/values.yaml
 ```
 
-这些环境配置不会被打包进 OCI Chart，只会在本仓库通过 Helmfile 渲染或部署时使用。
+`charts/postgresql/values.yaml` 只维护架构、存储和资源规格等通用默认值；dev values 维护
+`postgresql-auth` Secret 引用、时区、域名和 TCP 入口路由。环境配置不会被打包进 OCI Chart，
+只会在本仓库通过 Helmfile 渲染或部署时使用。
+
+## dev 密码配置
+
+在 GitHub `dev` Environment Secrets 中配置 `POSTGRES_PASSWORD`。部署工作流会把它同步为
+`infra/postgresql-auth` Kubernetes Secret 的 `postgres-password` 键，dev values 通过
+`auth.existingSecret` 引用：
+
+```yaml
+postgresql:
+  auth:
+    existingSecret: postgresql-auth
+    secretKeys:
+      adminPasswordKey: postgres-password
+```
+
+密码不会写入 values 或通过 Helm 命令行传递。已有持久化数据时，Secret 中必须使用数据库
+当前的 `postgres` 密码；只更新 Secret 不会修改数据库内部密码。
 
 ## 本地调试
 
@@ -73,17 +91,10 @@ helm template postgresql charts/postgresql --namespace infra
 helmfile -e dev template --selector name=postgresql --skip-deps
 ```
 
-使用 prod 环境覆盖配置渲染：
-
-```bash
-helmfile -e prod template --selector name=postgresql --skip-deps
-```
-
 部署到当前 kubeconfig 指向的集群：
 
 ```bash
 helmfile -e dev apply --selector name=postgresql
-helmfile -e prod apply --selector name=postgresql
 ```
 
 `--skip-deps` 适合本地快速调试，前提是依赖已经下载过。CI 或依赖版本变更后不要加这个参数。
@@ -111,11 +122,9 @@ helm upgrade --install postgresql oci://ghcr.io/because-of-you/charts/postgresql
   --create-namespace
 ```
 
-## 获取默认密码
-
-如果没有通过 values 指定密码，Bitnami PostgreSQL 会在安装时生成 `postgres` 管理员密码，并写入 `postgresql` Secret：
+## 获取 dev 管理员密码
 
 ```bash
-kubectl -n infra get secret postgresql \
+kubectl -n infra get secret postgresql-auth \
   -o go-template='{{ index .data "postgres-password" | base64decode }}{{ "\n" }}'
 ```
