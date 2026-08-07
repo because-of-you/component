@@ -1,0 +1,15 @@
+config:
+  baseDn: dc=acitrus,dc=cn
+  httpUrl: https://ldap.acitrus.cn
+  timezone: Asia/Shanghai
+
+secret:
+  existingSecret: lldap-secrets
+
+ingress:
+  enabled: true
+  host: ldap.acitrus.cn
+  entryPoints:
+    - websecure
+  tls:
+    certResolver: leresolver

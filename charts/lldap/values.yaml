@@ -1,0 +1,74 @@
+replicaCount: 1
+
+image:
+  repository: lldap/lldap
+  tag: stable-alpine-rootless
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+secret:
+  existingSecret: lldap-secrets
+  keys:
+    jwtSecret: jwt-secret
+    keySeed: key-seed
+    adminPassword: admin-password
+    databaseUrl: database-url
+
+config:
+  baseDn: dc=example,dc=com
+  httpUrl: http://localhost:17170
+  timezone: UTC
+
+service:
+  type: ClusterIP
+  ldapPort: 3890
+  webPort: 17170
+
+ingress:
+  enabled: false
+  name: lldap
+  host: ""
+  entryPoints:
+    - websecure
+  tls: {}
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+resources:
+  limits:
+    cpu: 250m
+    memory: 256Mi
+  requests:
+    cpu: 10m
+    memory: 64Mi
+
+probes:
+  startup:
+    failureThreshold: 30
+    periodSeconds: 2
+  readiness:
+    periodSeconds: 10
+  liveness:
+    periodSeconds: 10
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
