@@ -31,9 +31,8 @@ LDAP 地址、Bind DN、Cookie 域名、Traefik IngressRoute、ForwardAuth 地�
 - `AUTHELIA_SESSION_ENCRYPTION_KEY`，至少 32 个字符
 - `AUTHELIA_STORAGE_ENCRYPTION_KEY`，至少 20 个字符
 - `AUTHELIA_RESET_PASSWORD_JWT_SECRET`，至少 32 个字符
-- `AUTHELIA_POSTGRES_PASSWORD`
 
-部署工作流还会复用已有的 `REDIS_PASSWORD`。六项值会被同步为
+部署工作流还会复用已有的 `REDIS_PASSWORD` 和 `POSTGRES_PASSWORD`。六项值会被同步为
 `infra/authelia-secrets` Kubernetes Secret，并映射为 Authelia 官方 Chart 所需的键名。
 dev values 通过以下配置引用：
 
@@ -51,11 +50,11 @@ authelia:
 dev 环境不使用 SQLite 或内存 Session，直接连接仓库已部署的服务：
 
 ```text
-PostgreSQL: postgresql.infra.svc.cluster.local:5432 / authelia / authelia
+PostgreSQL: postgresql.infra.svc.cluster.local:5432 / authelia / postgres
 Redis:      redis-master.infra.svc.cluster.local:6379 / database 1
 ```
 
-PostgreSQL 使用独立的 `AUTHELIA_POSTGRES_PASSWORD`，Redis 密码复用 `REDIS_PASSWORD`。Authelia 使用
+PostgreSQL 密码复用 `POSTGRES_PASSWORD`，Redis 密码复用 `REDIS_PASSWORD`。Authelia 使用
 `Deployment` 且关闭 PVC，Pod 重建不会丢失数据库或 Session 状态。
 
 ### 首次创建数据库
@@ -64,14 +63,12 @@ PostgreSQL 使用独立的 `AUTHELIA_POSTGRES_PASSWORD`，Redis 密码复用 `RE
 `postgres` 管理员连接数据库并执行：
 
 ```sql
-CREATE ROLE authelia LOGIN;
-\password authelia
-CREATE DATABASE authelia OWNER authelia;
+CREATE DATABASE authelia OWNER postgres;
 ```
 
-`\password` 会交互式读取两次密码，不会把密码写入 Shell 历史。把同一个值保存为 GitHub `dev`
-Environment Secret `AUTHELIA_POSTGRES_PASSWORD`，然后再部署 Authelia。Authelia 启动时会在专用
-数据库的 `public` schema 中自动创建空表。
+Authelia 继续使用现有的 `postgres` 管理员账号和 GitHub `dev` Environment Secret
+`POSTGRES_PASSWORD`，不需要创建额外的数据库角色或密码 Secret。部署后，Authelia 会在专用数据库
+的 `public` schema 中自动创建空表。
 
 ### 备份与还原
 
@@ -79,10 +76,10 @@ Environment Secret `AUTHELIA_POSTGRES_PASSWORD`，然后再部署 Authelia。Aut
 
 ```bash
 pg_dump --format=custom --no-owner --dbname=authelia --file=authelia.dump
-pg_restore --clean --if-exists --no-owner --role=authelia --dbname=authelia authelia.dump
+pg_restore --clean --if-exists --no-owner --role=postgres --dbname=authelia authelia.dump
 ```
 
-还原前必须先创建由 `authelia` 拥有的目标数据库。`--clean --if-exists` 会替换目标库中的现有对象，
+还原前必须先创建由 `postgres` 拥有的目标数据库。`--clean --if-exists` 会替换目标库中的现有对象，
 因此不要把还原命令指向 `postgres` 数据库。
 
 ### 清理旧的 `postgres.public`

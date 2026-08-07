@@ -226,8 +226,7 @@ GitHub 的 `dev` Environment 只需要配置：
 
 - Secrets：`KUBECONFIG`、`REDIS_PASSWORD`、`POSTGRES_PASSWORD`、`AUTHELIA_LDAP_PASSWORD`、
   `AUTHELIA_SESSION_ENCRYPTION_KEY`、`AUTHELIA_STORAGE_ENCRYPTION_KEY`、
-  `AUTHELIA_RESET_PASSWORD_JWT_SECRET`、`AUTHELIA_POSTGRES_PASSWORD`、`ALIYUN_DNS_KEY`、
-  `ALIYUN_DNS_SECRET`
+  `AUTHELIA_RESET_PASSWORD_JWT_SECRET`、`ALIYUN_DNS_KEY`、`ALIYUN_DNS_SECRET`
 - Variables：`TS_OAUTH_CLIENT_ID`、`TS_AUDIENCE`、`K3S_TAILSCALE_HOST`
 
 `KUBECONFIG` 保存完整文件内容，其中 API Server 地址应使用 Tailscale 可以访问的地址。
@@ -235,10 +234,10 @@ GitHub 的 `dev` Environment 只需要配置：
 `K3S_TAILSCALE_HOST` 填写 K3s 主机的 Tailscale IP 或 MagicDNS 名称。
 Redis 和 PostgreSQL 部署任务会分别把对应的 Environment Secret 同步为 `infra` 命名空间中的
 `redis-auth` 和 `postgresql-auth` Kubernetes Secret，再由 Chart 通过 `existingSecret` 引用。
-Authelia 部署任务会把五项专用 Environment Secret（包括独立的
-`AUTHELIA_POSTGRES_PASSWORD`）加上已有的 `REDIS_PASSWORD` 同步为 `infra/authelia-secrets`，
-并映射为官方 Chart 所需的 LDAP、Session、Storage、Reset Password JWT、Redis 和 PostgreSQL
-Secret 键名。独立数据库的首次建库、备份和还原步骤见 `charts/authelia/README.md`。
+Authelia 部署任务会把四项专用 Environment Secret 加上已有的 `REDIS_PASSWORD`、
+`POSTGRES_PASSWORD` 同步为 `infra/authelia-secrets`，并映射为官方 Chart 所需的 LDAP、Session、
+Storage、Reset Password JWT、Redis 和 PostgreSQL Secret 键名。独立数据库的首次建库、备份和
+还原步骤见 `charts/authelia/README.md`。
 Traefik 部署任务会把 `ALIYUN_DNS_KEY` 和 `ALIYUN_DNS_SECRET` 同步为 `traefik` 命名空间中的
 `alidns` Kubernetes Secret，并映射为 DNS provider 所需的 `ALICLOUD_ACCESS_KEY` 和
 `ALICLOUD_SECRET_KEY`；Traefik 通过 `envFrom` 引用它们。
