@@ -50,6 +50,10 @@ runs:
         test -n "$DESTINATION_USERNAME"
         test -n "$DESTINATION_PASSWORD"
         [[ "$COPY_ATTEMPTS" =~ ^[1-9][0-9]*$ ]]
+        if [[ "$DESTINATION_IMAGE" != "$DESTINATION_REGISTRY/"* ]]; then
+          echo "Destination image '$DESTINATION_IMAGE' is outside registry '$DESTINATION_REGISTRY'" >&2
+          exit 1
+        fi
 
         trap 'skopeo logout "$DESTINATION_REGISTRY" >/dev/null 2>&1 || true' EXIT
         printf '%s' "$DESTINATION_PASSWORD" \

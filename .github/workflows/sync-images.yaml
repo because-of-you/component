@@ -1,72 +1,104 @@
 name: Sync Images
 
 on:
+  push:
+    branches:
+      - dev
+    paths:
+      - 'images/*/images.json'
   workflow_dispatch:
     inputs:
-      image:
-        description: Image to sync to Aliyun ACR
+      component:
+        description: Component directory name, or all
         required: true
-        type: choice
-        options:
-          - claude-code-hub
+        default: all
+        type: string
 
 permissions:
   contents: read
 
 concurrency:
-  group: sync-images-${{ inputs.image }}
+  group: sync-images-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      has-images: ${{ steps.matrix.outputs.has-images }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Select changed image manifests
+        id: matrix
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          CURRENT_SHA: ${{ github.sha }}
+          SELECTED_COMPONENT: ${{ inputs.component }}
+        run: |
+          set -euo pipefail
+          manifests_file="$(mktemp)"
+          trap 'rm -f "$manifests_file"' EXIT
+
+          if [[ "$EVENT_NAME" == "push" ]]; then
+            git diff --name-only "$BEFORE_SHA" "$CURRENT_SHA" -- 'images/*/images.json' \
+              | while IFS= read -r manifest; do
+                  [[ -f "$manifest" ]] && printf '%s\n' "$manifest"
+                done \
+              | sort -u > "$manifests_file"
+          elif [[ "$SELECTED_COMPONENT" == "all" ]]; then
+            find images -mindepth 2 -maxdepth 2 -type f -name images.json \
+              | sort > "$manifests_file"
+          else
+            if [[ ! "$SELECTED_COMPONENT" =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
+              echo "Invalid component directory name: $SELECTED_COMPONENT" >&2
+              exit 1
+            fi
+            manifest="images/${SELECTED_COMPONENT}/images.json"
+            if [[ ! -f "$manifest" ]]; then
+              echo "Unknown component or missing image manifest: $manifest" >&2
+              exit 1
+            fi
+            printf '%s\n' "$manifest" > "$manifests_file"
+          fi
+
+          mapfile -t manifests < "$manifests_file"
+          if (( ${#manifests[@]} == 0 )); then
+            echo 'matrix={"include":[]}' >> "$GITHUB_OUTPUT"
+            echo 'has-images=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          matrix="$(node .github/scripts/build-image-matrix.mjs "${manifests[@]}")"
+          echo "matrix=${matrix}" >> "$GITHUB_OUTPUT"
+          echo 'has-images=true' >> "$GITHUB_OUTPUT"
+
   sync:
+    needs: prepare
+    if: needs.prepare.outputs.has-images == 'true'
+    name: ${{ matrix.component }} / ${{ matrix.name }}
     runs-on: ubuntu-latest
     environment: dev
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Set up Helm
-        uses: azure/setup-helm@v4
-
-      - name: Resolve Claude Code Hub image
-        if: inputs.image == 'claude-code-hub'
-        id: claude-code-hub
-        shell: bash
-        env:
-          ALIYUN_ACR_REGISTRY: ${{ vars.ALIYUN_ACR_REGISTRY }}
-          ALIYUN_ACR_NAMESPACE: ${{ vars.ALIYUN_ACR_NAMESPACE }}
-        run: |
-          set -euo pipefail
-          test -n "$ALIYUN_ACR_REGISTRY"
-          test -n "$ALIYUN_ACR_NAMESPACE"
-
-          rendered_deployment="$(mktemp)"
-          trap 'rm -f "$rendered_deployment"' EXIT
-          helm template claude-code-hub charts/claude-code-hub \
-            --namespace app \
-            -f environments/dev/claude-code-hub/values.yaml \
-            --show-only templates/deployment.yaml \
-            > "$rendered_deployment"
-
-          destination_image="$(sed -n 's/^[[:space:]]*image: "\([^"]*\)"$/\1/p' "$rendered_deployment" | head -n 1)"
-          test -n "$destination_image"
-          image_tag="${destination_image##*:}"
-          expected_image="${ALIYUN_ACR_REGISTRY}/${ALIYUN_ACR_NAMESPACE}/claude-code-hub:${image_tag}"
-          if [[ "$destination_image" != "$expected_image" ]]; then
-            echo "Rendered image '$destination_image' does not match configured ACR destination '$expected_image'" >&2
-            exit 1
-          fi
-
-          echo "source-image=ghcr.io/because-of-you/claude-code-hub:${image_tag}" >> "$GITHUB_OUTPUT"
-          echo "destination-image=${destination_image}" >> "$GITHUB_OUTPUT"
-
-      - name: Mirror Claude Code Hub image
-        if: inputs.image == 'claude-code-hub'
+      - name: Mirror image
         uses: ./.github/actions/mirror-container-image
         with:
-          source-image: ${{ steps.claude-code-hub.outputs.source-image }}
-          destination-image: ${{ steps.claude-code-hub.outputs.destination-image }}
+          source-image: ${{ matrix.source }}
+          destination-image: ${{ matrix.destination }}
           destination-registry: ${{ vars.ALIYUN_ACR_REGISTRY }}
           destination-username: ${{ vars.ALIYUN_ACR_USERNAME }}
           destination-password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
