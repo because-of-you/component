@@ -174,21 +174,40 @@ if grep -Fq 'AUTHELIA_LDAP_PASSWORD' "$repo_root/.github/workflows/deploy-dev.ya
   echo 'Authelia credential sync must use the LLDAP bind account password' >&2
   exit 1
 fi
-authelia_sync_step="$(sed -n '/- name: Sync Authelia credentials/,/- name: Sync Aliyun DNS credentials/p' "$repo_root/.github/workflows/deploy-dev.yaml")"
+workflow="$repo_root/.github/workflows/deploy-dev.yaml"
+workflow_step() {
+  local step_name="$1"
+  awk -v target="      - name: $step_name" '
+    $0 == target { capture = 1 }
+    capture && /^      - name:/ && $0 != target { exit }
+    capture { print }
+  ' "$workflow"
+}
+
+authelia_sync_step="$(workflow_step 'Sync Authelia credentials')"
+test -n "$authelia_sync_step"
+grep -Fxq "        if: matrix.component == 'authelia'" <<<"$authelia_sync_step"
 grep -Fq 'POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}' <<<"$authelia_sync_step"
 grep -Fq 'AUTHELIA_OIDC_HMAC_SECRET: ${{ secrets.AUTHELIA_OIDC_HMAC_SECRET }}' <<<"$authelia_sync_step"
 grep -Fq 'AUTHELIA_OIDC_JWK: ${{ secrets.AUTHELIA_OIDC_JWK }}' <<<"$authelia_sync_step"
 grep -Fq 'CCH_OIDC_CLIENT_SECRET_DIGEST: ${{ secrets.CCH_OIDC_CLIENT_SECRET_DIGEST }}' <<<"$authelia_sync_step"
-grep -Fq 'RUSTFS_OIDC_CLIENT_SECRET_DIGEST: ${{ secrets.RUSTFS_OIDC_CLIENT_SECRET_DIGEST }}' <<<"$authelia_sync_step"
+grep -Fxq '          RUSTFS_OIDC_CLIENT_SECRET_DIGEST: ${{ secrets.RUSTFS_OIDC_CLIENT_SECRET_DIGEST }}' <<<"$authelia_sync_step"
+grep -Fxq '          test -n "$RUSTFS_OIDC_CLIENT_SECRET_DIGEST"' <<<"$authelia_sync_step"
+grep -Fxq '          printf '\''%s'\'' "$RUSTFS_OIDC_CLIENT_SECRET_DIGEST" > "$credentials_dir/identity_providers.oidc.clients.rustfs-console.secret.txt"' <<<"$authelia_sync_step"
 grep -Fq -- '--from-file=identity_providers.oidc.hmac.key=' <<<"$authelia_sync_step"
 grep -Fq -- '--from-file=identity_providers.oidc.jwk.RS256.pem=' <<<"$authelia_sync_step"
 grep -Fq -- '--from-file=identity_providers.oidc.clients.claude-code-hub.secret.txt=' <<<"$authelia_sync_step"
-grep -Fq -- '--from-file=identity_providers.oidc.clients.rustfs-console.secret.txt=' <<<"$authelia_sync_step"
-grep -Fq 'name: Restart Authelia after deployment' "$repo_root/.github/workflows/deploy-dev.yaml"
+grep -Fxq '            --from-file=identity_providers.oidc.clients.rustfs-console.secret.txt="$credentials_dir/identity_providers.oidc.clients.rustfs-console.secret.txt" \' <<<"$authelia_sync_step"
 if grep -Fq 'AUTHELIA_POSTGRES_PASSWORD' <<<"$authelia_sync_step"; then
   echo 'Authelia credential sync must reuse POSTGRES_PASSWORD' >&2
   exit 1
 fi
+
+authelia_restart_step="$(workflow_step 'Restart Authelia after deployment')"
+test -n "$authelia_restart_step"
+grep -Fxq "        if: matrix.component == 'authelia'" <<<"$authelia_restart_step"
+grep -Fxq '          kubectl -n infra rollout restart deployment/authelia' <<<"$authelia_restart_step"
+grep -Fxq '          kubectl -n infra rollout status deployment/authelia --timeout=300s' <<<"$authelia_restart_step"
 test -f "$dev_values"
 grep -Fq '# Authelia' "$chart_dir/README.md"
 grep -Fq 'authelia-forwardauth' "$chart_dir/README.md"

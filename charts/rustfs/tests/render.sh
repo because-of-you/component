@@ -48,16 +48,103 @@ if grep -R -F --include='*.yaml' --include='*.tpl' 'HostSNI(`*`)' "$repo_root/ch
   exit 1
 fi
 
-grep -Fq 'chart: ./charts/rustfs' "$repo_root/helmfile.yaml"
-grep -Fq -- '- infra/authelia' "$repo_root/helmfile.yaml"
 workflow="$repo_root/.github/workflows/deploy-dev.yaml"
-grep -Fq "'charts/rustfs/**'" "$workflow"
-grep -Fq "'environments/dev/rustfs/**'" "$workflow"
-grep -Fq -- '- rustfs' "$workflow"
-rustfs_sync_step="$(sed -n '/- name: Sync RustFS credentials/,/- name: Sync Claude Code Hub credentials/p' "$workflow")"
-grep -Fq 'RUSTFS_ACCESS_KEY: ${{ secrets.RUSTFS_ACCESS_KEY }}' <<<"$rustfs_sync_step"
-grep -Fq 'RUSTFS_SECRET_KEY: ${{ secrets.RUSTFS_SECRET_KEY }}' <<<"$rustfs_sync_step"
-grep -Fq 'RUSTFS_OIDC_CLIENT_SECRET: ${{ secrets.RUSTFS_OIDC_CLIENT_SECRET }}' <<<"$rustfs_sync_step"
-grep -Fq 'kubectl -n infra create secret generic rustfs-secrets' <<<"$rustfs_sync_step"
-grep -Fq -- '--from-file=RUSTFS_IDENTITY_OPENID_CLIENT_SECRET=' <<<"$rustfs_sync_step"
-grep -Fq 'name: Restart RustFS after deployment' "$workflow"
+
+ruby --disable-gems - "$repo_root/helmfile.yaml" "$workflow" <<'RUBY'
+require 'yaml'
+
+def assert(condition, message)
+  abort message unless condition
+end
+
+helmfile = YAML.load_stream(File.read(ARGV.fetch(0))).find do |document|
+  document.is_a?(Hash) && document['releases']
+end
+assert(helmfile, 'helmfile releases document is missing')
+
+rustfs_release = helmfile['releases'].find { |release| release['name'] == 'rustfs' }
+assert(rustfs_release, 'helmfile rustfs release is missing')
+assert(rustfs_release['namespace'] == 'infra', 'helmfile rustfs release must use namespace infra')
+assert(rustfs_release['chart'] == './charts/rustfs', 'helmfile rustfs release must use the local chart')
+assert(rustfs_release['needs'] == ['infra/authelia'], 'helmfile rustfs release must depend on infra/authelia')
+assert(
+  rustfs_release['values'] == ['./environments/{{ .Environment.Name }}/rustfs/values.yaml'],
+  'helmfile rustfs release must use the environment-specific values file'
+)
+
+workflow = YAML.load_file(ARGV.fetch(1), aliases: true)
+trigger = workflow[true] || workflow['on']
+assert(trigger['push']['paths'].include?('charts/rustfs/**'), 'workflow push paths must include the RustFS chart')
+assert(
+  trigger['push']['paths'].include?('environments/dev/rustfs/**'),
+  'workflow push paths must include the dev RustFS values'
+)
+assert(
+  trigger['workflow_dispatch']['inputs']['component']['options'].include?('rustfs'),
+  'workflow manual component options must include rustfs'
+)
+
+filter_step = workflow['jobs']['changes']['steps'].find { |step| step['id'] == 'filter' }
+assert(filter_step, 'workflow paths-filter step is missing')
+filters = YAML.safe_load(filter_step['with']['filters'])
+assert(filters['rustfs'].is_a?(Array), 'workflow rustfs paths-filter is missing')
+expected_filter = [
+  'charts/rustfs/**',
+  'environments/dev/rustfs/**',
+  'environments/dev/authelia/**',
+  'environments/dev/values.yaml',
+  'helmfile.yaml'
+]
+assert(filters['rustfs'].sort == expected_filter.sort, 'workflow rustfs paths-filter entries are incorrect')
+
+deploy_steps = workflow['jobs']['deploy']['steps']
+infra_namespace_step = deploy_steps.find { |step| step['name'] == 'Ensure infra namespace' }
+assert(infra_namespace_step, 'workflow infra namespace step is missing')
+assert(
+  infra_namespace_step['if'].include?(%q(matrix.component == 'rustfs')),
+  'workflow infra namespace condition must include rustfs'
+)
+
+rustfs_sync_step = deploy_steps.find { |step| step['name'] == 'Sync RustFS credentials' }
+assert(rustfs_sync_step, 'workflow RustFS credential sync step is missing')
+assert(
+  rustfs_sync_step['if'] == %q(matrix.component == 'rustfs'),
+  'workflow RustFS credential sync condition is incorrect'
+)
+expected_env = {
+  'RUSTFS_ACCESS_KEY' => %q(${{ secrets.RUSTFS_ACCESS_KEY }}),
+  'RUSTFS_SECRET_KEY' => %q(${{ secrets.RUSTFS_SECRET_KEY }}),
+  'RUSTFS_OIDC_CLIENT_SECRET' => %q(${{ secrets.RUSTFS_OIDC_CLIENT_SECRET }})
+}
+assert(rustfs_sync_step['env'] == expected_env, 'workflow RustFS credential secret mappings are incorrect')
+
+sync_lines = rustfs_sync_step['run'].lines.map { |line| line.strip.sub(/ \\$/, '') }
+expected_sync_lines = [
+  %q(printf '%s' "$RUSTFS_ACCESS_KEY" > "$credentials_dir/RUSTFS_ACCESS_KEY"),
+  %q(printf '%s' "$RUSTFS_SECRET_KEY" > "$credentials_dir/RUSTFS_SECRET_KEY"),
+  %q(printf '%s' "$RUSTFS_OIDC_CLIENT_SECRET" > "$credentials_dir/RUSTFS_IDENTITY_OPENID_CLIENT_SECRET"),
+  'kubectl -n infra create secret generic rustfs-secrets',
+  %q(--from-file=RUSTFS_ACCESS_KEY="$credentials_dir/RUSTFS_ACCESS_KEY"),
+  %q(--from-file=RUSTFS_SECRET_KEY="$credentials_dir/RUSTFS_SECRET_KEY"),
+  %q(--from-file=RUSTFS_IDENTITY_OPENID_CLIENT_SECRET="$credentials_dir/RUSTFS_IDENTITY_OPENID_CLIENT_SECRET")
+]
+expected_sync_lines.each do |line|
+  assert(sync_lines.include?(line), "workflow RustFS credential sync is missing: #{line}")
+end
+
+rustfs_restart_step = deploy_steps.find { |step| step['name'] == 'Restart RustFS after deployment' }
+assert(rustfs_restart_step, 'workflow RustFS restart step is missing')
+assert(
+  rustfs_restart_step['if'] == %q(matrix.component == 'rustfs'),
+  'workflow RustFS restart condition is incorrect'
+)
+restart_lines = rustfs_restart_step['run'].lines.map(&:strip)
+assert(
+  restart_lines.include?('kubectl -n infra rollout restart deployment/rustfs'),
+  'workflow RustFS restart command is missing'
+)
+assert(
+  restart_lines.include?('kubectl -n infra rollout status deployment/rustfs --timeout=300s'),
+  'workflow RustFS rollout status command is missing'
+)
+RUBY
