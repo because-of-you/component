@@ -11,7 +11,8 @@ registry.cn-shenzhen.aliyuncs.com/gravitation/claude-code-hub:codex-authelia-oid
 源码工作流只构建 GHCR 镜像。component 的 CCH 部署 Job 会先调用仓库内通用的
 `.github/actions/mirror-container-image`，使用 `skopeo` 将 values 指定的同名 Tag 从 GHCR 完整复制
 到深圳 ACR，成功后才通过 Tailscale 连接并执行 Helm；国内 K3s 从公开 ACR 仓库匿名拉取。新增其他
-镜像源时复用该 Action 即可，不需要复制登录、重试和清理逻辑。dev 对固定可变标签使用
+镜像源时复用该 Action 即可，不需要复制登录、重试和清理逻辑。Action 会先比较源、目标镜像的
+digest：内容相同时跳过复制，只有首次同步或源镜像内容变化时才传输。dev 对固定可变标签使用
 `imagePullPolicy: Always`，保证 Pod 重建时检查最新镜像。
 
 ## 部署内容

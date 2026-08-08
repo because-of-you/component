@@ -78,6 +78,8 @@ grep -Fq 'ghcr.io/because-of-you/claude-code-hub:${image_tag}' "$repo_root/.gith
 grep -Fq 'uses: ./.github/actions/mirror-container-image' "$repo_root/.github/workflows/deploy-dev.yaml"
 mirror_action="$repo_root/.github/actions/mirror-container-image/action.yml"
 test -f "$mirror_action"
+grep -Fq 'source_digest="$(skopeo inspect' "$mirror_action"
+grep -Fq '[[ "$source_digest" == "$destination_digest" ]]' "$mirror_action"
 grep -Fq 'skopeo copy --all "docker://${SOURCE_IMAGE}" "docker://${DESTINATION_IMAGE}"' "$mirror_action"
 grep -Fq 'kubectl -n app create secret generic claude-code-hub-secrets' "$repo_root/.github/workflows/deploy-dev.yaml"
 grep -Fq -- '--from-file=dsn=' "$repo_root/.github/workflows/deploy-dev.yaml"

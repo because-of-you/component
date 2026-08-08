@@ -1,5 +1,5 @@
 name: Mirror container image
-description: Copy a container image between registries with retries
+description: Copy a container image between registries only when its digest changes
 
 inputs:
   source-image:
@@ -57,6 +57,20 @@ runs:
               --username "$DESTINATION_USERNAME" \
               --password-stdin \
               "$DESTINATION_REGISTRY"
+
+        source_digest="$(skopeo inspect --format '{{.Digest}}' "docker://${SOURCE_IMAGE}")"
+        destination_digest=""
+        if destination_digest="$(skopeo inspect --format '{{.Digest}}' "docker://${DESTINATION_IMAGE}" 2>/dev/null)" \
+          && [[ "$source_digest" == "$destination_digest" ]]; then
+          echo "Image already mirrored with digest ${source_digest}; skipping copy"
+          exit 0
+        fi
+
+        if [[ -n "$destination_digest" ]]; then
+          echo "Image digest changed (${destination_digest} -> ${source_digest}); updating mirror"
+        else
+          echo "Destination image does not exist; creating mirror for digest ${source_digest}"
+        fi
 
         for ((attempt = 1; attempt <= COPY_ATTEMPTS; attempt++)); do
           if skopeo copy --all "docker://${SOURCE_IMAGE}" "docker://${DESTINATION_IMAGE}"; then
