@@ -60,6 +60,13 @@ authelia:
               - groups
               - name
               - preferred_username
+          rustfs:
+            id_token:
+              - email
+              - email_verified
+              - groups
+              - name
+              - preferred_username
         jwks:
           - algorithm: RS256
             use: sig
@@ -86,6 +93,26 @@ authelia:
             response_types:
               - code
             token_endpoint_auth_method: client_secret_basic
+          - client_id: rustfs-console
+            client_name: RustFS Console
+            client_secret:
+              path: /secrets/oidc/identity_providers.oidc.clients.rustfs-console.secret.txt
+            authorization_policy: one_factor
+            claims_policy: rustfs
+            require_pkce: true
+            pkce_challenge_method: S256
+            redirect_uris:
+              - https://s3.acitrus.cn/rustfs/admin/v3/oidc/callback/default
+            scopes:
+              - openid
+              - profile
+              - email
+              - groups
+            grant_types:
+              - authorization_code
+            response_types:
+              - code
+            token_endpoint_auth_method: client_secret_post
 
   secret:
     existingSecret: authelia-secrets
@@ -97,6 +124,8 @@ authelia:
             path: identity_providers.oidc.jwk.RS256.pem
           - key: identity_providers.oidc.clients.claude-code-hub.secret.txt
             path: identity_providers.oidc.clients.claude-code-hub.secret.txt
+          - key: identity_providers.oidc.clients.rustfs-console.secret.txt
+            path: identity_providers.oidc.clients.rustfs-console.secret.txt
 
 databaseBootstrap:
   enabled: true

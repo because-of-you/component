@@ -34,6 +34,7 @@ LDAP 地址、Bind DN、Cookie 域名、Traefik IngressRoute、ForwardAuth 地�
 - `AUTHELIA_OIDC_HMAC_SECRET`，OIDC HMAC 密钥
 - `AUTHELIA_OIDC_JWK`，完整的 RS256 私钥 PEM
 - `CCH_OIDC_CLIENT_SECRET_DIGEST`，CCH OIDC 客户端密钥的 PBKDF2 摘要
+- `RUSTFS_OIDC_CLIENT_SECRET_DIGEST`，RustFS OIDC 客户端密钥的 PBKDF2 摘要
 
 部署工作流还会复用已有的 `REDIS_PASSWORD` 和 `POSTGRES_PASSWORD`。这些值会被同步为
 `infra/authelia-secrets` Kubernetes Secret，并映射为 Authelia 官方 Chart 所需的键名。
@@ -61,6 +62,10 @@ docker run --rm -it authelia/authelia:4.39.20 \
 输出的 `Random Password` 保存为 `CCH_OIDC_CLIENT_SECRET`，`Digest` 保存为
 `CCH_OIDC_CLIENT_SECRET_DIGEST`；两项必须来自同一次生成。也可以在已部署的 Authelia Pod 中执行
 相同的 `authelia crypto hash generate` 命令，无需 Docker。
+
+RustFS 使用同一条 Authelia CLI 命令生成一组独立凭证。`Random Password` 保存为
+`RUSTFS_OIDC_CLIENT_SECRET`，`Digest` 保存为 `RUSTFS_OIDC_CLIENT_SECRET_DIGEST`；不要复用 CCH
+的凭证。两项也必须来自同一次生成；轮换时应同时替换明文密钥和摘要。
 
 另外生成 OIDC HMAC 与 RS256 私钥：
 
