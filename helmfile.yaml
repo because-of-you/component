@@ -80,6 +80,15 @@ releases:
     values:
       - ./environments/{{ .Environment.Name }}/authelia/values.yaml
 
+  - name: rustfs
+    namespace: infra
+    createNamespace: true
+    chart: ./charts/rustfs
+    needs:
+      - infra/authelia
+    values:
+      - ./environments/{{ .Environment.Name }}/rustfs/values.yaml
+
   - name: traefik
     namespace: traefik
     createNamespace: true

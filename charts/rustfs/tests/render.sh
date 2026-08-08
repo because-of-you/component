@@ -47,3 +47,17 @@ if grep -R -F --include='*.yaml' --include='*.tpl' 'HostSNI(`*`)' "$repo_root/ch
   echo 'A catch-all TCP router would intercept the shared gravitation entrypoint' >&2
   exit 1
 fi
+
+grep -Fq 'chart: ./charts/rustfs' "$repo_root/helmfile.yaml"
+grep -Fq -- '- infra/authelia' "$repo_root/helmfile.yaml"
+workflow="$repo_root/.github/workflows/deploy-dev.yaml"
+grep -Fq "'charts/rustfs/**'" "$workflow"
+grep -Fq "'environments/dev/rustfs/**'" "$workflow"
+grep -Fq -- '- rustfs' "$workflow"
+rustfs_sync_step="$(sed -n '/- name: Sync RustFS credentials/,/- name: Sync Claude Code Hub credentials/p' "$workflow")"
+grep -Fq 'RUSTFS_ACCESS_KEY: ${{ secrets.RUSTFS_ACCESS_KEY }}' <<<"$rustfs_sync_step"
+grep -Fq 'RUSTFS_SECRET_KEY: ${{ secrets.RUSTFS_SECRET_KEY }}' <<<"$rustfs_sync_step"
+grep -Fq 'RUSTFS_OIDC_CLIENT_SECRET: ${{ secrets.RUSTFS_OIDC_CLIENT_SECRET }}' <<<"$rustfs_sync_step"
+grep -Fq 'kubectl -n infra create secret generic rustfs-secrets' <<<"$rustfs_sync_step"
+grep -Fq -- '--from-file=RUSTFS_IDENTITY_OPENID_CLIENT_SECRET=' <<<"$rustfs_sync_step"
+grep -Fq 'name: Restart RustFS after deployment' "$workflow"

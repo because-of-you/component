@@ -179,9 +179,12 @@ grep -Fq 'POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}' <<<"$authelia_syn
 grep -Fq 'AUTHELIA_OIDC_HMAC_SECRET: ${{ secrets.AUTHELIA_OIDC_HMAC_SECRET }}' <<<"$authelia_sync_step"
 grep -Fq 'AUTHELIA_OIDC_JWK: ${{ secrets.AUTHELIA_OIDC_JWK }}' <<<"$authelia_sync_step"
 grep -Fq 'CCH_OIDC_CLIENT_SECRET_DIGEST: ${{ secrets.CCH_OIDC_CLIENT_SECRET_DIGEST }}' <<<"$authelia_sync_step"
+grep -Fq 'RUSTFS_OIDC_CLIENT_SECRET_DIGEST: ${{ secrets.RUSTFS_OIDC_CLIENT_SECRET_DIGEST }}' <<<"$authelia_sync_step"
 grep -Fq -- '--from-file=identity_providers.oidc.hmac.key=' <<<"$authelia_sync_step"
 grep -Fq -- '--from-file=identity_providers.oidc.jwk.RS256.pem=' <<<"$authelia_sync_step"
 grep -Fq -- '--from-file=identity_providers.oidc.clients.claude-code-hub.secret.txt=' <<<"$authelia_sync_step"
+grep -Fq -- '--from-file=identity_providers.oidc.clients.rustfs-console.secret.txt=' <<<"$authelia_sync_step"
+grep -Fq 'name: Restart Authelia after deployment' "$repo_root/.github/workflows/deploy-dev.yaml"
 if grep -Fq 'AUTHELIA_POSTGRES_PASSWORD' <<<"$authelia_sync_step"; then
   echo 'Authelia credential sync must reuse POSTGRES_PASSWORD' >&2
   exit 1

@@ -9,12 +9,14 @@ on:
       - 'charts/postgresql/**'
       - 'charts/lldap/**'
       - 'charts/authelia/**'
+      - 'charts/rustfs/**'
       - 'charts/claude-code-hub/**'
       - 'charts/traefik/**'
       - 'environments/dev/redis/**'
       - 'environments/dev/postgresql/**'
       - 'environments/dev/lldap/**'
       - 'environments/dev/authelia/**'
+      - 'environments/dev/rustfs/**'
       - 'environments/dev/claude-code-hub/**'
       - 'environments/dev/traefik/**'
       - 'environments/dev/values.yaml'
@@ -31,6 +33,7 @@ on:
           - postgresql
           - lldap
           - authelia
+          - rustfs
           - claude-code-hub
           - traefik
 
@@ -70,6 +73,12 @@ jobs:
               - 'helmfile.yaml'
             authelia:
               - 'charts/authelia/**'
+              - 'environments/dev/authelia/**'
+              - 'environments/dev/values.yaml'
+              - 'helmfile.yaml'
+            rustfs:
+              - 'charts/rustfs/**'
+              - 'environments/dev/rustfs/**'
               - 'environments/dev/authelia/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
@@ -143,7 +152,7 @@ jobs:
           done
 
       - name: Ensure infra namespace
-        if: matrix.component == 'redis' || matrix.component == 'postgresql' || matrix.component == 'lldap' || matrix.component == 'authelia'
+        if: matrix.component == 'redis' || matrix.component == 'postgresql' || matrix.component == 'lldap' || matrix.component == 'authelia' || matrix.component == 'rustfs'
         run: kubectl create namespace infra --dry-run=client -o yaml | bash .github/scripts/kubectl-apply-retry.sh
 
       - name: Ensure app namespace
@@ -233,6 +242,7 @@ jobs:
           AUTHELIA_OIDC_HMAC_SECRET: ${{ secrets.AUTHELIA_OIDC_HMAC_SECRET }}
           AUTHELIA_OIDC_JWK: ${{ secrets.AUTHELIA_OIDC_JWK }}
           CCH_OIDC_CLIENT_SECRET_DIGEST: ${{ secrets.CCH_OIDC_CLIENT_SECRET_DIGEST }}
+          RUSTFS_OIDC_CLIENT_SECRET_DIGEST: ${{ secrets.RUSTFS_OIDC_CLIENT_SECRET_DIGEST }}
           REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         run: |
@@ -243,6 +253,7 @@ jobs:
           test -n "$AUTHELIA_OIDC_HMAC_SECRET"
           test -n "$AUTHELIA_OIDC_JWK"
           test -n "$CCH_OIDC_CLIENT_SECRET_DIGEST"
+          test -n "$RUSTFS_OIDC_CLIENT_SECRET_DIGEST"
           test -n "$REDIS_PASSWORD"
           test -n "$POSTGRES_PASSWORD"
           umask 077
@@ -255,6 +266,7 @@ jobs:
           printf '%s' "$AUTHELIA_OIDC_HMAC_SECRET" > "$credentials_dir/identity_providers.oidc.hmac.key"
           printf '%s' "$AUTHELIA_OIDC_JWK" > "$credentials_dir/identity_providers.oidc.jwk.RS256.pem"
           printf '%s' "$CCH_OIDC_CLIENT_SECRET_DIGEST" > "$credentials_dir/identity_providers.oidc.clients.claude-code-hub.secret.txt"
+          printf '%s' "$RUSTFS_OIDC_CLIENT_SECRET_DIGEST" > "$credentials_dir/identity_providers.oidc.clients.rustfs-console.secret.txt"
           printf '%s' "$REDIS_PASSWORD" > "$credentials_dir/session.redis.password.txt"
           printf '%s' "$POSTGRES_PASSWORD" > "$credentials_dir/storage.postgres.password.txt"
           kubectl -n infra create secret generic authelia-secrets \
@@ -265,8 +277,33 @@ jobs:
             --from-file=identity_providers.oidc.hmac.key="$credentials_dir/identity_providers.oidc.hmac.key" \
             --from-file=identity_providers.oidc.jwk.RS256.pem="$credentials_dir/identity_providers.oidc.jwk.RS256.pem" \
             --from-file=identity_providers.oidc.clients.claude-code-hub.secret.txt="$credentials_dir/identity_providers.oidc.clients.claude-code-hub.secret.txt" \
+            --from-file=identity_providers.oidc.clients.rustfs-console.secret.txt="$credentials_dir/identity_providers.oidc.clients.rustfs-console.secret.txt" \
             --from-file=session.redis.password.txt="$credentials_dir/session.redis.password.txt" \
             --from-file=storage.postgres.password.txt="$credentials_dir/storage.postgres.password.txt" \
+            --dry-run=client -o yaml \
+            | bash .github/scripts/kubectl-apply-retry.sh
+
+      - name: Sync RustFS credentials
+        if: matrix.component == 'rustfs'
+        shell: bash
+        env:
+          RUSTFS_ACCESS_KEY: ${{ secrets.RUSTFS_ACCESS_KEY }}
+          RUSTFS_SECRET_KEY: ${{ secrets.RUSTFS_SECRET_KEY }}
+          RUSTFS_OIDC_CLIENT_SECRET: ${{ secrets.RUSTFS_OIDC_CLIENT_SECRET }}
+        run: |
+          test -n "$RUSTFS_ACCESS_KEY"
+          test -n "$RUSTFS_SECRET_KEY"
+          test -n "$RUSTFS_OIDC_CLIENT_SECRET"
+          umask 077
+          credentials_dir="$(mktemp -d)"
+          trap 'rm -rf "$credentials_dir"' EXIT
+          printf '%s' "$RUSTFS_ACCESS_KEY" > "$credentials_dir/RUSTFS_ACCESS_KEY"
+          printf '%s' "$RUSTFS_SECRET_KEY" > "$credentials_dir/RUSTFS_SECRET_KEY"
+          printf '%s' "$RUSTFS_OIDC_CLIENT_SECRET" > "$credentials_dir/RUSTFS_IDENTITY_OPENID_CLIENT_SECRET"
+          kubectl -n infra create secret generic rustfs-secrets \
+            --from-file=RUSTFS_ACCESS_KEY="$credentials_dir/RUSTFS_ACCESS_KEY" \
+            --from-file=RUSTFS_SECRET_KEY="$credentials_dir/RUSTFS_SECRET_KEY" \
+            --from-file=RUSTFS_IDENTITY_OPENID_CLIENT_SECRET="$credentials_dir/RUSTFS_IDENTITY_OPENID_CLIENT_SECRET" \
             --dry-run=client -o yaml \
             | bash .github/scripts/kubectl-apply-retry.sh
 
@@ -326,6 +363,20 @@ jobs:
 
       - name: Deploy ${{ matrix.component }}
         run: helmfile -e dev --selector name=${{ matrix.component }} sync
+
+      - name: Restart Authelia after deployment
+        if: matrix.component == 'authelia'
+        shell: bash
+        run: |
+          kubectl -n infra rollout restart deployment/authelia
+          kubectl -n infra rollout status deployment/authelia --timeout=300s
+
+      - name: Restart RustFS after deployment
+        if: matrix.component == 'rustfs'
+        shell: bash
+        run: |
+          kubectl -n infra rollout restart deployment/rustfs
+          kubectl -n infra rollout status deployment/rustfs --timeout=300s
 
       - name: Restart Claude Code Hub after deployment
         if: matrix.component == 'claude-code-hub'
