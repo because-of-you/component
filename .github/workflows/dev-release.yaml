@@ -128,6 +128,13 @@ jobs:
       - name: Render chart
         run: helm template test "${{ matrix.chart }}" >/dev/null
 
+      - name: Run chart render tests
+        shell: bash
+        run: |
+          if [[ -f "${{ matrix.chart }}/tests/render.sh" ]]; then
+            bash "${{ matrix.chart }}/tests/render.sh"
+          fi
+
       - name: Package chart
         id: package
         shell: bash

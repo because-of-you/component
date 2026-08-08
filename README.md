@@ -110,6 +110,7 @@ helm upgrade --install traefik oci://ghcr.io/because-of-you/charts/traefik \
 
 ```text
 infra: redis, postgresql, rabbitmq, lldap, authelia
+app: claude-code-hub, test-charts
 traefik: traefik
 ```
 
@@ -136,6 +137,13 @@ LLDAP 使用官方安装文档推荐的 `Evantage-WS/lldap-kubernetes` Helm Char
 
 ```text
 charts/lldap/README.md
+```
+
+Claude Code Hub 使用仓库自有 Chart 部署无状态应用，复用 `infra` 中的 PostgreSQL 和 Redis；
+当前仅提供 `app/claude-code-hub` ClusterIP Service，不创建公网入口。配置见：
+
+```text
+charts/claude-code-hub/README.md
 ```
 
 ## 本地开发
@@ -219,6 +227,7 @@ PR 合并前会执行：
 - 更新依赖
 - `helm lint`
 - `helm template`
+- 执行 Chart 自带的 `tests/render.sh`（如果存在）
 - `helm package`
 
 合并到 dev 后会额外执行：
@@ -249,7 +258,8 @@ GitHub 的 `dev` Environment 只需要配置：
 - Secrets：`KUBECONFIG`、`REDIS_PASSWORD`、`POSTGRES_PASSWORD`、`LLDAP_JWT_SECRET`、
   `LLDAP_KEY_SEED`、`LLDAP_ADMIN_PASSWORD`、`LLDAP_AUTHELIA_PASSWORD`、
   `AUTHELIA_SESSION_ENCRYPTION_KEY`、`AUTHELIA_STORAGE_ENCRYPTION_KEY`、
-  `AUTHELIA_RESET_PASSWORD_JWT_SECRET`、`ALIYUN_DNS_KEY`、`ALIYUN_DNS_SECRET`
+  `AUTHELIA_RESET_PASSWORD_JWT_SECRET`、`CCH_ADMIN_TOKEN`、`ALIYUN_DNS_KEY`、
+  `ALIYUN_DNS_SECRET`
 - Variables：`TS_OAUTH_CLIENT_ID`、`TS_AUDIENCE`、`K3S_TAILSCALE_HOST`
 
 `KUBECONFIG` 保存完整文件内容，其中 API Server 地址应使用 Tailscale 可以访问的地址。
@@ -263,6 +273,9 @@ LLDAP 部署任务会把四项 LLDAP Secret 和 `POSTGRES_PASSWORD` 同步为 `i
 `POSTGRES_PASSWORD` 同步为 `infra/authelia-secrets`，并映射为官方 Chart 所需的 LDAP、Session、
 Storage、Reset Password JWT、Redis 和 PostgreSQL Secret 键名。Authelia Chart 会通过幂等的
 Helm Hook 自动创建独立数据库；备份和还原步骤见 `charts/authelia/README.md`。
+Claude Code Hub 部署任务会复用 `POSTGRES_PASSWORD`、`REDIS_PASSWORD`，并把
+`CCH_ADMIN_TOKEN` 和编码后的连接串同步为 `app/claude-code-hub-secrets`；Chart 会自动创建
+`claude_code_hub` 数据库，应用启动后自行执行 schema migrations。
 Traefik 部署任务会把 `ALIYUN_DNS_KEY` 和 `ALIYUN_DNS_SECRET` 同步为 `traefik` 命名空间中的
 `alidns` Kubernetes Secret，并映射为 DNS provider 所需的 `ALICLOUD_ACCESS_KEY` 和
 `ALICLOUD_SECRET_KEY`；Traefik 通过 `envFrom` 引用它们。

@@ -9,11 +9,13 @@ on:
       - 'charts/postgresql/**'
       - 'charts/lldap/**'
       - 'charts/authelia/**'
+      - 'charts/claude-code-hub/**'
       - 'charts/traefik/**'
       - 'environments/dev/redis/**'
       - 'environments/dev/postgresql/**'
       - 'environments/dev/lldap/**'
       - 'environments/dev/authelia/**'
+      - 'environments/dev/claude-code-hub/**'
       - 'environments/dev/traefik/**'
       - 'environments/dev/values.yaml'
       - 'helmfile.yaml'
@@ -30,6 +32,7 @@ on:
           - postgresql
           - lldap
           - authelia
+          - claude-code-hub
           - traefik
 
 jobs:
@@ -75,6 +78,13 @@ jobs:
             authelia:
               - 'charts/authelia/**'
               - 'environments/dev/authelia/**'
+              - 'environments/dev/values.yaml'
+              - 'helmfile.yaml'
+              - '.github/scripts/**'
+              - '.github/workflows/deploy-dev.yaml'
+            claude-code-hub:
+              - 'charts/claude-code-hub/**'
+              - 'environments/dev/claude-code-hub/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
               - '.github/scripts/**'
@@ -145,6 +155,10 @@ jobs:
       - name: Ensure infra namespace
         if: matrix.component == 'redis' || matrix.component == 'postgresql' || matrix.component == 'lldap' || matrix.component == 'authelia'
         run: kubectl create namespace infra --dry-run=client -o yaml | bash .github/scripts/kubectl-apply-retry.sh
+
+      - name: Ensure app namespace
+        if: matrix.component == 'claude-code-hub'
+        run: kubectl create namespace app --dry-run=client -o yaml | bash .github/scripts/kubectl-apply-retry.sh
 
       - name: Ensure traefik namespace
         if: matrix.component == 'traefik'
@@ -253,6 +267,40 @@ jobs:
             --from-file=storage.postgres.password.txt="$credentials_dir/storage.postgres.password.txt" \
             --dry-run=client -o yaml \
             | bash .github/scripts/kubectl-apply-retry.sh
+
+      - name: Sync Claude Code Hub credentials
+        if: matrix.component == 'claude-code-hub'
+        shell: bash
+        env:
+          CCH_ADMIN_TOKEN: ${{ secrets.CCH_ADMIN_TOKEN }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        run: |
+          test -n "$CCH_ADMIN_TOKEN"
+          test -n "$REDIS_PASSWORD"
+          test -n "$POSTGRES_PASSWORD"
+          umask 077
+          credentials_dir="$(mktemp -d)"
+          trap 'rm -rf "$credentials_dir"' EXIT
+          encoded_postgres_password="$(jq -rn --arg value "$POSTGRES_PASSWORD" '$value|@uri')"
+          encoded_redis_password="$(jq -rn --arg value "$REDIS_PASSWORD" '$value|@uri')"
+          dsn="postgres://postgres:${encoded_postgres_password}@postgresql.infra.svc.cluster.local:5432/claude_code_hub"
+          redis_url="redis://:${encoded_redis_password}@redis-master.infra.svc.cluster.local:6379/2"
+          printf '%s' "$CCH_ADMIN_TOKEN" > "$credentials_dir/admin-token"
+          printf '%s' "$dsn" > "$credentials_dir/dsn"
+          printf '%s' "$redis_url" > "$credentials_dir/redis-url"
+          printf '%s' "$POSTGRES_PASSWORD" > "$credentials_dir/postgres-password"
+          kubectl -n app create secret generic claude-code-hub-secrets \
+            --from-file=admin-token="$credentials_dir/admin-token" \
+            --from-file=dsn="$credentials_dir/dsn" \
+            --from-file=redis-url="$credentials_dir/redis-url" \
+            --from-file=postgres-password="$credentials_dir/postgres-password" \
+            --dry-run=client -o yaml \
+            | bash .github/scripts/kubectl-apply-retry.sh
+          if kubectl -n app get deployment claude-code-hub >/dev/null 2>&1; then
+            kubectl -n app rollout restart deployment/claude-code-hub
+            kubectl -n app rollout status deployment/claude-code-hub --timeout=300s
+          fi
 
       - name: Sync Aliyun DNS credentials
         if: matrix.component == 'traefik'

@@ -1,0 +1,136 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "claude-code-hub.fullname" . }}
+  labels:
+    {{- include "claude-code-hub.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      {{- include "claude-code-hub.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "claude-code-hub.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: claude-code-hub
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
+          env:
+            - name: NODE_ENV
+              value: {{ .Values.config.nodeEnv | quote }}
+            - name: PORT
+              value: {{ .Values.service.targetPort | quote }}
+            - name: DSN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "existingSecret.name is required" .Values.existingSecret.name | quote }}
+                  key: {{ required "existingSecret.dsnKey is required" .Values.existingSecret.dsnKey | quote }}
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.existingSecret.name | quote }}
+                  key: {{ required "existingSecret.redisUrlKey is required" .Values.existingSecret.redisUrlKey | quote }}
+            - name: ADMIN_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.existingSecret.name | quote }}
+                  key: {{ required "existingSecret.adminTokenKey is required" .Values.existingSecret.adminTokenKey | quote }}
+            - name: AUTO_MIGRATE
+              value: {{ .Values.config.autoMigrate | quote }}
+            - name: SESSION_TOKEN_MODE
+              value: {{ .Values.config.sessionTokenMode | quote }}
+            - name: ENABLE_SECURE_COOKIES
+              value: {{ .Values.config.enableSecureCookies | quote }}
+            - name: ENABLE_RATE_LIMIT
+              value: {{ .Values.config.enableRateLimit | quote }}
+            - name: ENABLE_API_KEY_REDIS_CACHE
+              value: {{ .Values.config.enableApiKeyRedisCache | quote }}
+            - name: API_KEY_AUTH_CACHE_TTL_SECONDS
+              value: {{ .Values.config.apiKeyAuthCacheTtlSeconds | quote }}
+            - name: ENABLE_API_KEY_VACUUM_FILTER
+              value: {{ .Values.config.enableApiKeyVacuumFilter | quote }}
+            - name: ENABLE_PROVIDER_CACHE
+              value: {{ .Values.config.enableProviderCache | quote }}
+            - name: AUTH_SESSION_TTL_SECONDS
+              value: {{ .Values.config.authSessionTtlSeconds | quote }}
+            - name: SESSION_TTL
+              value: {{ .Values.config.sessionTtl | quote }}
+            - name: DB_POOL_MAX
+              value: {{ .Values.config.dbPoolMax | quote }}
+            - name: DB_POOL_IDLE_TIMEOUT
+              value: {{ .Values.config.dbPoolIdleTimeout | quote }}
+            - name: DB_POOL_CONNECT_TIMEOUT
+              value: {{ .Values.config.dbPoolConnectTimeout | quote }}
+            - name: FETCH_CONNECT_TIMEOUT
+              value: {{ .Values.config.fetchConnectTimeout | quote }}
+            - name: FETCH_HEADERS_TIMEOUT
+              value: {{ .Values.config.fetchHeadersTimeout | quote }}
+            - name: FETCH_BODY_TIMEOUT
+              value: {{ .Values.config.fetchBodyTimeout | quote }}
+            - name: MESSAGE_REQUEST_WRITE_MODE
+              value: {{ .Values.config.messageRequestWriteMode | quote }}
+            - name: MESSAGE_REQUEST_ASYNC_FLUSH_INTERVAL_MS
+              value: {{ .Values.config.messageRequestAsyncFlushIntervalMs | quote }}
+            - name: MESSAGE_REQUEST_ASYNC_BATCH_SIZE
+              value: {{ .Values.config.messageRequestAsyncBatchSize | quote }}
+            - name: MAX_RETRY_ATTEMPTS_DEFAULT
+              value: {{ .Values.config.maxRetryAttemptsDefault | quote }}
+            - name: TZ
+              value: {{ .Values.config.timezone | quote }}
+            {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.probes.path }}
+              port: http
+            {{- toYaml .Values.probes.startup | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.probes.path }}
+              port: http
+            {{- toYaml .Values.probes.readiness | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.probes.path }}
+              port: http
+            {{- toYaml .Values.probes.liveness | nindent 12 }}
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - sleep 15

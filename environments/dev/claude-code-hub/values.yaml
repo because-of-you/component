@@ -1,0 +1,18 @@
+replicaCount: 1
+
+config:
+  dbPoolMax: 8
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+databaseBootstrap:
+  enabled: true
+  host: postgresql.infra.svc.cluster.local
+  database: claude_code_hub
+  existingSecret: claude-code-hub-secrets

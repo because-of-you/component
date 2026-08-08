@@ -31,6 +31,16 @@ releases:
     values:
       - ./environments/{{ .Environment.Name }}/test-charts/values.yaml
 
+  - name: claude-code-hub
+    namespace: app
+    createNamespace: true
+    chart: ./charts/claude-code-hub
+    needs:
+      - infra/postgresql
+      - infra/redis
+    values:
+      - ./environments/{{ .Environment.Name }}/claude-code-hub/values.yaml
+
   - name: redis
     namespace: infra
     createNamespace: true

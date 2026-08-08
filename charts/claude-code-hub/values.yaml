@@ -1,0 +1,110 @@
+replicaCount: 1
+revisionHistoryLimit: 5
+terminationGracePeriodSeconds: 660
+
+image:
+  repository: ghcr.io/ding113/claude-code-hub
+  tag: v0.8.10
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+
+existingSecret:
+  name: claude-code-hub-secrets
+  dsnKey: dsn
+  redisUrlKey: redis-url
+  adminTokenKey: admin-token
+
+config:
+  nodeEnv: production
+  timezone: Asia/Shanghai
+  autoMigrate: true
+  sessionTokenMode: opaque
+  enableSecureCookies: true
+  enableRateLimit: true
+  enableApiKeyRedisCache: true
+  apiKeyAuthCacheTtlSeconds: 60
+  enableApiKeyVacuumFilter: true
+  enableProviderCache: true
+  authSessionTtlSeconds: 604800
+  sessionTtl: 300
+  dbPoolMax: 10
+  dbPoolIdleTimeout: 20
+  dbPoolConnectTimeout: 10
+  fetchConnectTimeout: 30000
+  fetchHeadersTimeout: 600000
+  fetchBodyTimeout: 600000
+  messageRequestWriteMode: async
+  messageRequestAsyncFlushIntervalMs: 250
+  messageRequestAsyncBatchSize: 200
+  maxRetryAttemptsDefault: 2
+
+extraEnv: []
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+
+probes:
+  path: /api/actions/health
+  startup:
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 5
+    failureThreshold: 24
+  readiness:
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 2
+  liveness:
+    initialDelaySeconds: 15
+    periodSeconds: 15
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+databaseBootstrap:
+  enabled: false
+  image:
+    repository: postgres
+    tag: 18.4-alpine
+    pullPolicy: IfNotPresent
+  host: ""
+  port: 5432
+  database: claude_code_hub
+  adminUser: postgres
+  existingSecret: claude-code-hub-secrets
+  passwordKey: postgres-password
+  backoffLimit: 6
+  resources:
+    requests:
+      cpu: 25m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
