@@ -14,6 +14,8 @@ rustfsIngress:
   tls: {}
 
 rustfs:
+  secret:
+    existingSecret: rustfs-secrets
   ingress:
     enabled: false
   gatewayApi:

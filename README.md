@@ -100,6 +100,12 @@ helm upgrade --install authelia oci://ghcr.io/because-of-you/charts/authelia \
   --create-namespace \
   -f values.yaml
 
+helm upgrade --install rustfs oci://ghcr.io/because-of-you/charts/rustfs \
+  --version 0.0.0-dev \
+  --namespace infra \
+  --create-namespace \
+  -f values.yaml
+
 helm upgrade --install traefik oci://ghcr.io/because-of-you/charts/traefik \
   --version 0.0.0-dev \
   --namespace traefik \
@@ -109,7 +115,7 @@ helm upgrade --install traefik oci://ghcr.io/because-of-you/charts/traefik \
 命名空间约定：
 
 ```text
-infra: redis, postgresql, rabbitmq, lldap, authelia
+infra: redis, postgresql, rabbitmq, lldap, authelia, rustfs
 app: claude-code-hub, test-charts
 traefik: traefik
 ```
@@ -146,6 +152,14 @@ Claude Code Hub 使用仓库自有 Chart 部署无状态应用，复用 `infra` 
 charts/claude-code-hub/README.md
 ```
 
+RustFS 使用官方 Chart 的 standalone 模式，数据和日志分别保存在 `10Gi` 与 `1Gi` PVC；控制台通过
+`https://s3.acitrus.cn` 提供，路径风格 S3 API Endpoint 为 `https://s3.acitrus.cn:1024`。
+OIDC、Secrets、验证、PVC 保留和清理说明见：
+
+```text
+charts/rustfs/README.md
+```
+
 ## 本地开发
 
 本仓库使用 Helmfile 管理本地环境渲染和部署。
@@ -160,6 +174,12 @@ helmfile -e dev template --selector name=redis --skip-deps
 
 ```bash
 helmfile -e dev template --selector name=authelia --skip-deps
+```
+
+渲染 dev 环境的 RustFS：
+
+```bash
+helmfile -e dev template --selector name=rustfs --skip-deps
 ```
 
 渲染 dev 环境的 LLDAP：
@@ -239,7 +259,8 @@ PR 合并前会执行：
 
 ## dev 集群部署
 
-Push 到 `dev` 分支并修改 Redis、PostgreSQL、LLDAP、Authelia 或 Traefik 的 Chart/values 后，
+Push 到 `dev` 分支并修改 Redis、PostgreSQL、LLDAP、Authelia、Claude Code Hub、RustFS 或 Traefik
+的 Chart/values 后，
 [deploy-dev.yaml](./.github/workflows/deploy-dev.yaml) 会检测发生变化的组件，并为每个组件创建独立 Matrix Job。
 每个 Job 通过 Tailscale 连接 K3s，并按组件名执行 Helmfile。例如只修改 Redis 时只运行：
 
@@ -260,6 +281,8 @@ GitHub 的 `dev` Environment 只需要配置：
   `AUTHELIA_SESSION_ENCRYPTION_KEY`、`AUTHELIA_STORAGE_ENCRYPTION_KEY`、
   `AUTHELIA_RESET_PASSWORD_JWT_SECRET`、`AUTHELIA_OIDC_HMAC_SECRET`、`AUTHELIA_OIDC_JWK`、
   `CCH_ADMIN_TOKEN`、`CCH_OIDC_CLIENT_SECRET`、`CCH_OIDC_CLIENT_SECRET_DIGEST`、
+  `RUSTFS_ACCESS_KEY`、`RUSTFS_SECRET_KEY`、`RUSTFS_OIDC_CLIENT_SECRET`、
+  `RUSTFS_OIDC_CLIENT_SECRET_DIGEST`、
   `ALIYUN_ACR_PASSWORD`、
   `ALIYUN_DNS_KEY`、`ALIYUN_DNS_SECRET`
 - Variables：`TS_OAUTH_CLIENT_ID`、`TS_AUDIENCE`、`K3S_TAILSCALE_HOST`、
@@ -271,11 +294,16 @@ GitHub 的 `dev` Environment 只需要配置：
 Redis 和 PostgreSQL 部署任务会分别把对应的 Environment Secret 同步为 `infra` 命名空间中的
 `redis-auth` 和 `postgresql-auth` Kubernetes Secret，再由 Chart 通过 `existingSecret` 引用。
 LLDAP 部署任务会把四项 LLDAP Secret 和 `POSTGRES_PASSWORD` 同步为 `infra/lldap-secrets`，
-并使用独立的 `lldap` 数据库。Authelia 部署任务会把六项专用 Environment Secret、
+并使用独立的 `lldap` 数据库。Authelia 部署任务会把七项专用 Environment Secret、
 `LLDAP_AUTHELIA_PASSWORD` 加上已有的 `REDIS_PASSWORD`、
 `POSTGRES_PASSWORD` 同步为 `infra/authelia-secrets`，并映射为官方 Chart 所需的 LDAP、Session、
 Storage、Reset Password JWT、OIDC、Redis 和 PostgreSQL Secret 键名。Authelia Chart 会通过幂等的
 Helm Hook 自动创建独立数据库；备份和还原步骤见 `charts/authelia/README.md`。
+RustFS 部署任务会把 `RUSTFS_ACCESS_KEY`、`RUSTFS_SECRET_KEY` 和
+`RUSTFS_OIDC_CLIENT_SECRET` 同步为 `infra/rustfs-secrets`。Authelia 部署任务还会把
+`RUSTFS_OIDC_CLIENT_SECRET_DIGEST` 同步为 RustFS OIDC Client 的 PBKDF2 摘要。控制台入口为
+`https://s3.acitrus.cn`；S3 客户端必须使用包含端口的路径风格 Endpoint
+`https://s3.acitrus.cn:1024`。
 Claude Code Hub 部署任务会复用 `POSTGRES_PASSWORD`、`REDIS_PASSWORD`，并把
 `CCH_ADMIN_TOKEN`、`CCH_OIDC_CLIENT_SECRET` 和编码后的连接串同步为
 `app/claude-code-hub-secrets`；Chart 会自动创建 `claude_code_hub` 数据库，应用启动后自行执行

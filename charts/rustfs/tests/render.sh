@@ -5,7 +5,8 @@ chart_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 repo_root="$(cd "$chart_dir/../.." && pwd)"
 dev_values="$repo_root/environments/dev/rustfs/values.yaml"
 rendered="$(mktemp)"
-trap 'rm -f "$rendered"' EXIT
+default_rendered="$(mktemp)"
+trap 'rm -f "$rendered" "$default_rendered"' EXIT
 
 test -f "$chart_dir/Chart.yaml"
 test -f "$chart_dir/values.yaml"
@@ -13,6 +14,9 @@ test -f "$dev_values"
 grep -Fq 'name: rustfs' "$chart_dir/Chart.yaml"
 grep -Fq 'version: 1.0.0-rc.1' "$chart_dir/Chart.yaml"
 grep -Fq 'repository: https://charts.rustfs.com' "$chart_dir/Chart.yaml"
+
+helm template rustfs-default "$chart_dir" >"$default_rendered"
+grep -Fq 'name: rustfs-secrets' "$default_rendered"
 
 helm template rustfs "$chart_dir" --namespace infra -f "$dev_values" >"$rendered"
 
@@ -154,3 +158,11 @@ assert(
   'workflow RustFS rollout status command is missing'
 )
 RUBY
+
+grep -Fq '# RustFS' "$chart_dir/README.md"
+grep -Fq 'https://s3.acitrus.cn' "$chart_dir/README.md"
+grep -Fq 'https://s3.acitrus.cn:1024' "$chart_dir/README.md"
+grep -Fq 'RUSTFS_OIDC_CLIENT_SECRET_DIGEST' "$chart_dir/README.md"
+grep -Fq 'consoleAdmin' "$chart_dir/README.md"
+grep -Fq 'PVC' "$chart_dir/README.md"
+grep -Fq 'charts/rustfs/README.md' "$repo_root/README.md"
