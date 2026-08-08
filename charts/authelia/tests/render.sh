@@ -74,14 +74,58 @@ grep -Fq 'require_pkce: true' "$rendered"
 grep -Fq "pkce_challenge_method: 'S256'" "$rendered"
 grep -Fq "token_endpoint_auth_method: 'client_secret_basic'" "$rendered"
 grep -Fq -- "- 'groups'" "$rendered"
-grep -Fq "client_id: 'rustfs-console'" "$rendered"
-grep -Fq "client_name: 'RustFS Console'" "$rendered"
-grep -Fq "claims_policy: 'rustfs'" "$rendered"
-grep -Fq 'require_pkce: true' "$rendered"
-grep -Fq "pkce_challenge_method: 'S256'" "$rendered"
-grep -Fq "token_endpoint_auth_method: 'client_secret_post'" "$rendered"
-grep -Fq -- "- 'https://s3.acitrus.cn/rustfs/admin/v3/oidc/callback/default'" "$rendered"
-grep -Fq 'identity_providers.oidc.clients.rustfs-console.secret.txt' "$rendered"
+
+rustfs_client_block="$(awk '
+  /^          - client_id: '\''rustfs-console'\''$/ { capture = 1 }
+  capture && /^          - client_id:/ && $0 !~ /rustfs-console/ { exit }
+  capture && /^        [^ ]/ { exit }
+  capture && /^    [^ ]/ { exit }
+  capture { print }
+' "$rendered")"
+test -n "$rustfs_client_block"
+grep -Fq "client_id: 'rustfs-console'" <<<"$rustfs_client_block"
+grep -Fq "client_name: 'RustFS Console'" <<<"$rustfs_client_block"
+grep -Fq '/secrets/oidc/identity_providers.oidc.clients.rustfs-console.secret.txt' <<<"$rustfs_client_block"
+grep -Fq "authorization_policy: 'one_factor'" <<<"$rustfs_client_block"
+grep -Fq "claims_policy: 'rustfs'" <<<"$rustfs_client_block"
+grep -Fq 'require_pkce: true' <<<"$rustfs_client_block"
+grep -Fq "pkce_challenge_method: 'S256'" <<<"$rustfs_client_block"
+grep -Fq 'redirect_uris:' <<<"$rustfs_client_block"
+grep -Fq -- "- 'https://s3.acitrus.cn/rustfs/admin/v3/oidc/callback/default'" <<<"$rustfs_client_block"
+grep -Fq 'scopes:' <<<"$rustfs_client_block"
+grep -Fq -- "- 'openid'" <<<"$rustfs_client_block"
+grep -Fq -- "- 'profile'" <<<"$rustfs_client_block"
+grep -Fq -- "- 'email'" <<<"$rustfs_client_block"
+grep -Fq -- "- 'groups'" <<<"$rustfs_client_block"
+grep -Fq 'grant_types:' <<<"$rustfs_client_block"
+grep -Fq -- "- 'authorization_code'" <<<"$rustfs_client_block"
+grep -Fq 'response_types:' <<<"$rustfs_client_block"
+grep -Fq -- "- 'code'" <<<"$rustfs_client_block"
+grep -Fq "token_endpoint_auth_method: 'client_secret_post'" <<<"$rustfs_client_block"
+
+oidc_secret_mount_block="$(awk '
+  /^        - name: secret-authelia-secrets$/ { capture = 1 }
+  capture && /^        - name:/ && $0 !~ /secret-authelia-secrets/ { exit }
+  capture && /^      volumes:$/ { exit }
+  capture { print }
+' "$rendered")"
+test -n "$oidc_secret_mount_block"
+grep -Fq 'name: secret-authelia-secrets' <<<"$oidc_secret_mount_block"
+grep -Fq 'mountPath: /secrets/oidc' <<<"$oidc_secret_mount_block"
+
+oidc_secret_volume_block="$(awk '
+  /^      volumes:$/ { in_volumes = 1 }
+  in_volumes && /^      - name: secret-authelia-secrets$/ { capture = 1 }
+  capture && /^      - name:/ && $0 !~ /secret-authelia-secrets/ { exit }
+  capture && /^---$/ { exit }
+  capture { print }
+' "$rendered")"
+test -n "$oidc_secret_volume_block"
+grep -Fq 'secretName: authelia-secrets' <<<"$oidc_secret_volume_block"
+grep -Fq 'items:' <<<"$oidc_secret_volume_block"
+grep -Fq 'key: identity_providers.oidc.clients.rustfs-console.secret.txt' <<<"$oidc_secret_volume_block"
+grep -Fq 'path: identity_providers.oidc.clients.rustfs-console.secret.txt' <<<"$oidc_secret_volume_block"
+
 grep -Fq 'mountPath: /secrets/oidc' "$rendered"
 grep -Fq 'identity_providers.oidc.jwk.RS256.pem' "$rendered"
 grep -Fq 'identity_providers.oidc.clients.claude-code-hub.secret.txt' "$rendered"
