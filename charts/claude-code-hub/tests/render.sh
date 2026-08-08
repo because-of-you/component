@@ -68,14 +68,20 @@ for forbidden_kind in Ingress IngressRoute Middleware PersistentVolumeClaim Secr
 done
 
 grep -Fq 'chart: ./charts/claude-code-hub' "$repo_root/helmfile.yaml"
-grep -Fq "'charts/claude-code-hub/**'" "$repo_root/.github/workflows/deploy-dev.yaml"
+grep -Fq "'charts/claude-code-hub/templates/**'" "$repo_root/.github/workflows/deploy-dev.yaml"
 grep -Fq "'environments/dev/claude-code-hub/**'" "$repo_root/.github/workflows/deploy-dev.yaml"
 grep -Fq 'CCH_ADMIN_TOKEN: ${{ secrets.CCH_ADMIN_TOKEN }}' "$repo_root/.github/workflows/deploy-dev.yaml"
 grep -Fq 'CCH_OIDC_CLIENT_SECRET: ${{ secrets.CCH_OIDC_CLIENT_SECRET }}' "$repo_root/.github/workflows/deploy-dev.yaml"
-grep -Fq 'ALIYUN_ACR_REGISTRY: ${{ vars.ALIYUN_ACR_REGISTRY }}' "$repo_root/.github/workflows/deploy-dev.yaml"
-grep -Fq 'ghcr.io/because-of-you/claude-code-hub:${image_tag}' "$repo_root/.github/workflows/deploy-dev.yaml"
-grep -Fq 'uses: ./.github/actions/mirror-container-image' "$repo_root/.github/workflows/deploy-dev.yaml"
-grep -Fq 'destination-password: ${{ secrets.ALIYUN_ACR_PASSWORD }}' "$repo_root/.github/workflows/deploy-dev.yaml"
+sync_workflow="$repo_root/.github/workflows/sync-images.yaml"
+test -f "$sync_workflow"
+grep -Fq 'ALIYUN_ACR_REGISTRY: ${{ vars.ALIYUN_ACR_REGISTRY }}' "$sync_workflow"
+grep -Fq 'ghcr.io/because-of-you/claude-code-hub:${image_tag}' "$sync_workflow"
+grep -Fq 'uses: ./.github/actions/mirror-container-image' "$sync_workflow"
+grep -Fq 'destination-password: ${{ secrets.ALIYUN_ACR_PASSWORD }}' "$sync_workflow"
+if grep -Fq 'uses: ./.github/actions/mirror-container-image' "$repo_root/.github/workflows/deploy-dev.yaml"; then
+  echo "Deploy Dev must not mirror container images" >&2
+  exit 1
+fi
 mirror_action="$repo_root/.github/actions/mirror-container-image/action.yml"
 test -f "$mirror_action"
 grep -Fq 'source_digest="$(skopeo inspect' "$mirror_action"

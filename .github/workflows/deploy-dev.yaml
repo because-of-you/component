@@ -79,7 +79,10 @@ jobs:
               - 'helmfile.yaml'
               - '.github/scripts/**'
             claude-code-hub:
-              - 'charts/claude-code-hub/**'
+              - 'charts/claude-code-hub/Chart.yaml'
+              - 'charts/claude-code-hub/values.yaml'
+              - 'charts/claude-code-hub/values.schema.json'
+              - 'charts/claude-code-hub/templates/**'
               - 'environments/dev/claude-code-hub/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
@@ -115,48 +118,6 @@ jobs:
         uses: mamezou-tech/setup-helmfile@v2.2.0
         with:
           helmfile-version: v1.7.1
-
-      - name: Resolve Claude Code Hub image
-        if: matrix.component == 'claude-code-hub'
-        id: claude-code-hub-image
-        shell: bash
-        env:
-          ALIYUN_ACR_REGISTRY: ${{ vars.ALIYUN_ACR_REGISTRY }}
-          ALIYUN_ACR_NAMESPACE: ${{ vars.ALIYUN_ACR_NAMESPACE }}
-        run: |
-          test -n "$ALIYUN_ACR_REGISTRY"
-          test -n "$ALIYUN_ACR_NAMESPACE"
-
-          rendered_deployment="$(mktemp)"
-          trap 'rm -f "$rendered_deployment"' EXIT
-          helm template claude-code-hub charts/claude-code-hub \
-            --namespace app \
-            -f environments/dev/claude-code-hub/values.yaml \
-            --show-only templates/deployment.yaml \
-            > "$rendered_deployment"
-
-          destination_image="$(sed -n 's/^[[:space:]]*image: "\([^"]*\)"$/\1/p' "$rendered_deployment" | head -n 1)"
-          test -n "$destination_image"
-          image_tag="${destination_image##*:}"
-          expected_image="${ALIYUN_ACR_REGISTRY}/${ALIYUN_ACR_NAMESPACE}/claude-code-hub:${image_tag}"
-          if [[ "$destination_image" != "$expected_image" ]]; then
-            echo "Rendered image '$destination_image' does not match configured ACR destination '$expected_image'" >&2
-            exit 1
-          fi
-
-          source_image="ghcr.io/because-of-you/claude-code-hub:${image_tag}"
-          echo "source-image=${source_image}" >> "$GITHUB_OUTPUT"
-          echo "destination-image=${destination_image}" >> "$GITHUB_OUTPUT"
-
-      - name: Mirror Claude Code Hub image to Aliyun ACR
-        if: matrix.component == 'claude-code-hub'
-        uses: ./.github/actions/mirror-container-image
-        with:
-          source-image: ${{ steps.claude-code-hub-image.outputs.source-image }}
-          destination-image: ${{ steps.claude-code-hub-image.outputs.destination-image }}
-          destination-registry: ${{ vars.ALIYUN_ACR_REGISTRY }}
-          destination-username: ${{ vars.ALIYUN_ACR_USERNAME }}
-          destination-password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
 
       - name: Connect to Tailscale
         uses: tailscale/github-action@v4
