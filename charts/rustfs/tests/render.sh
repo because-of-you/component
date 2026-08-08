@@ -6,7 +6,8 @@ repo_root="$(cd "$chart_dir/../.." && pwd)"
 dev_values="$repo_root/environments/dev/rustfs/values.yaml"
 rendered="$(mktemp)"
 default_rendered="$(mktemp)"
-trap 'rm -f "$rendered" "$default_rendered"' EXIT
+tcp_rendered_dir="$(mktemp -d)"
+trap 'rm -f "$rendered" "$default_rendered"; rm -rf "$tcp_rendered_dir"' EXIT
 
 test -f "$chart_dir/Chart.yaml"
 test -f "$chart_dir/values.yaml"
@@ -47,10 +48,87 @@ grep -Fq -- '- gravitation' "$rendered"
 grep -Fq 'port: 9001' "$rendered"
 grep -Fq 'port: 9000' "$rendered"
 grep -Fq 'certResolver: leresolver' "$rendered"
-if grep -R -F --include='*.yaml' --include='*.tpl' 'HostSNI(`*`)' "$repo_root/charts"; then
-  echo 'A catch-all TCP router would intercept the shared gravitation entrypoint' >&2
-  exit 1
-fi
+for component in redis postgresql rabbitmq; do
+  helm template "$component" "$repo_root/charts/$component" \
+    --namespace infra \
+    -f "$repo_root/environments/dev/$component/values.yaml" \
+    >"$tcp_rendered_dir/$component.yaml"
+done
+
+ruby --disable-gems - "$rendered" "$tcp_rendered_dir" <<'RUBY'
+require 'yaml'
+
+def assert(condition, message)
+  abort message unless condition
+end
+
+documents = YAML.load_stream(File.read(ARGV.fetch(0))).compact
+http_routes = documents.select { |document| document['kind'] == 'IngressRoute' }
+tcp_routes = documents.select { |document| document['kind'] == 'IngressRouteTCP' }
+
+assert(http_routes.length == 2, 'RustFS must render exactly two HTTP IngressRoute resources')
+assert(tcp_routes.empty?, 'RustFS must not render an IngressRouteTCP resource')
+
+expected_routes = {
+  'rustfs-console' => {
+    'entryPoints' => ['websecure'],
+    'routes' => [
+      {
+        'match' => 'Host(`s3.acitrus.cn`)',
+        'services' => [{ 'name' => 'rustfs-svc', 'port' => 9001 }]
+      }
+    ],
+    'tls' => { 'certResolver' => 'leresolver' }
+  },
+  'rustfs-s3-api' => {
+    'entryPoints' => ['gravitation'],
+    'routes' => [
+      {
+        'match' => 'Host(`s3.acitrus.cn`)',
+        'services' => [{ 'name' => 'rustfs-svc', 'port' => 9000 }]
+      }
+    ],
+    'tls' => { 'certResolver' => 'leresolver' }
+  }
+}
+
+assert(
+  http_routes.map { |route| route.dig('metadata', 'name') }.sort == expected_routes.keys.sort,
+  'RustFS HTTP IngressRoute names are incorrect'
+)
+expected_routes.each do |name, expected_spec|
+  route = http_routes.find { |candidate| candidate.dig('metadata', 'name') == name }
+  assert(route['spec'] == expected_spec, "RustFS #{name} route mapping is incorrect")
+end
+
+expected_tcp_hosts = {
+  'redis' => 'redis.tcp.acitrus.cn',
+  'postgresql' => 'postgresql.tcp.acitrus.cn',
+  'rabbitmq' => 'rabbitmq.tcp.acitrus.cn'
+}
+expected_tcp_hosts.each do |component, host|
+  component_documents = YAML.load_stream(
+    File.read(File.join(ARGV.fetch(1), "#{component}.yaml"))
+  ).compact
+  component_tcp_routes = component_documents.select do |document|
+    document['kind'] == 'IngressRouteTCP'
+  end
+  assert(
+    component_tcp_routes.length == 1,
+    "#{component} must render exactly one IngressRouteTCP resource"
+  )
+  ingress = component_tcp_routes.first
+  assert(
+    ingress.dig('spec', 'entryPoints') == ['gravitation'],
+    "#{component} TCP route must use only the gravitation entrypoint"
+  )
+  rules = ingress.dig('spec', 'routes')
+  assert(rules.is_a?(Array) && rules.length == 1, "#{component} TCP route rule count is incorrect")
+  match = rules.first['match']
+  assert(match == "HostSNI(`#{host}`)", "#{component} TCP HostSNI rule is incorrect")
+  assert(match != 'HostSNI(`*`)', "#{component} TCP route must not use catch-all HostSNI")
+end
+RUBY
 
 workflow="$repo_root/.github/workflows/deploy-dev.yaml"
 image_manifest="$repo_root/images/rustfs/images.yaml"
