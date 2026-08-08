@@ -83,6 +83,12 @@ helm upgrade --install postgresql oci://ghcr.io/because-of-you/charts/postgresql
   --namespace infra \
   --create-namespace
 
+helm upgrade --install lldap oci://ghcr.io/because-of-you/charts/lldap \
+  --version 0.0.0-dev \
+  --namespace infra \
+  --create-namespace \
+  -f values.yaml
+
 helm upgrade --install rabbitmq oci://ghcr.io/because-of-you/charts/rabbitmq \
   --version 0.0.0-dev \
   --namespace infra \
@@ -103,7 +109,7 @@ helm upgrade --install traefik oci://ghcr.io/because-of-you/charts/traefik \
 命名空间约定：
 
 ```text
-infra: redis, postgresql, rabbitmq, authelia
+infra: redis, postgresql, rabbitmq, lldap, authelia
 traefik: traefik
 ```
 
@@ -125,6 +131,13 @@ Middleware。密钥 values 和部署示例见：
 charts/authelia/README.md
 ```
 
+LLDAP 使用官方安装文档推荐的 `Evantage-WS/lldap-kubernetes` Helm Chart，数据保存在 PostgreSQL，
+并通过 `ldap.acitrus.cn` 提供管理页面。Secrets、首次登录、日志和完整清理见：
+
+```text
+charts/lldap/README.md
+```
+
 ## 本地开发
 
 本仓库使用 Helmfile 管理本地环境渲染和部署。
@@ -139,6 +152,12 @@ helmfile -e dev template --selector name=redis --skip-deps
 
 ```bash
 helmfile -e dev template --selector name=authelia --skip-deps
+```
+
+渲染 dev 环境的 LLDAP：
+
+```bash
+helmfile -e dev template --selector name=lldap --skip-deps
 ```
 
 部署到当前 kubeconfig 指向的集群：
@@ -211,7 +230,7 @@ PR 合并前会执行：
 
 ## dev 集群部署
 
-Push 到 `dev` 分支并修改 Redis、PostgreSQL、Authelia 或 Traefik 的 Chart/values 后，
+Push 到 `dev` 分支并修改 Redis、PostgreSQL、LLDAP、Authelia 或 Traefik 的 Chart/values 后，
 [deploy-dev.yaml](./.github/workflows/deploy-dev.yaml) 会检测发生变化的组件，并为每个组件创建独立 Matrix Job。
 每个 Job 通过 Tailscale 连接 K3s，并按组件名执行 Helmfile。例如只修改 Redis 时只运行：
 
@@ -224,7 +243,8 @@ helmfile -e dev --selector name=redis sync
 
 GitHub 的 `dev` Environment 只需要配置：
 
-- Secrets：`KUBECONFIG`、`REDIS_PASSWORD`、`POSTGRES_PASSWORD`、`AUTHELIA_LDAP_PASSWORD`、
+- Secrets：`KUBECONFIG`、`REDIS_PASSWORD`、`POSTGRES_PASSWORD`、`LLDAP_JWT_SECRET`、
+  `LLDAP_KEY_SEED`、`LLDAP_ADMIN_PASSWORD`、`LLDAP_AUTHELIA_PASSWORD`、
   `AUTHELIA_SESSION_ENCRYPTION_KEY`、`AUTHELIA_STORAGE_ENCRYPTION_KEY`、
   `AUTHELIA_RESET_PASSWORD_JWT_SECRET`、`ALIYUN_DNS_KEY`、`ALIYUN_DNS_SECRET`
 - Variables：`TS_OAUTH_CLIENT_ID`、`TS_AUDIENCE`、`K3S_TAILSCALE_HOST`
@@ -234,7 +254,9 @@ GitHub 的 `dev` Environment 只需要配置：
 `K3S_TAILSCALE_HOST` 填写 K3s 主机的 Tailscale IP 或 MagicDNS 名称。
 Redis 和 PostgreSQL 部署任务会分别把对应的 Environment Secret 同步为 `infra` 命名空间中的
 `redis-auth` 和 `postgresql-auth` Kubernetes Secret，再由 Chart 通过 `existingSecret` 引用。
-Authelia 部署任务会把四项专用 Environment Secret 加上已有的 `REDIS_PASSWORD`、
+LLDAP 部署任务会把四项 LLDAP Secret 和 `POSTGRES_PASSWORD` 同步为 `infra/lldap-secrets`，
+并使用独立的 `lldap` 数据库。Authelia 部署任务会把三项专用 Environment Secret、
+`LLDAP_AUTHELIA_PASSWORD` 加上已有的 `REDIS_PASSWORD`、
 `POSTGRES_PASSWORD` 同步为 `infra/authelia-secrets`，并映射为官方 Chart 所需的 LDAP、Session、
 Storage、Reset Password JWT、Redis 和 PostgreSQL Secret 键名。独立数据库的首次建库、备份和
 还原步骤见 `charts/authelia/README.md`。
