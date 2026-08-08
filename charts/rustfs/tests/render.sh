@@ -66,6 +66,61 @@ documents = YAML.load_stream(File.read(ARGV.fetch(0))).compact
 http_routes = documents.select { |document| document['kind'] == 'IngressRoute' }
 tcp_routes = documents.select { |document| document['kind'] == 'IngressRouteTCP' }
 
+deployments = documents.select do |document|
+  document['kind'] == 'Deployment' && document.dig('metadata', 'name') == 'rustfs'
+end
+assert(deployments.length == 1, 'RustFS must render exactly one rustfs Deployment')
+
+containers = deployments.first.dig('spec', 'template', 'spec', 'containers')
+assert(containers.is_a?(Array), 'RustFS Deployment containers are missing')
+container = containers.find { |candidate| candidate['name'] == 'rustfs' }
+assert(container, 'RustFS Deployment rustfs container is missing')
+
+env = container['env']
+assert(env.is_a?(Array), 'RustFS container env is missing')
+env_by_name = env.each_with_object({}) do |entry, indexed|
+  name = entry['name']
+  assert(name.is_a?(String), 'RustFS container env entry has no name')
+  assert(!indexed.key?(name), "RustFS container env contains duplicate #{name}")
+  indexed[name] = entry['value']
+end
+expected_env = {
+  'RUSTFS_BROWSER_REDIRECT_URL' => 'https://s3.acitrus.cn',
+  'RUSTFS_IDENTITY_OPENID_ENABLE' => 'on',
+  'RUSTFS_IDENTITY_OPENID_CONFIG_URL' => 'https://auth.acitrus.cn',
+  'RUSTFS_IDENTITY_OPENID_CLIENT_ID' => 'rustfs-console',
+  'RUSTFS_IDENTITY_OPENID_SCOPES' => 'openid,profile,email,groups',
+  'RUSTFS_IDENTITY_OPENID_REDIRECT_URI' =>
+    'https://s3.acitrus.cn/rustfs/admin/v3/oidc/callback/default',
+  'RUSTFS_IDENTITY_OPENID_REDIRECT_URI_DYNAMIC' => 'off',
+  'RUSTFS_IDENTITY_OPENID_DISPLAY_NAME' => 'Authelia',
+  'RUSTFS_IDENTITY_OPENID_GROUPS_CLAIM' => 'groups',
+  'RUSTFS_IDENTITY_OPENID_EMAIL_CLAIM' => 'email',
+  'RUSTFS_IDENTITY_OPENID_USERNAME_CLAIM' => 'preferred_username',
+  'RUSTFS_IDENTITY_OPENID_ROLE_POLICY' => 'consoleAdmin'
+}
+assert(
+  env_by_name == expected_env,
+  'RustFS container OIDC environment contract is incorrect'
+)
+assert(
+  !env_by_name.key?('RUSTFS_IDENTITY_OPENID_CLIENT_SECRET'),
+  'RustFS OIDC client secret must not be rendered as a literal env value'
+)
+assert(
+  !env_by_name.key?('RUSTFS_SERVER_DOMAINS') &&
+    !File.read(ARGV.fetch(0)).include?('RUSTFS_SERVER_DOMAINS'),
+  'RustFS path-style S3 mode must not set RUSTFS_SERVER_DOMAINS'
+)
+
+env_from = container['envFrom']
+assert(env_from.is_a?(Array), 'RustFS container envFrom is missing')
+secret_refs = env_from.map { |entry| entry.dig('secretRef', 'name') }.compact
+assert(
+  secret_refs == ['rustfs-secrets'],
+  'RustFS OIDC client secret must come from the rustfs-secrets envFrom reference'
+)
+
 assert(http_routes.length == 2, 'RustFS must render exactly two HTTP IngressRoute resources')
 assert(tcp_routes.empty?, 'RustFS must not render an IngressRouteTCP resource')
 
