@@ -80,7 +80,11 @@ grep -Fq 'autheliaSecrets.ldapPassword is required' "$failure_output"
 
 grep -Fq 'chart: ./charts/authelia' "$repo_root/helmfile.yaml"
 grep -Fq "'charts/authelia/**'" "$repo_root/.github/workflows/deploy-dev.yaml"
-grep -Fq 'AUTHELIA_LDAP_PASSWORD' "$repo_root/.github/workflows/deploy-dev.yaml"
+grep -Fq 'LLDAP_AUTHELIA_PASSWORD' "$repo_root/.github/workflows/deploy-dev.yaml"
+if grep -Fq 'AUTHELIA_LDAP_PASSWORD' "$repo_root/.github/workflows/deploy-dev.yaml"; then
+  echo 'Authelia credential sync must use the LLDAP bind account password' >&2
+  exit 1
+fi
 authelia_sync_step="$(sed -n '/- name: Sync Authelia credentials/,/- name: Sync Aliyun DNS credentials/p' "$repo_root/.github/workflows/deploy-dev.yaml")"
 grep -Fq 'POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}' <<<"$authelia_sync_step"
 if grep -Fq 'AUTHELIA_POSTGRES_PASSWORD' <<<"$authelia_sync_step"; then

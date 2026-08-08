@@ -7,10 +7,12 @@ on:
     paths:
       - 'charts/redis/**'
       - 'charts/postgresql/**'
+      - 'charts/lldap/**'
       - 'charts/authelia/**'
       - 'charts/traefik/**'
       - 'environments/dev/redis/**'
       - 'environments/dev/postgresql/**'
+      - 'environments/dev/lldap/**'
       - 'environments/dev/authelia/**'
       - 'environments/dev/traefik/**'
       - 'environments/dev/values.yaml'
@@ -25,6 +27,7 @@ on:
         options:
           - redis
           - postgresql
+          - lldap
           - authelia
           - traefik
 
@@ -56,6 +59,12 @@ jobs:
             postgresql:
               - 'charts/postgresql/**'
               - 'environments/dev/postgresql/**'
+              - 'environments/dev/values.yaml'
+              - 'helmfile.yaml'
+              - '.github/workflows/deploy-dev.yaml'
+            lldap:
+              - 'charts/lldap/**'
+              - 'environments/dev/lldap/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
               - '.github/workflows/deploy-dev.yaml'
@@ -112,7 +121,7 @@ jobs:
           kubeconfig: ${{ secrets.KUBECONFIG }}
 
       - name: Ensure infra namespace
-        if: matrix.component == 'redis' || matrix.component == 'postgresql' || matrix.component == 'authelia'
+        if: matrix.component == 'redis' || matrix.component == 'postgresql' || matrix.component == 'lldap' || matrix.component == 'authelia'
         run: kubectl create namespace infra --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Ensure traefik namespace
@@ -145,18 +154,60 @@ jobs:
                 --dry-run=client -o yaml \
             | kubectl apply -f -
 
+      - name: Sync LLDAP credentials
+        if: matrix.component == 'lldap'
+        shell: bash
+        env:
+          LLDAP_JWT_SECRET: ${{ secrets.LLDAP_JWT_SECRET }}
+          LLDAP_KEY_SEED: ${{ secrets.LLDAP_KEY_SEED }}
+          LLDAP_ADMIN_PASSWORD: ${{ secrets.LLDAP_ADMIN_PASSWORD }}
+          LLDAP_AUTHELIA_PASSWORD: ${{ secrets.LLDAP_AUTHELIA_PASSWORD }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        run: |
+          test -n "$LLDAP_JWT_SECRET"
+          test -n "$LLDAP_KEY_SEED"
+          test -n "$LLDAP_ADMIN_PASSWORD"
+          test -n "$LLDAP_AUTHELIA_PASSWORD"
+          test -n "$POSTGRES_PASSWORD"
+          umask 077
+          credentials_dir="$(mktemp -d)"
+          trap 'rm -rf "$credentials_dir"' EXIT
+          encoded_postgres_password="$(jq -rn --arg value "$POSTGRES_PASSWORD" '$value|@uri')"
+          database_url="postgres://postgres:${encoded_postgres_password}@postgresql.infra.svc.cluster.local:5432/lldap"
+          printf '%s' "$LLDAP_JWT_SECRET" > "$credentials_dir/lldap-jwt-secret"
+          printf '%s' "$LLDAP_KEY_SEED" > "$credentials_dir/lldap-key-seed"
+          printf '%s' 'admin' > "$credentials_dir/lldap-ldap-user-name"
+          printf '%s' "$LLDAP_ADMIN_PASSWORD" > "$credentials_dir/lldap-ldap-user-pass"
+          printf '%s' 'dc=acitrus,dc=cn' > "$credentials_dir/base-dn"
+          printf '%s' "$database_url" > "$credentials_dir/database-url"
+          printf '%s' "$LLDAP_AUTHELIA_PASSWORD" > "$credentials_dir/authelia-password"
+          kubectl -n infra create secret generic lldap-secrets \
+            --from-file=lldap-jwt-secret="$credentials_dir/lldap-jwt-secret" \
+            --from-file=lldap-key-seed="$credentials_dir/lldap-key-seed" \
+            --from-file=lldap-ldap-user-name="$credentials_dir/lldap-ldap-user-name" \
+            --from-file=lldap-ldap-user-pass="$credentials_dir/lldap-ldap-user-pass" \
+            --from-file=base-dn="$credentials_dir/base-dn" \
+            --from-file=database-url="$credentials_dir/database-url" \
+            --from-file=authelia-password="$credentials_dir/authelia-password" \
+            --dry-run=client -o yaml \
+            | kubectl apply -f -
+          if kubectl -n infra get deployment lldap >/dev/null 2>&1; then
+            kubectl -n infra rollout restart deployment/lldap
+            kubectl -n infra rollout status deployment/lldap --timeout=300s
+          fi
+
       - name: Sync Authelia credentials
         if: matrix.component == 'authelia'
         shell: bash
         env:
-          AUTHELIA_LDAP_PASSWORD: ${{ secrets.AUTHELIA_LDAP_PASSWORD }}
+          LLDAP_AUTHELIA_PASSWORD: ${{ secrets.LLDAP_AUTHELIA_PASSWORD }}
           AUTHELIA_SESSION_ENCRYPTION_KEY: ${{ secrets.AUTHELIA_SESSION_ENCRYPTION_KEY }}
           AUTHELIA_STORAGE_ENCRYPTION_KEY: ${{ secrets.AUTHELIA_STORAGE_ENCRYPTION_KEY }}
           AUTHELIA_RESET_PASSWORD_JWT_SECRET: ${{ secrets.AUTHELIA_RESET_PASSWORD_JWT_SECRET }}
           REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         run: |
-          test -n "$AUTHELIA_LDAP_PASSWORD"
+          test -n "$LLDAP_AUTHELIA_PASSWORD"
           test -n "$AUTHELIA_SESSION_ENCRYPTION_KEY"
           test -n "$AUTHELIA_STORAGE_ENCRYPTION_KEY"
           test -n "$AUTHELIA_RESET_PASSWORD_JWT_SECRET"
@@ -165,7 +216,7 @@ jobs:
           umask 077
           credentials_dir="$(mktemp -d)"
           trap 'rm -rf "$credentials_dir"' EXIT
-          printf '%s' "$AUTHELIA_LDAP_PASSWORD" > "$credentials_dir/authentication.ldap.password.txt"
+          printf '%s' "$LLDAP_AUTHELIA_PASSWORD" > "$credentials_dir/authentication.ldap.password.txt"
           printf '%s' "$AUTHELIA_SESSION_ENCRYPTION_KEY" > "$credentials_dir/session.encryption.key"
           printf '%s' "$AUTHELIA_STORAGE_ENCRYPTION_KEY" > "$credentials_dir/storage.encryption.key"
           printf '%s' "$AUTHELIA_RESET_PASSWORD_JWT_SECRET" > "$credentials_dir/identity_validation.reset_password.jwt.hmac.key"
