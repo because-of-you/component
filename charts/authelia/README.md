@@ -31,8 +31,11 @@ LDAP 地址、Bind DN、Cookie 域名、Traefik IngressRoute、ForwardAuth 地�
 - `AUTHELIA_SESSION_ENCRYPTION_KEY`，至少 32 个字符
 - `AUTHELIA_STORAGE_ENCRYPTION_KEY`，至少 20 个字符
 - `AUTHELIA_RESET_PASSWORD_JWT_SECRET`，至少 32 个字符
+- `AUTHELIA_OIDC_HMAC_SECRET`，OIDC HMAC 密钥
+- `AUTHELIA_OIDC_JWK`，完整的 RS256 私钥 PEM
+- `CCH_OIDC_CLIENT_SECRET_DIGEST`，CCH OIDC 客户端密钥的 PBKDF2 摘要
 
-部署工作流还会复用已有的 `REDIS_PASSWORD` 和 `POSTGRES_PASSWORD`。六项值会被同步为
+部署工作流还会复用已有的 `REDIS_PASSWORD` 和 `POSTGRES_PASSWORD`。这些值会被同步为
 `infra/authelia-secrets` Kubernetes Secret，并映射为 Authelia 官方 Chart 所需的键名。
 dev values 通过以下配置引用：
 
@@ -44,6 +47,34 @@ authelia:
 
 真实密钥不会写入 values 或通过 Helm 命令行传递。Chart 仍保留默认关闭的
 `autheliaSecrets` 模板，供独立 OCI 使用方按需启用；不要把真实值提交到仓库。
+
+### OIDC 密钥生成
+
+使用 Authelia CLI 同时生成 CCH 客户端明文密钥及其 PBKDF2 摘要：
+
+```bash
+docker run --rm -it authelia/authelia:4.39.20 \
+  authelia crypto hash generate pbkdf2 --variant sha512 \
+  --random --random.length 72 --random.charset rfc3986
+```
+
+输出的 `Random Password` 保存为 `CCH_OIDC_CLIENT_SECRET`，`Digest` 保存为
+`CCH_OIDC_CLIENT_SECRET_DIGEST`；两项必须来自同一次生成。也可以在已部署的 Authelia Pod 中执行
+相同的 `authelia crypto hash generate` 命令，无需 Docker。
+
+另外生成 OIDC HMAC 与 RS256 私钥：
+
+```bash
+openssl rand -hex 64
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out oidc-private.pem
+```
+
+第一个输出保存为 `AUTHELIA_OIDC_HMAC_SECRET`；`oidc-private.pem` 的完整内容（包括 BEGIN/END
+行）保存为 `AUTHELIA_OIDC_JWK`。私钥文件只用于录入 Secret，不能提交到仓库。
+
+dev 中注册的 Client ID 为 `claude-code-hub`，回调地址严格匹配
+`https://inner.coding.acitrus.cn/api/auth/oidc/callback`。claims policy 会把 `groups` 写入 ID Token，
+CCH 再校验用户必须属于 `lldap_admin`。
 
 ## 外部 PostgreSQL 与 Redis
 

@@ -1,0 +1,267 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "replicaCount",
+    "image",
+    "service",
+    "existingSecret",
+    "config",
+    "podDisruptionBudget",
+    "databaseBootstrap"
+  ],
+  "properties": {
+    "replicaCount": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "revisionHistoryLimit": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "terminationGracePeriodSeconds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "strategy": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["RollingUpdate", "Recreate"]
+        },
+        "rollingUpdate": {
+          "type": "object"
+        }
+      }
+    },
+    "image": {
+      "type": "object",
+      "required": ["repository", "tag", "pullPolicy"],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tag": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pullPolicy": {
+          "type": "string",
+          "enum": ["Always", "IfNotPresent", "Never"]
+        }
+      }
+    },
+    "service": {
+      "type": "object",
+      "required": ["type", "port", "targetPort"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["ClusterIP", "NodePort", "LoadBalancer"]
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "targetPort": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "annotations": {
+          "type": "object"
+        }
+      }
+    },
+    "podDisruptionBudget": {
+      "type": "object",
+      "required": ["enabled", "maxUnavailable"],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "maxUnavailable": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "string",
+              "pattern": "^[0-9]+%$"
+            }
+          ]
+        }
+      }
+    },
+    "existingSecret": {
+      "type": "object",
+      "required": ["name", "dsnKey", "redisUrlKey", "adminTokenKey", "oidcClientSecretKey"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "dsnKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "redisUrlKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "adminTokenKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "oidcClientSecretKey": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "config": {
+      "type": "object",
+      "required": ["autoMigrate", "sessionTokenMode"],
+      "properties": {
+        "nodeEnv": {"type": "string", "minLength": 1},
+        "timezone": {"type": "string", "minLength": 1},
+        "autoMigrate": {"type": "boolean"},
+        "sessionTokenMode": {
+          "type": "string",
+          "enum": ["legacy", "dual", "opaque"]
+        },
+        "enableSecureCookies": {"type": "boolean"},
+        "enableRateLimit": {"type": "boolean"},
+        "enableApiKeyRedisCache": {"type": "boolean"},
+        "apiKeyAuthCacheTtlSeconds": {"type": "integer", "minimum": 1},
+        "enableApiKeyVacuumFilter": {"type": "boolean"},
+        "enableProviderCache": {"type": "boolean"},
+        "authSessionTtlSeconds": {"type": "integer", "minimum": 1},
+        "sessionTtl": {"type": "integer", "minimum": 1},
+        "dbPoolMax": {"type": "integer", "minimum": 1},
+        "dbPoolIdleTimeout": {"type": "integer", "minimum": 1},
+        "dbPoolConnectTimeout": {"type": "integer", "minimum": 1},
+        "fetchConnectTimeout": {"type": "integer", "minimum": 1},
+        "fetchHeadersTimeout": {"type": "integer", "minimum": 1},
+        "fetchBodyTimeout": {"type": "integer", "minimum": 1},
+        "messageRequestWriteMode": {
+          "type": "string",
+          "enum": ["sync", "async"]
+        },
+        "messageRequestAsyncFlushIntervalMs": {"type": "integer", "minimum": 1},
+        "messageRequestAsyncBatchSize": {"type": "integer", "minimum": 1},
+        "maxRetryAttemptsDefault": {"type": "integer", "minimum": 0},
+        "oidc": {
+          "type": "object",
+          "required": ["enabled", "issuerUrl", "clientId", "redirectUri", "requiredGroup"],
+          "properties": {
+            "enabled": {"type": "boolean"},
+            "issuerUrl": {"type": "string"},
+            "clientId": {"type": "string"},
+            "redirectUri": {"type": "string"},
+            "requiredGroup": {"type": "string", "minLength": 1}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "extraEnv": {
+      "type": "array"
+    },
+    "databaseBootstrap": {
+      "type": "object",
+      "required": [
+        "enabled",
+        "image",
+        "host",
+        "port",
+        "database",
+        "adminUser",
+        "existingSecret",
+        "passwordKey"
+      ],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "image": {
+          "type": "object",
+          "required": ["repository", "tag", "pullPolicy"],
+          "properties": {
+            "repository": {"type": "string", "minLength": 1},
+            "tag": {"type": "string", "minLength": 1},
+            "pullPolicy": {
+              "type": "string",
+              "enum": ["Always", "IfNotPresent", "Never"]
+            }
+          }
+        },
+        "host": {"type": "string"},
+        "port": {"type": "integer", "minimum": 1, "maximum": 65535},
+        "database": {"type": "string", "minLength": 1},
+        "adminUser": {"type": "string", "minLength": 1},
+        "existingSecret": {"type": "string", "minLength": 1},
+        "passwordKey": {"type": "string", "minLength": 1},
+        "backoffLimit": {"type": "integer", "minimum": 0},
+        "resources": {"type": "object"}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "config": {
+            "properties": {
+              "oidc": {
+                "properties": {
+                  "enabled": {"const": true}
+                }
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "config": {
+            "properties": {
+              "oidc": {
+                "properties": {
+                  "issuerUrl": {"minLength": 1},
+                  "clientId": {"minLength": 1},
+                  "redirectUri": {"minLength": 1}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "databaseBootstrap": {
+            "properties": {
+              "enabled": {"const": true}
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "databaseBootstrap": {
+            "properties": {
+              "host": {"minLength": 1}
+            }
+          }
+        }
+      }
+    }
+  ]
+}

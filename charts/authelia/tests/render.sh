@@ -67,6 +67,16 @@ grep -Fq 'kind: Middleware' "$rendered"
 grep -Fq 'name: "authelia-forwardauth"' "$rendered"
 grep -Fq 'address: "http://authelia.infra.svc.cluster.local/api/authz/forward-auth"' "$rendered"
 grep -Fq -- '- Remote-Groups' "$rendered"
+grep -Fq "client_id: 'claude-code-hub'" "$rendered"
+grep -Fq "claims_policy: 'claude_code_hub'" "$rendered"
+grep -Fq -- "- 'https://inner.coding.acitrus.cn/api/auth/oidc/callback'" "$rendered"
+grep -Fq 'require_pkce: true' "$rendered"
+grep -Fq "pkce_challenge_method: 'S256'" "$rendered"
+grep -Fq "token_endpoint_auth_method: 'client_secret_basic'" "$rendered"
+grep -Fq -- "- 'groups'" "$rendered"
+grep -Fq 'mountPath: /secrets/oidc' "$rendered"
+grep -Fq 'identity_providers.oidc.jwk.RS256.pem' "$rendered"
+grep -Fq 'identity_providers.oidc.clients.claude-code-hub.secret.txt' "$rendered"
 
 helm template authelia "$chart_dir" --namespace infra --skip-schema-validation \
   -f "$dev_values" -f "$fixture" >"$managed_secret_rendered"
@@ -99,6 +109,12 @@ if grep -Fq 'AUTHELIA_LDAP_PASSWORD' "$repo_root/.github/workflows/deploy-dev.ya
 fi
 authelia_sync_step="$(sed -n '/- name: Sync Authelia credentials/,/- name: Sync Aliyun DNS credentials/p' "$repo_root/.github/workflows/deploy-dev.yaml")"
 grep -Fq 'POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}' <<<"$authelia_sync_step"
+grep -Fq 'AUTHELIA_OIDC_HMAC_SECRET: ${{ secrets.AUTHELIA_OIDC_HMAC_SECRET }}' <<<"$authelia_sync_step"
+grep -Fq 'AUTHELIA_OIDC_JWK: ${{ secrets.AUTHELIA_OIDC_JWK }}' <<<"$authelia_sync_step"
+grep -Fq 'CCH_OIDC_CLIENT_SECRET_DIGEST: ${{ secrets.CCH_OIDC_CLIENT_SECRET_DIGEST }}' <<<"$authelia_sync_step"
+grep -Fq -- '--from-file=identity_providers.oidc.hmac.key=' <<<"$authelia_sync_step"
+grep -Fq -- '--from-file=identity_providers.oidc.jwk.RS256.pem=' <<<"$authelia_sync_step"
+grep -Fq -- '--from-file=identity_providers.oidc.clients.claude-code-hub.secret.txt=' <<<"$authelia_sync_step"
 if grep -Fq 'AUTHELIA_POSTGRES_PASSWORD' <<<"$authelia_sync_step"; then
   echo 'Authelia credential sync must reuse POSTGRES_PASSWORD' >&2
   exit 1

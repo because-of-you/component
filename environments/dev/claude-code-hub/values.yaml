@@ -2,6 +2,12 @@ replicaCount: 1
 
 config:
   dbPoolMax: 8
+  oidc:
+    enabled: true
+    issuerUrl: https://auth.acitrus.cn
+    clientId: claude-code-hub
+    redirectUri: https://inner.coding.acitrus.cn/api/auth/oidc/callback
+    requiredGroup: lldap_admin
 
 resources:
   requests:

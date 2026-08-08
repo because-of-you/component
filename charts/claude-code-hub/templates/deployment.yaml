@@ -4,14 +4,19 @@ metadata:
   name: {{ include "claude-code-hub.fullname" . }}
   labels:
     {{- include "claude-code-hub.labels" . | nindent 4 }}
+  {{- with .Values.deploymentAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   replicas: {{ .Values.replicaCount }}
   revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
   strategy:
-    type: RollingUpdate
+    type: {{ .Values.strategy.type }}
+    {{- if eq .Values.strategy.type "RollingUpdate" }}
     rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
+      {{- toYaml .Values.strategy.rollingUpdate | nindent 6 }}
+    {{- end }}
   selector:
     matchLabels:
       {{- include "claude-code-hub.selectorLabels" . | nindent 6 }}
@@ -31,6 +36,22 @@ spec:
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       securityContext:
@@ -65,6 +86,26 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.existingSecret.name | quote }}
                   key: {{ required "existingSecret.adminTokenKey is required" .Values.existingSecret.adminTokenKey | quote }}
+            {{- if .Values.config.oidc.enabled }}
+            - name: OIDC_ENABLED
+              value: "true"
+            - name: OIDC_ISSUER_URL
+              value: {{ required "config.oidc.issuerUrl is required when OIDC is enabled" .Values.config.oidc.issuerUrl | quote }}
+            - name: OIDC_CLIENT_ID
+              value: {{ required "config.oidc.clientId is required when OIDC is enabled" .Values.config.oidc.clientId | quote }}
+            - name: OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.existingSecret.name | quote }}
+                  key: {{ required "existingSecret.oidcClientSecretKey is required when OIDC is enabled" .Values.existingSecret.oidcClientSecretKey | quote }}
+            - name: OIDC_REDIRECT_URI
+              value: {{ required "config.oidc.redirectUri is required when OIDC is enabled" .Values.config.oidc.redirectUri | quote }}
+            - name: OIDC_REQUIRED_GROUP
+              value: {{ required "config.oidc.requiredGroup is required when OIDC is enabled" .Values.config.oidc.requiredGroup | quote }}
+            {{- else }}
+            - name: OIDC_ENABLED
+              value: "false"
+            {{- end }}
             - name: AUTO_MIGRATE
               value: {{ .Values.config.autoMigrate | quote }}
             - name: SESSION_TOKEN_MODE

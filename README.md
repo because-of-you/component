@@ -258,8 +258,9 @@ GitHub 的 `dev` Environment 只需要配置：
 - Secrets：`KUBECONFIG`、`REDIS_PASSWORD`、`POSTGRES_PASSWORD`、`LLDAP_JWT_SECRET`、
   `LLDAP_KEY_SEED`、`LLDAP_ADMIN_PASSWORD`、`LLDAP_AUTHELIA_PASSWORD`、
   `AUTHELIA_SESSION_ENCRYPTION_KEY`、`AUTHELIA_STORAGE_ENCRYPTION_KEY`、
-  `AUTHELIA_RESET_PASSWORD_JWT_SECRET`、`CCH_ADMIN_TOKEN`、`ALIYUN_DNS_KEY`、
-  `ALIYUN_DNS_SECRET`
+  `AUTHELIA_RESET_PASSWORD_JWT_SECRET`、`AUTHELIA_OIDC_HMAC_SECRET`、`AUTHELIA_OIDC_JWK`、
+  `CCH_ADMIN_TOKEN`、`CCH_OIDC_CLIENT_SECRET`、`CCH_OIDC_CLIENT_SECRET_DIGEST`、
+  `ALIYUN_DNS_KEY`、`ALIYUN_DNS_SECRET`
 - Variables：`TS_OAUTH_CLIENT_ID`、`TS_AUDIENCE`、`K3S_TAILSCALE_HOST`
 
 `KUBECONFIG` 保存完整文件内容，其中 API Server 地址应使用 Tailscale 可以访问的地址。
@@ -268,14 +269,16 @@ GitHub 的 `dev` Environment 只需要配置：
 Redis 和 PostgreSQL 部署任务会分别把对应的 Environment Secret 同步为 `infra` 命名空间中的
 `redis-auth` 和 `postgresql-auth` Kubernetes Secret，再由 Chart 通过 `existingSecret` 引用。
 LLDAP 部署任务会把四项 LLDAP Secret 和 `POSTGRES_PASSWORD` 同步为 `infra/lldap-secrets`，
-并使用独立的 `lldap` 数据库。Authelia 部署任务会把三项专用 Environment Secret、
+并使用独立的 `lldap` 数据库。Authelia 部署任务会把六项专用 Environment Secret、
 `LLDAP_AUTHELIA_PASSWORD` 加上已有的 `REDIS_PASSWORD`、
 `POSTGRES_PASSWORD` 同步为 `infra/authelia-secrets`，并映射为官方 Chart 所需的 LDAP、Session、
-Storage、Reset Password JWT、Redis 和 PostgreSQL Secret 键名。Authelia Chart 会通过幂等的
+Storage、Reset Password JWT、OIDC、Redis 和 PostgreSQL Secret 键名。Authelia Chart 会通过幂等的
 Helm Hook 自动创建独立数据库；备份和还原步骤见 `charts/authelia/README.md`。
 Claude Code Hub 部署任务会复用 `POSTGRES_PASSWORD`、`REDIS_PASSWORD`，并把
-`CCH_ADMIN_TOKEN` 和编码后的连接串同步为 `app/claude-code-hub-secrets`；Chart 会自动创建
-`claude_code_hub` 数据库，应用启动后自行执行 schema migrations。
+`CCH_ADMIN_TOKEN`、`CCH_OIDC_CLIENT_SECRET` 和编码后的连接串同步为
+`app/claude-code-hub-secrets`；Chart 会自动创建 `claude_code_hub` 数据库，应用启动后自行执行
+schema migrations。OIDC 回调固定为 `https://inner.coding.acitrus.cn/api/auth/oidc/callback`，但当前
+Chart 不创建该域名的公网入口。
 Traefik 部署任务会把 `ALIYUN_DNS_KEY` 和 `ALIYUN_DNS_SECRET` 同步为 `traefik` 命名空间中的
 `alidns` Kubernetes Secret，并映射为 DNS provider 所需的 `ALICLOUD_ACCESS_KEY` 和
 `ALICLOUD_SECRET_KEY`；Traefik 通过 `envFrom` 引用它们。

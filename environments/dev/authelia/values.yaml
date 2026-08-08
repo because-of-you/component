@@ -47,8 +47,56 @@ authelia:
         schema: public
         username: postgres
 
+    identity_providers:
+      oidc:
+        enabled: true
+        hmac_secret:
+          path: identity_providers.oidc.hmac.key
+        claims_policies:
+          claude_code_hub:
+            id_token:
+              - email
+              - email_verified
+              - groups
+              - name
+              - preferred_username
+        jwks:
+          - algorithm: RS256
+            use: sig
+            key:
+              path: /secrets/oidc/identity_providers.oidc.jwk.RS256.pem
+        clients:
+          - client_id: claude-code-hub
+            client_name: Claude Code Hub
+            client_secret:
+              path: /secrets/oidc/identity_providers.oidc.clients.claude-code-hub.secret.txt
+            authorization_policy: one_factor
+            claims_policy: claude_code_hub
+            require_pkce: true
+            pkce_challenge_method: S256
+            redirect_uris:
+              - https://inner.coding.acitrus.cn/api/auth/oidc/callback
+            scopes:
+              - openid
+              - profile
+              - email
+              - groups
+            grant_types:
+              - authorization_code
+            response_types:
+              - code
+            token_endpoint_auth_method: client_secret_basic
+
   secret:
     existingSecret: authelia-secrets
+    additionalSecrets:
+      authelia-secrets:
+        path: oidc
+        items:
+          - key: identity_providers.oidc.jwk.RS256.pem
+            path: identity_providers.oidc.jwk.RS256.pem
+          - key: identity_providers.oidc.clients.claude-code-hub.secret.txt
+            path: identity_providers.oidc.clients.claude-code-hub.secret.txt
 
 databaseBootstrap:
   enabled: true
