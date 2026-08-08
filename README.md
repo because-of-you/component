@@ -261,8 +261,8 @@ LLDAP 部署任务会把四项 LLDAP Secret 和 `POSTGRES_PASSWORD` 同步为 `i
 并使用独立的 `lldap` 数据库。Authelia 部署任务会把三项专用 Environment Secret、
 `LLDAP_AUTHELIA_PASSWORD` 加上已有的 `REDIS_PASSWORD`、
 `POSTGRES_PASSWORD` 同步为 `infra/authelia-secrets`，并映射为官方 Chart 所需的 LDAP、Session、
-Storage、Reset Password JWT、Redis 和 PostgreSQL Secret 键名。独立数据库的首次建库、备份和
-还原步骤见 `charts/authelia/README.md`。
+Storage、Reset Password JWT、Redis 和 PostgreSQL Secret 键名。Authelia Chart 会通过幂等的
+Helm Hook 自动创建独立数据库；备份和还原步骤见 `charts/authelia/README.md`。
 Traefik 部署任务会把 `ALIYUN_DNS_KEY` 和 `ALIYUN_DNS_SECRET` 同步为 `traefik` 命名空间中的
 `alidns` Kubernetes Secret，并映射为 DNS provider 所需的 `ALICLOUD_ACCESS_KEY` 和
 `ALICLOUD_SECRET_KEY`；Traefik 通过 `envFrom` 引用它们。

@@ -52,6 +52,27 @@ autheliaSecrets:
   redisPassword: ""
   postgresPassword: ""
 
+databaseBootstrap:
+  enabled: false
+  image:
+    repository: postgres
+    tag: 18.4-alpine
+    pullPolicy: IfNotPresent
+  host: ""
+  port: 5432
+  database: ""
+  adminUser: postgres
+  existingSecret: ""
+  passwordKey: postgres-password
+  backoffLimit: 6
+  resources:
+    requests:
+      cpu: 10m
+      memory: 16Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi
+
 autheliaIngress:
   enabled: false
   name: authelia

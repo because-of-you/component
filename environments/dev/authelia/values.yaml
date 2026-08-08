@@ -1,4 +1,13 @@
 authelia:
+  pod:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 1000m
+        memory: 256Mi
+
   configMap:
     authentication_backend:
       ldap:
@@ -32,6 +41,12 @@ authelia:
 
   secret:
     existingSecret: authelia-secrets
+
+databaseBootstrap:
+  enabled: true
+  host: postgresql.infra.svc.cluster.local
+  database: authelia
+  existingSecret: postgresql-auth
 
 autheliaIngress:
   enabled: true

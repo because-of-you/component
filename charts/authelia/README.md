@@ -57,14 +57,11 @@ Redis:      redis-master.infra.svc.cluster.local:6379 / database 1
 PostgreSQL 密码复用 `POSTGRES_PASSWORD`，Redis 密码复用 `REDIS_PASSWORD`。Authelia 使用
 `Deployment` 且关闭 PVC，Pod 重建不会丢失数据库或 Session 状态。
 
-### 首次创建数据库
+### 自动创建数据库
 
-现有 PostgreSQL 已使用持久卷，Bitnami 初始化脚本不会为已有数据目录重新运行。首次切换前，使用
-`postgres` 管理员连接数据库并执行：
-
-```sql
-CREATE DATABASE authelia OWNER postgres;
-```
+dev 环境启用了幂等的 `pre-install,pre-upgrade` Helm Hook。每次部署前，Hook 使用
+`postgresql-auth/postgres-password` 连接现有 PostgreSQL；`authelia` 数据库不存在时自动创建，
+已经存在时直接跳过，不会删除或重建数据库。
 
 Authelia 继续使用现有的 `postgres` 管理员账号和 GitHub `dev` Environment Secret
 `POSTGRES_PASSWORD`，不需要创建额外的数据库角色或密码 Secret。部署后，Authelia 会在专用数据库
