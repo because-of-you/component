@@ -3,21 +3,10 @@ authelia:
     authentication_backend:
       ldap:
         enabled: true
-        implementation: custom
-        address: ldap://opendirectory.net
-        timeout: 5 seconds
-        start_tls: true
-        base_dn: dc=acitrus,dc=opendirectory,dc=net
-        additional_users_dn: ou=public
-        users_filter: '(&({username_attribute}={input})(objectClass=person))'
-        additional_groups_dn: ""
-        groups_filter: '(&(memberUid={username})(objectClass=posixGroup))'
-        user: cn=acitrus,ou=admins,dc=opendirectory,dc=net
-        attributes:
-          username: uid
-          display_name: cn
-          mail: mail
-          group_name: cn
+        implementation: lldap
+        address: ldap://lldap.infra.svc.cluster.local:3890
+        base_dn: dc=acitrus,dc=cn
+        user: uid=authelia,ou=people,dc=acitrus,dc=cn
 
     session:
       cookies:

@@ -43,6 +43,15 @@ releases:
     values:
       - ./environments/{{ .Environment.Name }}/postgresql/values.yaml
 
+  - name: lldap
+    namespace: infra
+    createNamespace: true
+    chart: ./charts/lldap
+    needs:
+      - infra/postgresql
+    values:
+      - ./environments/{{ .Environment.Name }}/lldap/values.yaml
+
   - name: rabbitmq
     namespace: infra
     createNamespace: true
@@ -54,6 +63,8 @@ releases:
     namespace: infra
     createNamespace: true
     chart: ./charts/authelia
+    needs:
+      - infra/lldap
     values:
       - ./environments/{{ .Environment.Name }}/authelia/values.yaml
 

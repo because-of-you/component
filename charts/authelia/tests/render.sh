@@ -24,10 +24,14 @@ if grep -Fq 'kind: Secret' "$rendered"; then
   exit 1
 fi
 grep -Fq 'secretName: authelia-secrets' "$rendered"
-grep -Fq "address: 'ldap://opendirectory.net'" "$rendered"
-grep -Fq 'start_tls: true' "$rendered"
-grep -Fq "additional_users_dn: 'ou=public'" "$rendered"
-grep -Fq "username: 'uid'" "$rendered"
+grep -Fq "implementation: 'lldap'" "$rendered"
+grep -Fq "address: 'ldap://lldap.infra.svc.cluster.local:3890'" "$rendered"
+grep -Fq "base_dn: 'dc=acitrus,dc=cn'" "$rendered"
+grep -Fq "user: 'uid=authelia,ou=people,dc=acitrus,dc=cn'" "$rendered"
+if grep -Eq 'opendirectory\.net|start_tls: true|memberUid|posixGroup' "$rendered"; then
+  echo 'Authelia must not render the legacy OpenDirectory configuration' >&2
+  exit 1
+fi
 grep -Fq "default_policy: 'one_factor'" "$rendered"
 grep -A1 '^    totp:' "$rendered" | grep -Fq 'disable: true'
 grep -A1 '^    webauthn:' "$rendered" | grep -Fq 'disable: true'

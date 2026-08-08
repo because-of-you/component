@@ -27,7 +27,7 @@ LDAP 地址、Bind DN、Cookie 域名、Traefik IngressRoute、ForwardAuth 地�
 
 在 GitHub `dev` Environment Secrets 中配置：
 
-- `AUTHELIA_LDAP_PASSWORD`
+- `LLDAP_AUTHELIA_PASSWORD`
 - `AUTHELIA_SESSION_ENCRYPTION_KEY`，至少 32 个字符
 - `AUTHELIA_STORAGE_ENCRYPTION_KEY`，至少 20 个字符
 - `AUTHELIA_RESET_PASSWORD_JWT_SECRET`，至少 32 个字符
@@ -111,17 +111,17 @@ Helm 和部署工作流不会自动执行旧 schema 清理。
 
 ## LDAP 与入口
 
-dev 环境使用以下 LDAP 结构：
+dev 环境使用集群内 LLDAP：
 
 ```text
-ldap://opendirectory.net
-dc=acitrus,dc=opendirectory,dc=net
-ou=public
-uid
+ldap://lldap.infra.svc.cluster.local:3890
+dc=acitrus,dc=cn
+uid=authelia,ou=people,dc=acitrus,dc=cn
 ```
 
-用户通过 `uid` 登录，组查询使用 RFC2307 `posixGroup.memberUid`。当前 LDAP 连接未加密，只适合
-已确认可信的内网环境。
+Authelia 使用原生 `implementation: lldap` 模板，用户可以通过用户名或邮箱登录。绑定账号
+`authelia` 属于 `lldap_strict_readonly`，只查询用户和组，不持有 LLDAP 管理员权限。LDAP 连接
+只经过 `infra` 命名空间内的 ClusterIP，不开放公网；LLDAP 管理页面通过 HTTPS 暴露。
 
 Traefik IngressRoute 暴露 `auth.acitrus.cn`。保护其他 IngressRoute 时引用：
 
