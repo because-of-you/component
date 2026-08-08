@@ -29,3 +29,21 @@ grep -Fq 'RUSTFS_BROWSER_REDIRECT_URL' "$rendered"
 grep -Fq 'value: https://s3.acitrus.cn' "$rendered"
 grep -Fq 'RUSTFS_IDENTITY_OPENID_ROLE_POLICY' "$rendered"
 grep -Fq 'value: consoleAdmin' "$rendered"
+
+test "$(grep -c '^kind: IngressRoute$' "$rendered")" -eq 2
+if grep -Fq 'kind: IngressRouteTCP' "$rendered"; then
+  echo 'RustFS S3 must use an HTTP IngressRoute' >&2
+  exit 1
+fi
+grep -Fq 'name: "rustfs-console"' "$rendered"
+grep -Fq 'name: "rustfs-s3-api"' "$rendered"
+grep -Fq 'match: '\''Host(`s3.acitrus.cn`)'\''' "$rendered"
+grep -Fq -- '- websecure' "$rendered"
+grep -Fq -- '- gravitation' "$rendered"
+grep -Fq 'port: 9001' "$rendered"
+grep -Fq 'port: 9000' "$rendered"
+grep -Fq 'certResolver: leresolver' "$rendered"
+if grep -R -F --include='*.yaml' --include='*.tpl' 'HostSNI(`*`)' "$repo_root/charts"; then
+  echo 'A catch-all TCP router would intercept the shared gravitation entrypoint' >&2
+  exit 1
+fi

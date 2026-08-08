@@ -63,3 +63,15 @@ rustfs:
       value: preferred_username
     - name: RUSTFS_IDENTITY_OPENID_ROLE_POLICY
       value: consoleAdmin
+
+rustfsIngress:
+  enabled: true
+  host: s3.acitrus.cn
+  console:
+    entryPoints:
+      - websecure
+  api:
+    entryPoints:
+      - gravitation
+  tls:
+    certResolver: leresolver
