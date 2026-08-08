@@ -75,6 +75,27 @@ grep -Fq "pkce_challenge_method: 'S256'" "$rendered"
 grep -Fq "token_endpoint_auth_method: 'client_secret_basic'" "$rendered"
 grep -Fq -- "- 'groups'" "$rendered"
 
+rustfs_claims_policy_block="$(awk '
+  /^          rustfs:$/ { capture = 1 }
+  capture && /^          [^ ]/ && $0 !~ /rustfs:/ { exit }
+  capture && /^        [^ ]/ { exit }
+  capture { print }
+' "$rendered")"
+test -n "$rustfs_claims_policy_block"
+
+rustfs_id_token_claims_block="$(awk '
+  /^            id_token:$/ { capture = 1 }
+  capture && /^            [[:alnum:]_]+:/ && $0 !~ /id_token:/ { exit }
+  capture { print }
+' <<<"$rustfs_claims_policy_block")"
+expected_rustfs_id_token_claims="            id_token:
+            - 'email'
+            - 'email_verified'
+            - 'groups'
+            - 'name'
+            - 'preferred_username'"
+test "$rustfs_id_token_claims_block" = "$expected_rustfs_id_token_claims"
+
 rustfs_client_block="$(awk '
   /^          - client_id: '\''rustfs-console'\''$/ { capture = 1 }
   capture && /^          - client_id:/ && $0 !~ /rustfs-console/ { exit }
