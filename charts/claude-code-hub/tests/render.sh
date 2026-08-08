@@ -42,6 +42,15 @@ grep -Fq 'type: ClusterIP' "$rendered"
 grep -Fq 'port: 80' "$rendered"
 grep -Fq 'targetPort: http' "$rendered"
 
+grep -Fq 'kind: IngressRoute' "$rendered"
+grep -Fq 'match: '\''Host(`inner.coding.acitrus.cn`)'\''' "$rendered"
+grep -Fq 'name: claude-code-hub' "$rendered"
+grep -Fq 'certResolver: leresolver' "$rendered"
+if grep -Fq 'middlewares:' "$rendered"; then
+  echo "CCH must use native OIDC instead of Traefik ForwardAuth" >&2
+  exit 1
+fi
+
 if grep -Fq 'kind: PodDisruptionBudget' "$rendered"; then
   echo "dev must not create a PodDisruptionBudget" >&2
   exit 1
@@ -60,7 +69,7 @@ grep -Fq 'database_name="claude_code_hub"' "$rendered"
 grep -Fq 'name: "claude-code-hub-secrets"' "$rendered"
 grep -Fq 'key: "postgres-password"' "$rendered"
 
-for forbidden_kind in Ingress IngressRoute Middleware PersistentVolumeClaim Secret StatefulSet; do
+for forbidden_kind in Ingress Middleware PersistentVolumeClaim Secret StatefulSet; do
   if grep -Eq "^kind: $forbidden_kind$" "$rendered"; then
     echo "internal deployment must not create $forbidden_kind" >&2
     exit 1

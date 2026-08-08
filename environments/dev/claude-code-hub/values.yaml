@@ -4,6 +4,14 @@ image:
   repository: registry.cn-shenzhen.aliyuncs.com/gravitation/claude-code-hub
   pullPolicy: Always
 
+ingressRoute:
+  enabled: true
+  host: inner.coding.acitrus.cn
+  entryPoints:
+    - websecure
+  tls:
+    certResolver: leresolver
+
 config:
   dbPoolMax: 8
   oidc:

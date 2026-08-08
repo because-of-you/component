@@ -41,6 +41,12 @@ service:
   targetPort: 3000
   annotations: {}
 
+ingressRoute:
+  enabled: false
+  host: ""
+  entryPoints: []
+  tls: {}
+
 podDisruptionBudget:
   enabled: false
   maxUnavailable: 1

@@ -21,13 +21,14 @@ registry.cn-shenzhen.aliyuncs.com/gravitation/claude-code-hub:codex-authelia-oid
 
 - 一个无状态 `Deployment`
 - 一个内部 `ClusterIP Service`
+- 一个可选的 Traefik `IngressRoute`
 - 一个幂等的 PostgreSQL 数据库创建 Hook
 - 一个默认关闭、可在多副本环境启用的 `PodDisruptionBudget`
 - 官方 `/api/actions/health` 启动、就绪和存活探针
 - 以 Node 镜像的数字 UID/GID `1000:1000` 非 root 运行、禁用 ServiceAccount Token、丢弃 Linux
   capabilities
 
-该阶段不创建 Ingress、Authelia Middleware、PVC、PostgreSQL 或 Redis 实例。
+该阶段不创建 Authelia Middleware、PVC、PostgreSQL 或 Redis 实例。
 
 ## dev 环境
 
@@ -37,6 +38,7 @@ release 部署在 `app` 命名空间，连接：
 PostgreSQL: postgresql.infra.svc.cluster.local:5432 / claude_code_hub / postgres
 Redis:      redis-master.infra.svc.cluster.local:6379 / database 2
 Service:    claude-code-hub.app.svc.cluster.local:80
+HTTPS:      https://inner.coding.acitrus.cn
 ```
 
 应用启动时使用官方 `AUTO_MIGRATE=true` 执行 Drizzle migrations；Chart 的 pre-install、
@@ -80,7 +82,9 @@ helm template claude-code-hub charts/claude-code-hub \
 helmfile -e dev --selector name=claude-code-hub sync
 ```
 
-当前仍不创建公网入口。dev 已启用 fork 提供的原生 Authelia/OIDC，并固定配置为：
+dev 通过 Traefik `websecure` 和 `leresolver` 暴露 `inner.coding.acitrus.cn`。入口不挂载
+Authelia ForwardAuth，也不按路径放行；所有页面与 API 请求都进入 CCH，由应用自身分别执行
+OIDC Session 或 API Key 鉴权。dev 已启用 fork 提供的原生 Authelia/OIDC，并固定配置为：
 
 ```yaml
 config:

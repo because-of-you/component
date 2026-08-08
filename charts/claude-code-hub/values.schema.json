@@ -5,6 +5,7 @@
     "replicaCount",
     "image",
     "service",
+    "ingressRoute",
     "existingSecret",
     "config",
     "podDisruptionBudget",
@@ -76,6 +77,29 @@
           "type": "object"
         }
       }
+    },
+    "ingressRoute": {
+      "type": "object",
+      "required": ["enabled", "host", "entryPoints", "tls"],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "host": {
+          "type": "string"
+        },
+        "entryPoints": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "tls": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
     },
     "podDisruptionBudget": {
       "type": "object",
@@ -213,6 +237,27 @@
     }
   },
   "allOf": [
+    {
+      "if": {
+        "properties": {
+          "ingressRoute": {
+            "properties": {
+              "enabled": {"const": true}
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "ingressRoute": {
+            "properties": {
+              "host": {"minLength": 1},
+              "entryPoints": {"minItems": 1}
+            }
+          }
+        }
+      }
+    },
     {
       "if": {
         "properties": {
