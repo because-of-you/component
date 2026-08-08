@@ -19,7 +19,6 @@ on:
       - 'environments/dev/traefik/**'
       - 'environments/dev/values.yaml'
       - 'helmfile.yaml'
-      - '.github/scripts/**'
       - '.github/workflows/deploy-dev.yaml'
   workflow_dispatch:
     inputs:
@@ -59,25 +58,21 @@ jobs:
               - 'environments/dev/redis/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
-              - '.github/scripts/**'
             postgresql:
               - 'charts/postgresql/**'
               - 'environments/dev/postgresql/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
-              - '.github/scripts/**'
             lldap:
               - 'charts/lldap/**'
               - 'environments/dev/lldap/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
-              - '.github/scripts/**'
             authelia:
               - 'charts/authelia/**'
               - 'environments/dev/authelia/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
-              - '.github/scripts/**'
             claude-code-hub:
               - 'charts/claude-code-hub/Chart.yaml'
               - 'charts/claude-code-hub/values.yaml'
@@ -86,13 +81,11 @@ jobs:
               - 'environments/dev/claude-code-hub/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
-              - '.github/scripts/**'
             traefik:
               - 'charts/traefik/**'
               - 'environments/dev/traefik/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
-              - '.github/scripts/**'
 
   deploy:
     needs: changes
