@@ -1,0 +1,6 @@
+component: rustfs
+
+images:
+  - name: application
+    source: docker.io/rustfs/rustfs:1.0.0-rc.1
+    destination: registry.cn-shenzhen.aliyuncs.com/gravitation/rustfs:1.0.0-rc.1

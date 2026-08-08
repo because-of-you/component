@@ -49,6 +49,12 @@ if grep -R -F --include='*.yaml' --include='*.tpl' 'HostSNI(`*`)' "$repo_root/ch
 fi
 
 workflow="$repo_root/.github/workflows/deploy-dev.yaml"
+image_manifest="$repo_root/images/rustfs/images.yaml"
+
+test -f "$image_manifest"
+grep -Fq 'component: rustfs' "$image_manifest"
+grep -Fq 'source: docker.io/rustfs/rustfs:1.0.0-rc.1' "$image_manifest"
+grep -Fq 'destination: registry.cn-shenzhen.aliyuncs.com/gravitation/rustfs:1.0.0-rc.1' "$image_manifest"
 
 ruby --disable-gems - "$repo_root/helmfile.yaml" "$workflow" <<'RUBY'
 require 'yaml'
