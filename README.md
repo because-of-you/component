@@ -238,6 +238,9 @@ Push 到 `dev` 分支并修改 Redis、PostgreSQL、LLDAP、Authelia 或 Traefik
 helmfile -e dev --selector name=redis sync
 ```
 
+加载 kubeconfig 后，工作流会先轮询 Kubernetes `/readyz`。Namespace 和 Secret 的
+`kubectl apply` 关闭非必要的 OpenAPI 校验，并在 Tailscale/API Server 短暂超时时自动重试。
+
 同时修改多个组件时，各组件独立部署；一个组件失败不会取消其他组件 Job。
 需要重新部署未发生变化的组件时，可以通过 `workflow_dispatch` 手动选择一个组件运行。
 

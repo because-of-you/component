@@ -34,9 +34,12 @@
 2. 使用现成 Action 安装 Helmfile。
 3. 使用 Tailscale GitHub Action 临时加入 Tailnet。
 4. 使用 Kubernetes context Action 加载 GitHub `dev` Environment 中的 `KUBECONFIG`。
-5. 执行 `helmfile -e dev --selector name=<component> sync`。
+5. 轮询 Kubernetes `/readyz`，确认 Tailscale 到 API Server 的连接可用。
+6. Namespace 和 Secret 的 `kubectl apply` 使用关闭 OpenAPI 校验的共享重试脚本。
+7. 执行 `helmfile -e dev --selector name=<component> sync`。
 
-仓库不增加变更检测、Tailscale、kubeconfig 或 Helm 部署 Shell 脚本。
+仓库不增加变更检测、Tailscale、kubeconfig 或 Helm 部署 Shell 脚本；仅维护一个共享的
+`kubectl apply` 瞬时故障重试脚本。
 
 ## 环境和仓库结构
 

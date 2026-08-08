@@ -17,6 +17,7 @@ on:
       - 'environments/dev/traefik/**'
       - 'environments/dev/values.yaml'
       - 'helmfile.yaml'
+      - '.github/scripts/**'
       - '.github/workflows/deploy-dev.yaml'
   workflow_dispatch:
     inputs:
@@ -55,30 +56,35 @@ jobs:
               - 'environments/dev/redis/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
+              - '.github/scripts/**'
               - '.github/workflows/deploy-dev.yaml'
             postgresql:
               - 'charts/postgresql/**'
               - 'environments/dev/postgresql/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
+              - '.github/scripts/**'
               - '.github/workflows/deploy-dev.yaml'
             lldap:
               - 'charts/lldap/**'
               - 'environments/dev/lldap/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
+              - '.github/scripts/**'
               - '.github/workflows/deploy-dev.yaml'
             authelia:
               - 'charts/authelia/**'
               - 'environments/dev/authelia/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
+              - '.github/scripts/**'
               - '.github/workflows/deploy-dev.yaml'
             traefik:
               - 'charts/traefik/**'
               - 'environments/dev/traefik/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
+              - '.github/scripts/**'
               - '.github/workflows/deploy-dev.yaml'
 
   deploy:
@@ -120,13 +126,29 @@ jobs:
           method: kubeconfig
           kubeconfig: ${{ secrets.KUBECONFIG }}
 
+      - name: Wait for Kubernetes API
+        shell: bash
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            if kubectl get --raw=/readyz --request-timeout=15s >/dev/null; then
+              exit 0
+            fi
+            if [[ "$attempt" == 6 ]]; then
+              echo "Kubernetes API did not become ready after 6 attempts" >&2
+              exit 1
+            fi
+            delay=$((attempt * 2))
+            echo "Kubernetes API check $attempt failed; retrying in ${delay}s" >&2
+            sleep "$delay"
+          done
+
       - name: Ensure infra namespace
         if: matrix.component == 'redis' || matrix.component == 'postgresql' || matrix.component == 'lldap' || matrix.component == 'authelia'
-        run: kubectl create namespace infra --dry-run=client -o yaml | kubectl apply -f -
+        run: kubectl create namespace infra --dry-run=client -o yaml | bash .github/scripts/kubectl-apply-retry.sh
 
       - name: Ensure traefik namespace
         if: matrix.component == 'traefik'
-        run: kubectl create namespace traefik --dry-run=client -o yaml | kubectl apply -f -
+        run: kubectl create namespace traefik --dry-run=client -o yaml | bash .github/scripts/kubectl-apply-retry.sh
 
       - name: Sync Redis credentials
         if: matrix.component == 'redis'
@@ -139,7 +161,7 @@ jobs:
             | kubectl -n infra create secret generic redis-auth \
                 --from-file=redis-password=/dev/stdin \
                 --dry-run=client -o yaml \
-            | kubectl apply -f -
+            | bash .github/scripts/kubectl-apply-retry.sh
 
       - name: Sync PostgreSQL credentials
         if: matrix.component == 'postgresql'
@@ -152,7 +174,7 @@ jobs:
             | kubectl -n infra create secret generic postgresql-auth \
                 --from-file=postgres-password=/dev/stdin \
                 --dry-run=client -o yaml \
-            | kubectl apply -f -
+            | bash .github/scripts/kubectl-apply-retry.sh
 
       - name: Sync LLDAP credentials
         if: matrix.component == 'lldap'
@@ -190,7 +212,7 @@ jobs:
             --from-file=database-url="$credentials_dir/database-url" \
             --from-file=authelia-password="$credentials_dir/authelia-password" \
             --dry-run=client -o yaml \
-            | kubectl apply -f -
+            | bash .github/scripts/kubectl-apply-retry.sh
           if kubectl -n infra get deployment lldap >/dev/null 2>&1; then
             kubectl -n infra rollout restart deployment/lldap
             kubectl -n infra rollout status deployment/lldap --timeout=300s
@@ -230,7 +252,7 @@ jobs:
             --from-file=session.redis.password.txt="$credentials_dir/session.redis.password.txt" \
             --from-file=storage.postgres.password.txt="$credentials_dir/storage.postgres.password.txt" \
             --dry-run=client -o yaml \
-            | kubectl apply -f -
+            | bash .github/scripts/kubectl-apply-retry.sh
 
       - name: Sync Aliyun DNS credentials
         if: matrix.component == 'traefik'
@@ -250,7 +272,7 @@ jobs:
             --from-file=ALICLOUD_ACCESS_KEY="$credentials_dir/ALICLOUD_ACCESS_KEY" \
             --from-file=ALICLOUD_SECRET_KEY="$credentials_dir/ALICLOUD_SECRET_KEY" \
             --dry-run=client -o yaml \
-            | kubectl apply -f -
+            | bash .github/scripts/kubectl-apply-retry.sh
 
       - name: Deploy ${{ matrix.component }}
         run: helmfile -e dev --selector name=${{ matrix.component }} sync
