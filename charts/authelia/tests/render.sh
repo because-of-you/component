@@ -97,10 +97,25 @@ grep -Fq -- "- 'openid'" <<<"$rustfs_client_block"
 grep -Fq -- "- 'profile'" <<<"$rustfs_client_block"
 grep -Fq -- "- 'email'" <<<"$rustfs_client_block"
 grep -Fq -- "- 'groups'" <<<"$rustfs_client_block"
-grep -Fq 'grant_types:' <<<"$rustfs_client_block"
-grep -Fq -- "- 'authorization_code'" <<<"$rustfs_client_block"
-grep -Fq 'response_types:' <<<"$rustfs_client_block"
-grep -Fq -- "- 'code'" <<<"$rustfs_client_block"
+
+rustfs_grant_types_block="$(awk '
+  /^            grant_types:$/ { capture = 1 }
+  capture && /^            [^ ]/ && $0 !~ /grant_types:/ { exit }
+  capture { print }
+' <<<"$rustfs_client_block")"
+expected_rustfs_grant_types="            grant_types:
+              - 'authorization_code'"
+test "$rustfs_grant_types_block" = "$expected_rustfs_grant_types"
+
+rustfs_response_types_block="$(awk '
+  /^            response_types:$/ { capture = 1 }
+  capture && /^            [^ ]/ && $0 !~ /response_types:/ { exit }
+  capture { print }
+' <<<"$rustfs_client_block")"
+expected_rustfs_response_types="            response_types:
+              - 'code'"
+test "$rustfs_response_types_block" = "$expected_rustfs_response_types"
+
 grep -Fq "token_endpoint_auth_method: 'client_secret_post'" <<<"$rustfs_client_block"
 
 oidc_secret_mount_block="$(awk '
