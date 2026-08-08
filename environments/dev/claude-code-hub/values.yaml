@@ -1,5 +1,9 @@
 replicaCount: 1
 
+image:
+  repository: registry.cn-shenzhen.aliyuncs.com/gravitation/claude-code-hub
+  pullPolicy: Always
+
 config:
   dbPoolMax: 8
   oidc:

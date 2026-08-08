@@ -1,8 +1,16 @@
 # Claude Code Hub
 
 该 Chart 参考 Claude Code Hub 官方 Kubernetes 清单维护，但只部署应用本体，复用集群中已有的
-PostgreSQL 和 Redis。开发阶段固定使用 fork 的 `codex/authelia-oidc` 分支镜像标签
-`ghcr.io/because-of-you/claude-code-hub:codex-authelia-oidc`。
+PostgreSQL 和 Redis。开发阶段固定使用 fork 的 `codex/authelia-oidc` 分支镜像标签，并从深圳
+阿里云 ACR 拉取：
+
+```text
+registry.cn-shenzhen.aliyuncs.com/gravitation/claude-code-hub:codex-authelia-oidc
+```
+
+源码工作流只构建 GHCR 镜像。component 的 CCH 部署 Job 会先使用 `skopeo` 将 values 指定的同名
+Tag 从 GHCR 完整复制到深圳 ACR，成功后才通过 Tailscale 连接并执行 Helm；国内 K3s 从公开 ACR
+仓库匿名拉取。dev 对固定可变标签使用 `imagePullPolicy: Always`，保证 Pod 重建时检查最新镜像。
 
 ## 部署内容
 
@@ -35,6 +43,13 @@ GitHub `dev` Environment 需要：
 
 - Secret `CCH_ADMIN_TOKEN`
 - Secret `CCH_OIDC_CLIENT_SECRET`，OIDC 客户端明文密钥
+- Secret `ALIYUN_ACR_PASSWORD`，ACR 独立访问凭证密码
+
+还需要以下 GitHub `dev` Environment Variables：
+
+- `ALIYUN_ACR_REGISTRY=registry.cn-shenzhen.aliyuncs.com`
+- `ALIYUN_ACR_NAMESPACE=gravitation`
+- `ALIYUN_ACR_USERNAME=data_visionary`
 
 部署流程复用已有的 `POSTGRES_PASSWORD` 和 `REDIS_PASSWORD`，生成
 `app/claude-code-hub-secrets`：

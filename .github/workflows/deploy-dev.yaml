@@ -60,42 +60,36 @@ jobs:
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
               - '.github/scripts/**'
-              - '.github/workflows/deploy-dev.yaml'
             postgresql:
               - 'charts/postgresql/**'
               - 'environments/dev/postgresql/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
               - '.github/scripts/**'
-              - '.github/workflows/deploy-dev.yaml'
             lldap:
               - 'charts/lldap/**'
               - 'environments/dev/lldap/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
               - '.github/scripts/**'
-              - '.github/workflows/deploy-dev.yaml'
             authelia:
               - 'charts/authelia/**'
               - 'environments/dev/authelia/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
               - '.github/scripts/**'
-              - '.github/workflows/deploy-dev.yaml'
             claude-code-hub:
               - 'charts/claude-code-hub/**'
               - 'environments/dev/claude-code-hub/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
               - '.github/scripts/**'
-              - '.github/workflows/deploy-dev.yaml'
             traefik:
               - 'charts/traefik/**'
               - 'environments/dev/traefik/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
               - '.github/scripts/**'
-              - '.github/workflows/deploy-dev.yaml'
 
   deploy:
     needs: changes
@@ -121,6 +115,60 @@ jobs:
         uses: mamezou-tech/setup-helmfile@v2.2.0
         with:
           helmfile-version: v1.7.1
+
+      - name: Install image mirroring tool
+        if: matrix.component == 'claude-code-hub'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends skopeo
+
+      - name: Mirror Claude Code Hub image to Aliyun ACR
+        if: matrix.component == 'claude-code-hub'
+        shell: bash
+        env:
+          ALIYUN_ACR_REGISTRY: ${{ vars.ALIYUN_ACR_REGISTRY }}
+          ALIYUN_ACR_NAMESPACE: ${{ vars.ALIYUN_ACR_NAMESPACE }}
+          ALIYUN_ACR_USERNAME: ${{ vars.ALIYUN_ACR_USERNAME }}
+          ALIYUN_ACR_PASSWORD: ${{ secrets.ALIYUN_ACR_PASSWORD }}
+        run: |
+          test -n "$ALIYUN_ACR_REGISTRY"
+          test -n "$ALIYUN_ACR_NAMESPACE"
+          test -n "$ALIYUN_ACR_USERNAME"
+          test -n "$ALIYUN_ACR_PASSWORD"
+
+          rendered_deployment="$(mktemp)"
+          trap 'rm -f "$rendered_deployment"' EXIT
+          helm template claude-code-hub charts/claude-code-hub \
+            --namespace app \
+            -f environments/dev/claude-code-hub/values.yaml \
+            --show-only templates/deployment.yaml \
+            > "$rendered_deployment"
+
+          destination_image="$(sed -n 's/^[[:space:]]*image: "\([^"]*\)"$/\1/p' "$rendered_deployment" | head -n 1)"
+          test -n "$destination_image"
+          image_tag="${destination_image##*:}"
+          expected_image="${ALIYUN_ACR_REGISTRY}/${ALIYUN_ACR_NAMESPACE}/claude-code-hub:${image_tag}"
+          if [[ "$destination_image" != "$expected_image" ]]; then
+            echo "Rendered image '$destination_image' does not match configured ACR destination '$expected_image'" >&2
+            exit 1
+          fi
+
+          source_image="ghcr.io/because-of-you/claude-code-hub:${image_tag}"
+          printf '%s' "$ALIYUN_ACR_PASSWORD" \
+            | skopeo login --username "$ALIYUN_ACR_USERNAME" --password-stdin "$ALIYUN_ACR_REGISTRY"
+
+          for attempt in 1 2 3; do
+            if skopeo copy --all "docker://${source_image}" "docker://${destination_image}"; then
+              exit 0
+            fi
+            if [[ "$attempt" == 3 ]]; then
+              echo "Failed to mirror $source_image after 3 attempts" >&2
+              exit 1
+            fi
+            delay=$((attempt * 5))
+            echo "Image mirror attempt $attempt failed; retrying in ${delay}s" >&2
+            sleep "$delay"
+          done
 
       - name: Connect to Tailscale
         uses: tailscale/github-action@v4

@@ -260,8 +260,10 @@ GitHub 的 `dev` Environment 只需要配置：
   `AUTHELIA_SESSION_ENCRYPTION_KEY`、`AUTHELIA_STORAGE_ENCRYPTION_KEY`、
   `AUTHELIA_RESET_PASSWORD_JWT_SECRET`、`AUTHELIA_OIDC_HMAC_SECRET`、`AUTHELIA_OIDC_JWK`、
   `CCH_ADMIN_TOKEN`、`CCH_OIDC_CLIENT_SECRET`、`CCH_OIDC_CLIENT_SECRET_DIGEST`、
+  `ALIYUN_ACR_PASSWORD`、
   `ALIYUN_DNS_KEY`、`ALIYUN_DNS_SECRET`
-- Variables：`TS_OAUTH_CLIENT_ID`、`TS_AUDIENCE`、`K3S_TAILSCALE_HOST`
+- Variables：`TS_OAUTH_CLIENT_ID`、`TS_AUDIENCE`、`K3S_TAILSCALE_HOST`、
+  `ALIYUN_ACR_REGISTRY`、`ALIYUN_ACR_NAMESPACE`、`ALIYUN_ACR_USERNAME`
 
 `KUBECONFIG` 保存完整文件内容，其中 API Server 地址应使用 Tailscale 可以访问的地址。
 `TS_OAUTH_CLIENT_ID` 和 `TS_AUDIENCE` 是 Tailscale OIDC 联合身份的非敏感标识；
@@ -277,8 +279,9 @@ Helm Hook 自动创建独立数据库；备份和还原步骤见 `charts/autheli
 Claude Code Hub 部署任务会复用 `POSTGRES_PASSWORD`、`REDIS_PASSWORD`，并把
 `CCH_ADMIN_TOKEN`、`CCH_OIDC_CLIENT_SECRET` 和编码后的连接串同步为
 `app/claude-code-hub-secrets`；Chart 会自动创建 `claude_code_hub` 数据库，应用启动后自行执行
-schema migrations。OIDC 回调固定为 `https://inner.coding.acitrus.cn/api/auth/oidc/callback`，但当前
-Chart 不创建该域名的公网入口。
+schema migrations。部署前会使用 `ALIYUN_ACR_*` 配置将同 Tag 的公开 GHCR 镜像复制到深圳 ACR，
+集群再从 ACR 拉取。OIDC 回调固定为
+`https://inner.coding.acitrus.cn/api/auth/oidc/callback`，但当前 Chart 不创建该域名的公网入口。
 Traefik 部署任务会把 `ALIYUN_DNS_KEY` 和 `ALIYUN_DNS_SECRET` 同步为 `traefik` 命名空间中的
 `alidns` Kubernetes Secret，并映射为 DNS provider 所需的 `ALICLOUD_ACCESS_KEY` 和
 `ALICLOUD_SECRET_KEY`；Traefik 通过 `envFrom` 引用它们。
