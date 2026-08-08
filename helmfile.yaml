@@ -5,6 +5,8 @@ repositories:
     url: https://traefik.github.io/charts
   - name: authelia
     url: https://charts.authelia.com
+  - name: lldap
+    url: https://evantage-ws.github.io/lldap-kubernetes/
 
 helmDefaults:
   atomic: true
