@@ -116,25 +116,16 @@ jobs:
         with:
           helmfile-version: v1.7.1
 
-      - name: Install image mirroring tool
+      - name: Resolve Claude Code Hub image
         if: matrix.component == 'claude-code-hub'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends skopeo
-
-      - name: Mirror Claude Code Hub image to Aliyun ACR
-        if: matrix.component == 'claude-code-hub'
+        id: claude-code-hub-image
         shell: bash
         env:
           ALIYUN_ACR_REGISTRY: ${{ vars.ALIYUN_ACR_REGISTRY }}
           ALIYUN_ACR_NAMESPACE: ${{ vars.ALIYUN_ACR_NAMESPACE }}
-          ALIYUN_ACR_USERNAME: ${{ vars.ALIYUN_ACR_USERNAME }}
-          ALIYUN_ACR_PASSWORD: ${{ secrets.ALIYUN_ACR_PASSWORD }}
         run: |
           test -n "$ALIYUN_ACR_REGISTRY"
           test -n "$ALIYUN_ACR_NAMESPACE"
-          test -n "$ALIYUN_ACR_USERNAME"
-          test -n "$ALIYUN_ACR_PASSWORD"
 
           rendered_deployment="$(mktemp)"
           trap 'rm -f "$rendered_deployment"' EXIT
@@ -154,21 +145,18 @@ jobs:
           fi
 
           source_image="ghcr.io/because-of-you/claude-code-hub:${image_tag}"
-          printf '%s' "$ALIYUN_ACR_PASSWORD" \
-            | skopeo login --username "$ALIYUN_ACR_USERNAME" --password-stdin "$ALIYUN_ACR_REGISTRY"
+          echo "source-image=${source_image}" >> "$GITHUB_OUTPUT"
+          echo "destination-image=${destination_image}" >> "$GITHUB_OUTPUT"
 
-          for attempt in 1 2 3; do
-            if skopeo copy --all "docker://${source_image}" "docker://${destination_image}"; then
-              exit 0
-            fi
-            if [[ "$attempt" == 3 ]]; then
-              echo "Failed to mirror $source_image after 3 attempts" >&2
-              exit 1
-            fi
-            delay=$((attempt * 5))
-            echo "Image mirror attempt $attempt failed; retrying in ${delay}s" >&2
-            sleep "$delay"
-          done
+      - name: Mirror Claude Code Hub image to Aliyun ACR
+        if: matrix.component == 'claude-code-hub'
+        uses: ./.github/actions/mirror-container-image
+        with:
+          source-image: ${{ steps.claude-code-hub-image.outputs.source-image }}
+          destination-image: ${{ steps.claude-code-hub-image.outputs.destination-image }}
+          destination-registry: ${{ vars.ALIYUN_ACR_REGISTRY }}
+          destination-username: ${{ vars.ALIYUN_ACR_USERNAME }}
+          destination-password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
 
       - name: Connect to Tailscale
         uses: tailscale/github-action@v4
