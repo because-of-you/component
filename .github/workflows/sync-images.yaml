@@ -5,7 +5,7 @@ on:
     branches:
       - dev
     paths:
-      - 'images/*/images.json'
+      - 'images/*/images.yaml'
   workflow_dispatch:
     inputs:
       component:
@@ -48,20 +48,20 @@ jobs:
           trap 'rm -f "$manifests_file"' EXIT
 
           if [[ "$EVENT_NAME" == "push" ]]; then
-            git diff --name-only "$BEFORE_SHA" "$CURRENT_SHA" -- 'images/*/images.json' \
+            git diff --name-only "$BEFORE_SHA" "$CURRENT_SHA" -- 'images/*/images.yaml' \
               | while IFS= read -r manifest; do
                   [[ -f "$manifest" ]] && printf '%s\n' "$manifest"
                 done \
               | sort -u > "$manifests_file"
           elif [[ "$SELECTED_COMPONENT" == "all" ]]; then
-            find images -mindepth 2 -maxdepth 2 -type f -name images.json \
+            find images -mindepth 2 -maxdepth 2 -type f -name images.yaml \
               | sort > "$manifests_file"
           else
             if [[ ! "$SELECTED_COMPONENT" =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
               echo "Invalid component directory name: $SELECTED_COMPONENT" >&2
               exit 1
             fi
-            manifest="images/${SELECTED_COMPONENT}/images.json"
+            manifest="images/${SELECTED_COMPONENT}/images.yaml"
             if [[ ! -f "$manifest" ]]; then
               echo "Unknown component or missing image manifest: $manifest" >&2
               exit 1
@@ -76,7 +76,7 @@ jobs:
             exit 0
           fi
 
-          matrix="$(node .github/scripts/build-image-matrix.mjs "${manifests[@]}")"
+          matrix="$(ruby .github/scripts/build-image-matrix.rb "${manifests[@]}")"
           echo "matrix=${matrix}" >> "$GITHUB_OUTPUT"
           echo 'has-images=true' >> "$GITHUB_OUTPUT"
 
