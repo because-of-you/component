@@ -74,6 +74,7 @@ begin
     YAML
     _, stderr, status = run_parser(first_path, second_path)
     assert(!status.success?, "duplicate destination unexpectedly passed")
+    assert(stderr.include?(second_path), "duplicate error omitted manifest path: #{stderr}")
     assert(
       stderr.include?("duplicate destination image: target/shared:dev"),
       "duplicate error omitted destination: #{stderr}",

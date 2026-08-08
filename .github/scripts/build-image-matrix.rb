@@ -54,6 +54,7 @@ begin
           "images[#{index}].destination",
           manifest_path,
         ),
+        manifest_path: manifest_path,
       }
     end
   end
@@ -61,12 +62,18 @@ begin
   destinations = {}
   entries.each do |entry|
     destination = entry[:destination]
-    raise "duplicate destination image: #{destination}" if destinations[destination]
+    if destinations[destination]
+      raise "#{entry[:manifest_path]}: duplicate destination image: #{destination} " \
+            "(already declared in #{destinations[destination]})"
+    end
 
-    destinations[destination] = true
+    destinations[destination] = entry[:manifest_path]
   end
 
-  print JSON.generate(include: entries)
+  matrix_entries = entries.map do |entry|
+    entry.reject { |key, _| key == :manifest_path }
+  end
+  print JSON.generate(include: matrix_entries)
 rescue StandardError => error
   warn error.message
   exit 1
