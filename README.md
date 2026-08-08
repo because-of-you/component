@@ -100,6 +100,7 @@ helm upgrade --install authelia oci://ghcr.io/because-of-you/charts/authelia \
   --create-namespace \
   -f values.yaml
 
+# 前置：先按 charts/rustfs/README.md 创建 rustfs-secrets，或覆盖 existingSecret。
 helm upgrade --install rustfs oci://ghcr.io/because-of-you/charts/rustfs \
   --version 0.0.0-dev \
   --namespace infra \

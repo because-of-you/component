@@ -32,6 +32,44 @@ GitHub `dev` Environment 必须配置以下四项 Secret：
 `RUSTFS_OIDC_CLIENT_SECRET_DIGEST` 并供 Authelia 使用。生成及轮换命令见
 [`charts/authelia/README.md`](../authelia/README.md)。真实密钥和摘要不得写入 values 或提交到仓库。
 
+wrapper 默认引用 `rustfs-secrets`，但不会创建这个 Secret。GitHub dev 部署工作流会自动同步它；
+手动执行本地安装、OCI 安装或 `helmfile apply` 前，必须先在 release 所在命名空间创建 Secret，或者
+通过 values 把 `rustfs.secret.existingSecret` 改为已有的 Secret 名称。该 Kubernetes Secret 必须包含
+以下三个 data key：
+
+- `RUSTFS_ACCESS_KEY`
+- `RUSTFS_SECRET_KEY`
+- `RUSTFS_IDENTITY_OPENID_CLIENT_SECRET`
+
+其中 `RUSTFS_IDENTITY_OPENID_CLIENT_SECRET` 的内容对应 GitHub Secret
+`RUSTFS_OIDC_CLIENT_SECRET`。下面的示例从本地文件创建 Secret，不把凭证值放进命令行或 shell
+历史。先用受信任的编辑器或 Secret 管理工具，在仓库外的受保护目录中创建三个同名文件；把
+`credentials_dir` 改为该目录后再执行，并在完成后按本地安全策略清理这些文件：
+
+```bash
+credentials_dir="/path/outside/repository/rustfs"
+test -f "$credentials_dir/RUSTFS_ACCESS_KEY"
+test -f "$credentials_dir/RUSTFS_SECRET_KEY"
+test -f "$credentials_dir/RUSTFS_IDENTITY_OPENID_CLIENT_SECRET"
+
+kubectl create namespace infra --dry-run=client -o yaml \
+  | kubectl apply -f -
+kubectl -n infra create secret generic rustfs-secrets \
+  --from-file=RUSTFS_ACCESS_KEY="$credentials_dir/RUSTFS_ACCESS_KEY" \
+  --from-file=RUSTFS_SECRET_KEY="$credentials_dir/RUSTFS_SECRET_KEY" \
+  --from-file=RUSTFS_IDENTITY_OPENID_CLIENT_SECRET="$credentials_dir/RUSTFS_IDENTITY_OPENID_CLIENT_SECRET" \
+  --dry-run=client -o yaml \
+  | kubectl apply -f -
+```
+
+若使用其他 Secret 名称，在传给 Chart 的 values 中显式覆盖：
+
+```yaml
+rustfs:
+  secret:
+    existingSecret: my-rustfs-secrets
+```
+
 ## OIDC
 
 Authelia Client ID 是 `rustfs-console`，使用 `client_secret_post` 和 PKCE `S256`，回调地址固定为：
