@@ -3,4 +3,5 @@ dist/
 *.tgz
 charts/**/charts/
 .helmfile/
+.worktrees/
 .idea
