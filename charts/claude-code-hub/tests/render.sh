@@ -104,6 +104,9 @@ grep -Fq 'kubectl -n app create secret generic claude-code-hub-secrets' "$repo_r
 grep -Fq -- '--from-file=dsn=' "$repo_root/.github/workflows/deploy-dev.yaml"
 grep -Fq -- '--from-file=redis-url=' "$repo_root/.github/workflows/deploy-dev.yaml"
 grep -Fq -- '--from-file=oidc-client-secret=' "$repo_root/.github/workflows/deploy-dev.yaml"
+deploy_line="$(grep -nF 'name: Deploy ${{ matrix.component }}' "$repo_root/.github/workflows/deploy-dev.yaml" | cut -d: -f1)"
+restart_line="$(grep -nF 'name: Restart Claude Code Hub after deployment' "$repo_root/.github/workflows/deploy-dev.yaml" | cut -d: -f1)"
+test "$restart_line" -gt "$deploy_line"
 
 if helm template invalid "$chart_dir" --set config.sessionTokenMode=invalid >/dev/null 2>&1; then
   echo "values schema must reject an invalid session token mode" >&2

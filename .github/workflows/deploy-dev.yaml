@@ -303,10 +303,6 @@ jobs:
             --from-file=postgres-password="$credentials_dir/postgres-password" \
             --dry-run=client -o yaml \
             | bash .github/scripts/kubectl-apply-retry.sh
-          if kubectl -n app get deployment claude-code-hub >/dev/null 2>&1; then
-            kubectl -n app rollout restart deployment/claude-code-hub
-            kubectl -n app rollout status deployment/claude-code-hub --timeout=300s
-          fi
 
       - name: Sync Aliyun DNS credentials
         if: matrix.component == 'traefik'
@@ -330,3 +326,10 @@ jobs:
 
       - name: Deploy ${{ matrix.component }}
         run: helmfile -e dev --selector name=${{ matrix.component }} sync
+
+      - name: Restart Claude Code Hub after deployment
+        if: matrix.component == 'claude-code-hub'
+        shell: bash
+        run: |
+          kubectl -n app rollout restart deployment/claude-code-hub
+          kubectl -n app rollout status deployment/claude-code-hub --timeout=300s
