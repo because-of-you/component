@@ -28,6 +28,7 @@ grep -Fq 'port: 17170' "$rendered"
 grep -Fq 'kind: Ingress' "$rendered"
 grep -Fq 'ldap.acitrus.cn' "$rendered"
 grep -Fq 'traefik.ingress.kubernetes.io/router.entrypoints: websecure' "$rendered"
+grep -Fq 'traefik.ingress.kubernetes.io/router.middlewares: infra-authelia-forwardauth@kubernetescrd' "$rendered"
 grep -Fq 'traefik.ingress.kubernetes.io/router.tls.certresolver: leresolver' "$rendered"
 
 for forbidden_kind in HorizontalPodAutoscaler PersistentVolumeClaim Certificate Secret IngressRoute; do

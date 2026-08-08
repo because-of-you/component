@@ -32,7 +32,10 @@ if grep -Eq 'opendirectory\.net|start_tls: true|memberUid|posixGroup' "$rendered
   echo 'Authelia must not render the legacy OpenDirectory configuration' >&2
   exit 1
 fi
-grep -Fq "default_policy: 'one_factor'" "$rendered"
+grep -Fq "default_policy: 'deny'" "$rendered"
+grep -Fq -- "- 'ldap.acitrus.cn'" "$rendered"
+grep -Fq 'policy: one_factor' "$rendered"
+grep -Fq -- "- ['group:lldap_admin']" "$rendered"
 grep -A1 '^    totp:' "$rendered" | grep -Fq 'disable: true'
 grep -A1 '^    webauthn:' "$rendered" | grep -Fq 'disable: true'
 grep -Fq 'kind: Deployment' "$rendered"

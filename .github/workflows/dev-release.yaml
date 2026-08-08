@@ -100,6 +100,9 @@ jobs:
     needs: changed-charts
     if: needs.changed-charts.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
+    concurrency:
+      group: dev-release-${{ matrix.name }}
+      cancel-in-progress: false
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.changed-charts.outputs.charts) }}
@@ -109,6 +112,8 @@ jobs:
 
       - name: Set up Helm
         uses: azure/setup-helm@v4
+        with:
+          version: v3.21.0
 
       - name: Update chart dependencies
         shell: bash
@@ -143,7 +148,7 @@ jobs:
         if: github.event_name == 'push'
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.name }}-dev-${{ github.run_number }}
+          name: ${{ matrix.name }}-dev-${{ github.run_number }}-${{ github.run_attempt }}
           path: dist/*.tgz
 
       - name: Login to GHCR
@@ -152,4 +157,25 @@ jobs:
 
       - name: Push dev chart to OCI
         if: github.event_name == 'push'
-        run: helm push "dist/${{ matrix.name }}-${{ steps.package.outputs.version }}.tgz" "oci://ghcr.io/${{ github.repository_owner }}/charts"
+        shell: bash
+        run: |
+          for attempt in 1 2 3; do
+            if helm push "dist/${{ matrix.name }}-${{ steps.package.outputs.version }}.tgz" \
+              "oci://ghcr.io/${{ github.repository_owner }}/charts"; then
+              break
+            fi
+            if [[ "$attempt" == 3 ]]; then
+              echo "Helm push failed after 3 attempts" >&2
+              exit 1
+            fi
+            delay=$((attempt * 5))
+            echo "Helm push attempt $attempt failed; retrying in ${delay}s" >&2
+            sleep "$delay"
+          done
+          {
+            echo "### Published ${{ matrix.name }}"
+            echo
+            echo "\`oci://ghcr.io/${{ github.repository_owner }}/charts/${{ matrix.name }}\`"
+            echo
+            echo "Version: \`${{ steps.package.outputs.version }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

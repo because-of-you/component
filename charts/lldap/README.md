@@ -80,6 +80,9 @@ helmfile -e dev sync --selector name=lldap
 4. 按需把 `wfy` 加入业务组。
 5. 在 `https://auth.acitrus.cn` 使用 `wfy` 或邮箱登录。
 
+`ldap.acitrus.cn` 的 Traefik Ingress 引用了 `infra/authelia-forwardauth` Middleware。只有属于
+`lldap_admin` 组的用户可以访问管理页面；集群内部 LDAP Service 和 bootstrap Job 不经过该入口。
+
 LLDAP 不需要指定 SSHA、SHA256 等算法；通过 Web UI 设置明文密码后，服务端自行安全存储并通过
 LDAP Bind 验证。
 

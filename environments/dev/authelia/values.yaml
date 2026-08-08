@@ -9,6 +9,14 @@ authelia:
         memory: 256Mi
 
   configMap:
+    access_control:
+      default_policy: deny
+      rules:
+        - domain: ldap.acitrus.cn
+          policy: one_factor
+          subject:
+            - group:lldap_admin
+
     authentication_backend:
       ldap:
         enabled: true
