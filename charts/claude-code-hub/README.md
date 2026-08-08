@@ -19,7 +19,8 @@ Tag 从 GHCR 完整复制到深圳 ACR，成功后才通过 Tailscale 连接并�
 - 一个幂等的 PostgreSQL 数据库创建 Hook
 - 一个默认关闭、可在多副本环境启用的 `PodDisruptionBudget`
 - 官方 `/api/actions/health` 启动、就绪和存活探针
-- 非 root、禁用 ServiceAccount Token、丢弃 Linux capabilities
+- 以 Node 镜像的数字 UID/GID `1000:1000` 非 root 运行、禁用 ServiceAccount Token、丢弃 Linux
+  capabilities
 
 该阶段不创建 Ingress、Authelia Middleware、PVC、PostgreSQL 或 Redis 实例。
 

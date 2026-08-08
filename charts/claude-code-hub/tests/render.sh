@@ -32,6 +32,8 @@ grep -Fq 'path: /api/actions/health' "$rendered"
 grep -Fq 'automountServiceAccountToken: false' "$rendered"
 grep -Fq 'runAsNonRoot: true' "$rendered"
 grep -Fq 'runAsUser: 70' "$rendered"
+grep -Fq 'runAsUser: 1000' "$rendered"
+grep -Fq 'runAsGroup: 1000' "$rendered"
 grep -Fq 'cpu: 1000m' "$rendered"
 grep -Fq 'memory: 1Gi' "$rendered"
 
