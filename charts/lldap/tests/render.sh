@@ -50,6 +50,8 @@ grep -Fq 'helm.sh/hook: post-install,post-upgrade' "$rendered"
 grep -Fq '"id": "authelia"' "$rendered"
 grep -Fq '"password_file": "/secrets/authelia-password"' "$rendered"
 grep -Fq 'lldap_strict_readonly' "$rendered"
+grep -A1 -F 'group-configs.json: |' "$rendered" | grep -Eq '^    \{$'
+grep -A1 -F 'user-configs.json: |' "$rendered" | grep -Eq '^    \{$'
 grep -Fq 'value: "http://lldap:17170"' "$rendered"
 grep -Fq 'name: DO_CLEANUP' "$rendered"
 grep -Fq 'value: "false"' "$rendered"

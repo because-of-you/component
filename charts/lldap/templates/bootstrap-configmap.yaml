@@ -7,19 +7,15 @@ metadata:
     {{- include "lldap-wrapper.labels" . | nindent 4 }}
 data:
   group-configs.json: |
-    [
-      {
-        "name": {{ .Values.directoryBootstrap.group | quote }}
-      }
-    ]
+    {
+      "name": {{ .Values.directoryBootstrap.group | quote }}
+    }
   user-configs.json: |
-    [
-      {
-        "id": {{ .Values.directoryBootstrap.user.id | quote }},
-        "email": {{ .Values.directoryBootstrap.user.email | quote }},
-        "displayName": {{ .Values.directoryBootstrap.user.displayName | quote }},
-        "password_file": "/secrets/authelia-password",
-        "groups": [{{ .Values.directoryBootstrap.group | quote }}]
-      }
-    ]
+    {
+      "id": {{ .Values.directoryBootstrap.user.id | quote }},
+      "email": {{ .Values.directoryBootstrap.user.email | quote }},
+      "displayName": {{ .Values.directoryBootstrap.user.displayName | quote }},
+      "password_file": "/secrets/authelia-password",
+      "groups": [{{ .Values.directoryBootstrap.group | quote }}]
+    }
 {{- end }}
