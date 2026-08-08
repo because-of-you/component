@@ -186,7 +186,7 @@ workflow_step() {
 
 authelia_sync_step="$(workflow_step 'Sync Authelia credentials')"
 test -n "$authelia_sync_step"
-grep -Fxq "        if: matrix.component == 'authelia'" <<<"$authelia_sync_step"
+grep -Fxq "        if: matrix.component == 'authelia' || matrix.component == 'rustfs'" <<<"$authelia_sync_step"
 grep -Fq 'POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}' <<<"$authelia_sync_step"
 grep -Fq 'AUTHELIA_OIDC_HMAC_SECRET: ${{ secrets.AUTHELIA_OIDC_HMAC_SECRET }}' <<<"$authelia_sync_step"
 grep -Fq 'AUTHELIA_OIDC_JWK: ${{ secrets.AUTHELIA_OIDC_JWK }}' <<<"$authelia_sync_step"
