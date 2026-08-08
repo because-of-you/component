@@ -1,0 +1,65 @@
+rustfs:
+  mode:
+    standalone:
+      enabled: true
+    distributed:
+      enabled: false
+
+  image:
+    rustfs:
+      repository: registry.cn-shenzhen.aliyuncs.com/gravitation/rustfs
+      tag: 1.0.0-rc.1
+      pullPolicy: IfNotPresent
+
+  secret:
+    existingSecret: rustfs-secrets
+
+  storageclass:
+    name: local-path
+    dataStorageSize: 10Gi
+    logStorageSize: 1Gi
+
+  ingress:
+    enabled: false
+  gatewayApi:
+    enabled: false
+  pdb:
+    create: false
+  service:
+    type: ClusterIP
+  serviceAccount:
+    automount: false
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+
+  extraEnv:
+    - name: RUSTFS_BROWSER_REDIRECT_URL
+      value: https://s3.acitrus.cn
+    - name: RUSTFS_IDENTITY_OPENID_ENABLE
+      value: "on"
+    - name: RUSTFS_IDENTITY_OPENID_CONFIG_URL
+      value: https://auth.acitrus.cn
+    - name: RUSTFS_IDENTITY_OPENID_CLIENT_ID
+      value: rustfs-console
+    - name: RUSTFS_IDENTITY_OPENID_SCOPES
+      value: openid,profile,email,groups
+    - name: RUSTFS_IDENTITY_OPENID_REDIRECT_URI
+      value: https://s3.acitrus.cn/rustfs/admin/v3/oidc/callback/default
+    - name: RUSTFS_IDENTITY_OPENID_REDIRECT_URI_DYNAMIC
+      value: "off"
+    - name: RUSTFS_IDENTITY_OPENID_DISPLAY_NAME
+      value: Authelia
+    - name: RUSTFS_IDENTITY_OPENID_GROUPS_CLAIM
+      value: groups
+    - name: RUSTFS_IDENTITY_OPENID_EMAIL_CLAIM
+      value: email
+    - name: RUSTFS_IDENTITY_OPENID_USERNAME_CLAIM
+      value: preferred_username
+    - name: RUSTFS_IDENTITY_OPENID_ROLE_POLICY
+      value: consoleAdmin

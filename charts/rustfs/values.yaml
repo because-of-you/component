@@ -1,0 +1,20 @@
+rustfsIngress:
+  enabled: false
+  host: ""
+  service:
+    name: ""
+    apiPort: 9000
+    consolePort: 9001
+  console:
+    name: rustfs-console
+    entryPoints: []
+  api:
+    name: rustfs-s3-api
+    entryPoints: []
+  tls: {}
+
+rustfs:
+  ingress:
+    enabled: false
+  gatewayApi:
+    enabled: false
