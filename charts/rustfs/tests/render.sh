@@ -51,6 +51,7 @@ grep -Fq 'certResolver: leresolver' "$rendered"
 for component in redis postgresql rabbitmq; do
   helm template "$component" "$repo_root/charts/$component" \
     --namespace infra \
+    --dependency-update \
     -f "$repo_root/environments/dev/$component/values.yaml" \
     >"$tcp_rendered_dir/$component.yaml"
 done
