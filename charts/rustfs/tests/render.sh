@@ -87,6 +87,7 @@ env_by_name = env.each_with_object({}) do |entry, indexed|
 end
 expected_env = {
   'RUSTFS_BROWSER_REDIRECT_URL' => 'https://s3.acitrus.cn',
+  'RUSTFS_OUTBOUND_ALLOW_ORIGINS' => 'https://auth.acitrus.cn',
   'RUSTFS_IDENTITY_OPENID_ENABLE' => 'on',
   'RUSTFS_IDENTITY_OPENID_CONFIG_URL' => 'https://auth.acitrus.cn',
   'RUSTFS_IDENTITY_OPENID_CLIENT_ID' => 'rustfs-console',

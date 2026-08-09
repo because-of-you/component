@@ -78,6 +78,10 @@ Authelia Client ID 是 `rustfs-console`，使用 `client_secret_post` 和 PKCE `
 https://s3.acitrus.cn/rustfs/admin/v3/oidc/callback/default
 ```
 
+dev 环境中的 `auth.acitrus.cn` 解析到 Tailscale `100.64.0.0/10` 地址，因此通过精确的
+`RUSTFS_OUTBOUND_ALLOW_ORIGINS=https://auth.acitrus.cn` 白名单允许 RustFS 访问该可信 OIDC origin；
+不要把整个私网地址段加入白名单。
+
 dev 环境设置了 `RUSTFS_IDENTITY_OPENID_ROLE_POLICY=consoleAdmin`。这意味着任何能够通过该
 OIDC Client 登录的用户都会获得 RustFS 控制台管理权限；这个宽松策略仅适用于开发环境，不能直接
 照搬到生产环境。

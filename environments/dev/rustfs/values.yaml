@@ -41,6 +41,8 @@ rustfs:
   extraEnv:
     - name: RUSTFS_BROWSER_REDIRECT_URL
       value: https://s3.acitrus.cn
+    - name: RUSTFS_OUTBOUND_ALLOW_ORIGINS
+      value: https://auth.acitrus.cn
     - name: RUSTFS_IDENTITY_OPENID_ENABLE
       value: "on"
     - name: RUSTFS_IDENTITY_OPENID_CONFIG_URL
