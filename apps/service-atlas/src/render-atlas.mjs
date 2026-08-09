@@ -31,10 +31,11 @@ function renderRoad(relation, index, positions) {
   const target = scalePoint(positions.get(relation.target));
   const waypoints = (relation.waypoints ?? []).map(scalePoint);
   const pathId = `road-${index}`;
-  const begin = `-${(index % 5) * 1.7}s`;
+  const delay = (index % 5) * 1.7;
+  const begin = delay === 0 ? "0s" : `-${delay}s`;
   const path = buildRoadPath(source, target, waypoints);
 
-  return `<g class="road-group" data-relation-index="${index}" data-source="${escapeMarkup(relation.source)}" data-target="${escapeMarkup(relation.target)}"><path id="${pathId}" class="road ${presentation.className}" d="${path}" pathLength="100"/><circle class="road-mote ${presentation.className}" r=".28"><animateMotion dur="${presentation.duration}s" begin="${begin}" repeatCount="indefinite"><mpath href="#${pathId}"/></animateMotion></circle></g>`;
+  return `<g class="road-group" data-relation-index="${index}" data-source="${escapeMarkup(relation.source)}" data-target="${escapeMarkup(relation.target)}"><path id="${pathId}" class="road ${presentation.className}" d="${path}" pathLength="100"/><circle class="road-mote ${presentation.className}" r="0.28"><animateMotion dur="${presentation.duration}s" begin="${begin}" repeatCount="indefinite"><mpath href="#${pathId}"/></animateMotion></circle></g>`;
 }
 
 function renderLandmark(service, position) {

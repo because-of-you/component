@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { catalogue } from "../src/catalogue.mjs";
 import { renderAtlas } from "../src/render-atlas.mjs";
 
-test("renders one road and landmark per catalogue entry with the map viewport", () => {
+test("renders one road and landmark per catalogue record", () => {
   const svg = renderAtlas(catalogue);
 
   assert.equal(
@@ -23,7 +23,7 @@ test("renders one road and landmark per catalogue entry with the map viewport", 
   assert.match(svg, />Claude Code Hub<\/text>/);
 });
 
-test("renders external service landmarks as safe links and internal landmarks as interactive groups", () => {
+test("renders safe links and non-link infrastructure landmarks", () => {
   const svg = renderAtlas(catalogue);
 
   assert.match(
@@ -36,9 +36,11 @@ test("renders external service landmarks as safe links and internal landmarks as
   );
 });
 
-test("animates road motes without directional road decorations", () => {
-  const svg = renderAtlas(catalogue);
+test("renders route motes without arrowheads or chevrons", () => {
+  const markup = renderAtlas(catalogue);
 
-  assert.match(svg, /<animateMotion\b/);
-  assert.doesNotMatch(svg, /marker-end|<polygon|&gt;&gt;&gt;|›|→|↗/);
+  assert.match(markup, /<animateMotion\b/);
+  assert.match(markup, /begin="0s"/);
+  assert.match(markup, /r="0.28"/);
+  assert.doesNotMatch(markup, /marker-end|polygon|&gt;&gt;&gt;|›|→|↗/);
 });
