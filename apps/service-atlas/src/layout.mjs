@@ -53,5 +53,7 @@ export function getRoadPresentation(type) {
 }
 
 function formatNumber(value) {
-  return String(Math.round(value * 100) / 100);
+  return Number.isInteger(value)
+    ? String(value)
+    : String(Number(value.toFixed(2)));
 }

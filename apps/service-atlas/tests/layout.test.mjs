@@ -28,6 +28,12 @@ test("builds a smooth path through waypoints", () => {
   );
 });
 
+test("formats coordinates with fixed decimal rounding", () => {
+  assert.ok(
+    buildRoadPath({ x: 1.335, y: 50 }, { x: 80, y: 20 }).startsWith("M 1.33 "),
+  );
+});
+
 test("returns presentation metadata for route and cache roads", () => {
   assert.deepEqual(getRoadPresentation("route"), {
     className: "road--route",
