@@ -1,0 +1,124 @@
+import { catalogue } from "./catalogue.mjs";
+import { getFocusState } from "./graph.mjs";
+import { renderAtlas } from "./render-atlas.mjs";
+
+const overlay = document.querySelector("#atlas-overlay");
+const error = document.querySelector("#atlas-error");
+const coarsePointer = window.matchMedia("(pointer: coarse)");
+let selectedId = null;
+
+function clearFocus() {
+  if (!overlay) return;
+
+  overlay
+    .querySelectorAll(".is-direct, .is-indirect, .is-muted, .is-selected")
+    .forEach((node) => {
+      node.classList.remove("is-direct", "is-indirect", "is-muted", "is-selected");
+    });
+  selectedId = null;
+}
+
+function applyFocus(serviceId) {
+  if (!overlay || !serviceId) return false;
+
+  let state;
+  try {
+    state = getFocusState(catalogue, serviceId);
+  } catch {
+    return false;
+  }
+
+  clearFocus();
+  selectedId = serviceId;
+
+  overlay.querySelectorAll("[data-service-id]").forEach((landmark) => {
+    const id = landmark.dataset.serviceId;
+    if (id === serviceId) landmark.classList.add("is-selected", "is-direct");
+    else if (state.directNodes.has(id)) landmark.classList.add("is-direct");
+    else if (state.indirectNodes.has(id)) landmark.classList.add("is-indirect");
+    else landmark.classList.add("is-muted");
+  });
+
+  overlay.querySelectorAll(".road-group[data-relation-index]").forEach((road) => {
+    const index = Number.parseInt(road.dataset.relationIndex ?? "", 10);
+    if (state.directRelations.has(index)) road.classList.add("is-direct");
+    else if (state.indirectRelations.has(index)) road.classList.add("is-indirect");
+    else road.classList.add("is-muted");
+  });
+
+  return true;
+}
+
+function previewFocus(serviceId) {
+  const rememberedId = selectedId;
+  const applied = applyFocus(serviceId);
+  selectedId = rememberedId;
+  return applied;
+}
+
+function getLandmark(target) {
+  if (!(target instanceof Element)) return null;
+  const landmark = target.closest("[data-service-id]");
+  return landmark && overlay?.contains(landmark) ? landmark : null;
+}
+
+function getLandmarkId(target) {
+  return getLandmark(target)?.dataset.serviceId ?? null;
+}
+
+try {
+  if (!overlay) throw new Error("Missing atlas overlay mount point");
+  overlay.innerHTML = renderAtlas(catalogue);
+
+  overlay.addEventListener("pointerover", (event) => {
+    if (coarsePointer.matches) return;
+    const serviceId = getLandmarkId(event.target);
+    if (serviceId) applyFocus(serviceId);
+    else clearFocus();
+  });
+
+  overlay.addEventListener("focusin", (event) => {
+    const serviceId = getLandmarkId(event.target);
+    if (!serviceId) return;
+
+    // Touch browsers can focus a link immediately before dispatching click.
+    // Preserve the last deliberate tap so the first tap still previews.
+    if (coarsePointer.matches) previewFocus(serviceId);
+    else applyFocus(serviceId);
+  });
+
+  overlay.addEventListener("pointerleave", () => {
+    if (!coarsePointer.matches) clearFocus();
+  });
+
+  overlay.addEventListener("focusout", (event) => {
+    if (coarsePointer.matches || overlay.contains(event.relatedTarget)) return;
+    clearFocus();
+  });
+
+  overlay.addEventListener("click", (event) => {
+    if (!coarsePointer.matches) return;
+
+    const landmark = getLandmark(event.target);
+    const serviceId = landmark?.dataset.serviceId;
+    if (!landmark || !serviceId) return;
+
+    if (landmark.matches("a[href]") && selectedId === serviceId) return;
+
+    event.preventDefault();
+    applyFocus(serviceId);
+  });
+
+  overlay.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+
+    const landmark = getLandmark(event.target);
+    if (!landmark?.matches('g[role="button"]')) return;
+
+    event.preventDefault();
+    applyFocus(landmark.dataset.serviceId);
+  });
+} catch (cause) {
+  console.error("Unable to render service atlas", cause);
+  if (error) error.hidden = false;
+}

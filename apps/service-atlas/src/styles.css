@@ -1,0 +1,270 @@
+:root {
+  color: #26231f;
+  background: #ece9df;
+  font-family: "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", serif;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#atlas {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  background: #ece9df;
+}
+
+.atlas-scroll {
+  width: 100vw;
+  height: 100vh;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.atlas-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.atlas-stage {
+  position: relative;
+  isolation: isolate;
+  width: 100vw;
+  height: 100vh;
+  min-width: 960px;
+  min-height: 600px;
+  overflow: hidden;
+  background: #ded8c9;
+}
+
+.atlas-landscape,
+#atlas-overlay,
+.atlas-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.atlas-landscape {
+  z-index: 0;
+  display: block;
+  object-fit: cover;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+#atlas-overlay {
+  z-index: 1;
+}
+
+.atlas-overlay {
+  overflow: visible;
+}
+
+.roads,
+.road-group,
+.road {
+  pointer-events: none;
+}
+
+.road-group {
+  opacity: 1;
+  transition: opacity 260ms ease, filter 260ms ease;
+}
+
+.road-base,
+.road {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.road.relation-route {
+  stroke: rgba(65, 111, 143, 0.72);
+  stroke-width: 0.34;
+}
+
+.road.relation-authentication {
+  stroke: rgba(161, 94, 67, 0.65);
+  stroke-width: 0.24;
+  stroke-dasharray: 1.1 1.15;
+}
+
+.road.relation-data {
+  stroke: rgba(84, 104, 101, 0.55);
+  stroke-width: 0.27;
+}
+
+.road.relation-cache {
+  stroke: rgba(157, 126, 62, 0.56);
+  stroke-width: 0.18;
+  stroke-dasharray: 0.62 1.05;
+}
+
+.road.relation-message {
+  stroke: rgba(103, 108, 133, 0.6);
+  stroke-width: 0.22;
+  stroke-dasharray: 0.72 1.2;
+}
+
+.road-mote {
+  stroke: rgba(255, 252, 232, 0.92);
+  stroke-width: 0.18;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 0.7px rgba(255, 250, 218, 0.95));
+}
+
+.road-mote.relation-route {
+  fill: #6b91ab;
+}
+
+.road-mote.relation-authentication {
+  fill: #b66f53;
+}
+
+.road-mote.relation-data {
+  fill: #738a84;
+}
+
+.road-mote.relation-cache {
+  fill: #b49551;
+}
+
+.road-mote.relation-message {
+  fill: #8186a0;
+}
+
+.landmark {
+  color: #2d2924;
+  outline: none;
+  opacity: 1;
+  transition: opacity 260ms ease, filter 260ms ease;
+}
+
+.landmark-hit {
+  fill: transparent;
+  stroke: none;
+}
+
+.landmark-aura {
+  fill: rgba(248, 240, 209, 0.09);
+  stroke: rgba(130, 100, 54, 0.28);
+  stroke-width: 0.16;
+  vector-effect: non-scaling-stroke;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: fill 220ms ease, stroke 220ms ease, transform 220ms ease, filter 220ms ease;
+}
+
+.landmark-label {
+  fill: #25221e;
+  stroke: rgba(245, 240, 224, 0.94);
+  stroke-width: 0.72px;
+  paint-order: stroke fill;
+  font-family: "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", serif;
+  font-size: 2.05px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  pointer-events: none;
+  user-select: none;
+}
+
+.landmark--link {
+  cursor: pointer;
+}
+
+.landmark--static {
+  cursor: default;
+}
+
+.landmark:hover .landmark-aura,
+.landmark:focus-visible .landmark-aura,
+.landmark.is-direct .landmark-aura {
+  fill: rgba(250, 225, 151, 0.2);
+  stroke: rgba(161, 111, 47, 0.72);
+  filter: drop-shadow(0 0 2px rgba(229, 188, 105, 0.72));
+  transform: scale(1.08);
+}
+
+.landmark:focus-visible .landmark-label {
+  stroke: rgba(255, 249, 222, 1);
+  stroke-width: 1px;
+}
+
+.landmark.is-selected .landmark-aura {
+  fill: rgba(246, 211, 118, 0.28);
+  stroke: rgba(135, 78, 31, 0.9);
+  stroke-width: 0.25;
+  filter: drop-shadow(0 0 2.5px rgba(227, 178, 77, 0.86));
+  transform: scale(1.16);
+}
+
+.landmark.is-selected .landmark-label {
+  fill: #171512;
+  font-weight: 700;
+}
+
+.landmark.is-indirect,
+.road-group.is-indirect {
+  opacity: 0.72;
+}
+
+.landmark.is-muted,
+.road-group.is-muted {
+  opacity: 0.19;
+}
+
+.road-group.is-direct {
+  filter: drop-shadow(0 0 1.25px rgba(247, 226, 166, 0.8));
+}
+
+#atlas-error {
+  position: fixed;
+  z-index: 3;
+  top: 50%;
+  left: 50%;
+  margin: 0;
+  padding: 0.7rem 1rem;
+  color: #554c42;
+  background: rgba(244, 240, 228, 0.88);
+  border: 1px solid rgba(105, 87, 64, 0.22);
+  transform: translate(-50%, -50%);
+  font-size: 0.92rem;
+  letter-spacing: 0.08em;
+  box-shadow: 0 8px 30px rgba(58, 49, 38, 0.12);
+}
+
+@media (max-width: 720px) {
+  .atlas-stage {
+    width: 960px;
+    height: 600px;
+    min-width: 960px;
+    min-height: 600px;
+  }
+
+  .landmark-label {
+    font-size: 2.3px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .road-mote { display: none; }
+
+  .landmark,
+  .landmark-aura,
+  .road-group {
+    transition: none;
+  }
+}
