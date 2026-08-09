@@ -1,0 +1,27 @@
+export const catalogue = {
+  services: [
+    { id: "traefik", name: "Traefik", href: "https://traefik.acitrus.cn", landmark: "gatehouse", position: { x: 14, y: 48 }, label: { dx: 2, dy: -6, align: "start" } },
+    { id: "authelia", name: "Authelia", href: "https://auth.acitrus.cn", landmark: "checkpoint", position: { x: 48, y: 50 }, label: { dx: 0, dy: -6, align: "middle" } },
+    { id: "claude-code-hub", name: "Claude Code Hub", href: "https://inner.coding.acitrus.cn", landmark: "academy", position: { x: 48, y: 18 }, label: { dx: 0, dy: -6, align: "middle" } },
+    { id: "rustfs", name: "RustFS", href: "https://s3.acitrus.cn", landmark: "archive", position: { x: 75, y: 22 }, label: { dx: 0, dy: -6, align: "middle" } },
+    { id: "lldap", name: "LLDAP", href: "https://ldap.acitrus.cn", landmark: "registry", position: { x: 86, y: 48 }, label: { dx: 0, dy: -6, align: "middle" } },
+    { id: "rabbitmq", name: "RabbitMQ", href: "https://rabbitmq.ui.acitrus.cn", landmark: "courier-station", position: { x: 78, y: 68 }, label: { dx: 0, dy: -6, align: "middle" } },
+    { id: "postgresql", name: "PostgreSQL", landmark: "stone-vault", position: { x: 44, y: 84 }, label: { dx: 0, dy: 7, align: "middle" } },
+    { id: "redis", name: "Redis", landmark: "relay-pavilion", position: { x: 68, y: 84 }, label: { dx: 0, dy: 7, align: "middle" } },
+  ],
+  relations: [
+    { source: "traefik", target: "authelia", type: "route", waypoints: [{ x: 28, y: 48 }, { x: 39, y: 49 }] },
+    { source: "traefik", target: "claude-code-hub", type: "route", waypoints: [{ x: 29, y: 42 }, { x: 38, y: 27 }] },
+    { source: "traefik", target: "rustfs", type: "route", waypoints: [{ x: 31, y: 42 }, { x: 52, y: 30 }, { x: 66, y: 25 }] },
+    { source: "traefik", target: "lldap", type: "route", waypoints: [{ x: 32, y: 54 }, { x: 58, y: 58 }, { x: 76, y: 52 }] },
+    { source: "traefik", target: "rabbitmq", type: "route", waypoints: [{ x: 31, y: 57 }, { x: 53, y: 67 }, { x: 69, y: 68 }] },
+    { source: "claude-code-hub", target: "authelia", type: "authentication", waypoints: [{ x: 53, y: 31 }, { x: 53, y: 41 }] },
+    { source: "rustfs", target: "authelia", type: "authentication", waypoints: [{ x: 68, y: 31 }, { x: 60, y: 43 }] },
+    { source: "authelia", target: "lldap", type: "authentication", waypoints: [{ x: 61, y: 45 }, { x: 74, y: 46 }] },
+    { source: "claude-code-hub", target: "postgresql", type: "data", waypoints: [{ x: 45, y: 40 }, { x: 43, y: 66 }] },
+    { source: "authelia", target: "postgresql", type: "data", waypoints: [{ x: 48, y: 65 }, { x: 45, y: 75 }] },
+    { source: "lldap", target: "postgresql", type: "data", waypoints: [{ x: 72, y: 60 }, { x: 56, y: 76 }] },
+    { source: "claude-code-hub", target: "redis", type: "cache", waypoints: [{ x: 56, y: 40 }, { x: 64, y: 64 }] },
+    { source: "authelia", target: "redis", type: "cache", waypoints: [{ x: 57, y: 61 }, { x: 64, y: 74 }] },
+  ],
+};
