@@ -1,10 +1,12 @@
-export const RELATION_TYPES = new Set([
+const RELATION_TYPE_VALUES = Object.freeze([
   "route",
   "authentication",
   "data",
   "cache",
   "message",
 ]);
+
+export const RELATION_TYPES = new Set(RELATION_TYPE_VALUES);
 
 const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const ALIGNMENTS = new Set(["start", "middle", "end"]);
@@ -25,6 +27,10 @@ function validateCoordinate(errors, value, path) {
 
 function validateHref(errors, href, path) {
   if (href === undefined) return;
+  if (typeof href !== "string") {
+    errors.push(`${path} must be an absolute URL`);
+    return;
+  }
 
   try {
     const url = new URL(href);
@@ -47,7 +53,7 @@ export function validateCatalogue(catalogue) {
 
   services.forEach((service, index) => {
     const path = `services[${index}]`;
-    if (!ID_PATTERN.test(service?.id ?? "")) {
+    if (typeof service?.id !== "string" || !ID_PATTERN.test(service.id)) {
       errors.push(`${path}.id must be a kebab-case identifier`);
     } else if (ids.has(service.id)) {
       errors.push(`${path}.id duplicates ${service.id}`);
@@ -83,7 +89,7 @@ export function validateCatalogue(catalogue) {
     if (!ids.has(relation?.target)) {
       errors.push(`${path}.target references missing service ${relation?.target}`);
     }
-    if (!RELATION_TYPES.has(relation?.type)) {
+    if (!RELATION_TYPE_VALUES.includes(relation?.type)) {
       errors.push(`${path}.type ${relation?.type} is unsupported`);
     }
     if (relation?.waypoints !== undefined) {
@@ -109,8 +115,10 @@ export function assertCatalogue(catalogue) {
 
 export function prepareCatalogue(catalogue, { warn = console.warn } = {}) {
   const prepared = structuredClone(catalogue);
+  const services = Array.isArray(prepared?.services) ? prepared.services : [];
 
-  prepared.services?.forEach((service, index) => {
+  services.forEach((service, index) => {
+    if (service === null || typeof service !== "object") return;
     if (service.href === undefined) return;
 
     const hrefErrors = [];
