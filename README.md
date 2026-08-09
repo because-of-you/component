@@ -275,49 +275,82 @@ helmfile -e dev --selector name=redis sync
 同时修改多个组件时，各组件独立部署；一个组件失败不会取消其他组件 Job。
 需要重新部署未发生变化的组件时，可以通过 `workflow_dispatch` 手动选择一个组件运行。
 
-GitHub 的 `dev` Environment 只需要配置：
+<!-- dev-config-inventory:start -->
+## dev Environment 配置清单
 
-- Secrets：`KUBECONFIG`、`REDIS_PASSWORD`、`POSTGRES_PASSWORD`、`LLDAP_JWT_SECRET`、
-  `LLDAP_KEY_SEED`、`LLDAP_ADMIN_PASSWORD`、`LLDAP_AUTHELIA_PASSWORD`、
-  `AUTHELIA_SESSION_ENCRYPTION_KEY`、`AUTHELIA_STORAGE_ENCRYPTION_KEY`、
-  `AUTHELIA_RESET_PASSWORD_JWT_SECRET`、`AUTHELIA_OIDC_HMAC_SECRET`、`AUTHELIA_OIDC_JWK`、
-  `CCH_ADMIN_TOKEN`、`CCH_OIDC_CLIENT_SECRET`、`CCH_OIDC_CLIENT_SECRET_DIGEST`、
-  `RUSTFS_ACCESS_KEY`、`RUSTFS_SECRET_KEY`、`RUSTFS_OIDC_CLIENT_SECRET`、
-  `RUSTFS_OIDC_CLIENT_SECRET_DIGEST`、
-  `ALIYUN_ACR_PASSWORD`、
-  `ALIYUN_DNS_KEY`、`ALIYUN_DNS_SECRET`
-- Variables：`TS_OAUTH_CLIENT_ID`、`TS_AUDIENCE`、`K3S_TAILSCALE_HOST`、
-  `ALIYUN_ACR_REGISTRY`、`ALIYUN_ACR_NAMESPACE`、`ALIYUN_ACR_USERNAME`
+所有值都配置在 GitHub 仓库的 `Settings → Environments → dev`。Secret 保存敏感内容，Variable 保存非敏感标识；真实值不得写入仓库。
 
-`KUBECONFIG` 保存完整文件内容，其中 API Server 地址应使用 Tailscale 可以访问的地址。
-`TS_OAUTH_CLIENT_ID` 和 `TS_AUDIENCE` 是 Tailscale OIDC 联合身份的非敏感标识；
-`K3S_TAILSCALE_HOST` 填写 K3s 主机的 Tailscale IP 或 MagicDNS 名称。
-Redis 和 PostgreSQL 部署任务会分别把对应的 Environment Secret 同步为 `infra` 命名空间中的
-`redis-auth` 和 `postgresql-auth` Kubernetes Secret，再由 Chart 通过 `existingSecret` 引用。
-LLDAP 部署任务会把四项 LLDAP Secret 和 `POSTGRES_PASSWORD` 同步为 `infra/lldap-secrets`，
-并使用独立的 `lldap` 数据库。Authelia 部署任务会把七项专用 Environment Secret、
-`LLDAP_AUTHELIA_PASSWORD` 加上已有的 `REDIS_PASSWORD`、
-`POSTGRES_PASSWORD` 同步为 `infra/authelia-secrets`，并映射为官方 Chart 所需的 LDAP、Session、
-Storage、Reset Password JWT、OIDC、Redis 和 PostgreSQL Secret 键名。Authelia Chart 会通过幂等的
-Helm Hook 自动创建独立数据库；备份和还原步骤见 `charts/authelia/README.md`。
-RustFS 部署任务会把 `RUSTFS_ACCESS_KEY`、`RUSTFS_SECRET_KEY` 和
-`RUSTFS_OIDC_CLIENT_SECRET` 同步为 `infra/rustfs-secrets`。Authelia 部署任务还会把
-`RUSTFS_OIDC_CLIENT_SECRET_DIGEST` 同步为 RustFS OIDC Client 的 PBKDF2 摘要。控制台入口为
-`https://s3.acitrus.cn`；S3 客户端必须使用包含端口的路径风格 Endpoint
-`https://s3.acitrus.cn:1024`。
-Claude Code Hub 部署任务会复用 `POSTGRES_PASSWORD`、`REDIS_PASSWORD`，并把
-`CCH_ADMIN_TOKEN`、`CCH_OIDC_CLIENT_SECRET` 和编码后的连接串同步为
-`app/claude-code-hub-secrets`；Chart 会自动创建 `claude_code_hub` 数据库，应用启动后自行执行
-schema migrations。部署前会使用 `ALIYUN_ACR_*` 配置将同 Tag 的公开 GHCR 镜像复制到深圳 ACR，
-集群再从 ACR 拉取。OIDC 回调固定为
-`https://inner.coding.acitrus.cn/api/auth/oidc/callback`，但当前 Chart 不创建该域名的公网入口。
-Traefik 部署任务会把 `ALIYUN_DNS_KEY` 和 `ALIYUN_DNS_SECRET` 同步为 `traefik` 命名空间中的
-`alidns` Kubernetes Secret，并映射为 DNS provider 所需的 `ALICLOUD_ACCESS_KEY` 和
-`ALICLOUD_SECRET_KEY`；Traefik 通过 `envFrom` 引用它们。
-已有持久化数据时，首次配置必须使用服务当前密码；更新 `POSTGRES_PASSWORD` 不会自动修改
-PostgreSQL 数据库内部的用户密码，轮换时还需要同步执行数据库密码变更。
-普通配置继续维护在 `environments/dev/*/values.yaml`；密码等敏感值不要写入公共仓库，
-可以预先创建为集群 Secret，或按需放入 GitHub Environment Secrets。
+### 公共连接配置
+
+| 名称 | 类型 | 用途与填写要求 |
+| --- | --- | --- |
+| `KUBECONFIG` | Secret | 完整 kubeconfig 文件内容，API Server 地址必须可通过 Tailscale 访问。 |
+| `TS_OAUTH_CLIENT_ID` | Variable | Tailscale GitHub OIDC Client ID。 |
+| `TS_AUDIENCE` | Variable | Tailscale OIDC audience。 |
+| `K3S_TAILSCALE_HOST` | Variable | K3s 主机的 Tailscale IP 或 MagicDNS 名称。 |
+
+### 基础设施凭据
+
+| 名称 | 类型 | 使用方 | 生成或来源 |
+| --- | --- | --- | --- |
+| `REDIS_PASSWORD` | Secret | Redis、Authelia、CCH | 新环境可用 `openssl rand -base64 32`；已有 PVC 必须先确认服务当前密码。 |
+| `POSTGRES_PASSWORD` | Secret | PostgreSQL、LLDAP、Authelia、CCH | 新环境可用 `openssl rand -base64 32`；已有 PVC 不能只改 Secret。 |
+| `LLDAP_JWT_SECRET` | Secret | LLDAP | `openssl rand -base64 48`。 |
+| `LLDAP_KEY_SEED` | Secret | LLDAP | `openssl rand -base64 32`。 |
+| `LLDAP_ADMIN_PASSWORD` | Secret | LLDAP 管理员 | `openssl rand -base64 32`。 |
+| `LLDAP_AUTHELIA_PASSWORD` | Secret | LLDAP/Authelia bind 账号 | `openssl rand -base64 32`，两端必须使用同一值。 |
+| `ALIYUN_DNS_KEY` | Secret | Traefik ACME DNS Challenge | 阿里云访问凭据 AccessKey ID。 |
+| `ALIYUN_DNS_SECRET` | Secret | Traefik ACME DNS Challenge | 与上一项配对的 AccessKey Secret。 |
+| `ALIYUN_ACR_PASSWORD` | Secret | Sync Images | 阿里云 ACR 独立访问凭据密码。 |
+| `ALIYUN_ACR_REGISTRY` | Variable | Sync Images | `registry.cn-shenzhen.aliyuncs.com`。 |
+| `ALIYUN_ACR_USERNAME` | Variable | Sync Images | ACR 独立访问凭据用户名。 |
+
+Redis 的同步映射是 `REDIS_PASSWORD` → `infra/redis-auth/redis-password`。已有 PVC 时，GitHub Secret 必须使用 Redis 服务当前密码；轮换时必须协调更新 Redis 服务密码和 Kubernetes Secret，不能只修改 Environment Secret。
+
+### Authelia 与 OIDC
+
+| 名称 | 类型 | 生成或对应关系 |
+| --- | --- | --- |
+| `AUTHELIA_SESSION_ENCRYPTION_KEY` | Secret | 至少 32 个字符，可用 `openssl rand -hex 32`。 |
+| `AUTHELIA_STORAGE_ENCRYPTION_KEY` | Secret | 至少 20 个字符，可用 `openssl rand -hex 32`。 |
+| `AUTHELIA_RESET_PASSWORD_JWT_SECRET` | Secret | 至少 32 个字符，可用 `openssl rand -hex 32`。 |
+| `AUTHELIA_OIDC_HMAC_SECRET` | Secret | `openssl rand -hex 64`。 |
+| `AUTHELIA_OIDC_JWK` | Secret | `openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048` 生成的完整 PEM。 |
+| `CCH_OIDC_CLIENT_SECRET` | Secret | CCH OIDC 明文 Client Secret。 |
+| `CCH_OIDC_CLIENT_SECRET_DIGEST` | Secret | 上一项对应的 Authelia PBKDF2 Digest，必须来自同一次生成。 |
+| `RUSTFS_OIDC_CLIENT_SECRET` | Secret | RustFS OIDC 明文 Client Secret。 |
+| `RUSTFS_OIDC_CLIENT_SECRET_DIGEST` | Secret | 上一项对应的 Authelia PBKDF2 Digest，必须来自同一次生成。 |
+
+为 CCH 和 RustFS 分别执行一次以下命令，不要复用同一组输出：
+
+```bash
+docker run --rm -it authelia/authelia:4.39.20 \
+  authelia crypto hash generate pbkdf2 --variant sha512 \
+  --random --random.length 72 --random.charset rfc3986
+```
+
+同一次输出的 `Random Password` 保存为对应的 `*_OIDC_CLIENT_SECRET`，`Digest` 保存为对应的 `*_OIDC_CLIENT_SECRET_DIGEST`。
+
+### 应用凭据
+
+| 名称 | 类型 | 使用方与生成方式 |
+| --- | --- | --- |
+| `CCH_ADMIN_TOKEN` | Secret | Claude Code Hub 紧急管理入口，可用 `openssl rand -hex 32`。 |
+| `RUSTFS_ACCESS_KEY` | Secret | S3 Access Key ID，使用 `openssl rand -hex 16` 生成 32 个十六进制字符。 |
+| `RUSTFS_SECRET_KEY` | Secret | S3 Secret Access Key，使用 `openssl rand -hex 32` 生成 64 个十六进制字符。 |
+
+RustFS 的 Access Key/Secret Key 与 OIDC Client Secret 是两套独立凭据，不得复用。详细轮换及 Kubernetes Secret 映射见：
+
+- `charts/redis/README.md`
+- `charts/postgresql/README.md`
+- `charts/lldap/README.md`
+- `charts/authelia/README.md`
+- `charts/claude-code-hub/README.md`
+- `charts/rustfs/README.md`
+- `charts/traefik/README.md`
+
+以后工作流新增 `secrets.*` 或 `vars.*` 引用时，必须同步更新本清单和对应组件 README。
+<!-- dev-config-inventory:end -->
 
 ## 新增组件
 

@@ -52,12 +52,8 @@ GitHub `dev` Environment 需要：
 - Secret `CCH_ADMIN_TOKEN`
 - Secret `CCH_OIDC_CLIENT_SECRET`，OIDC 客户端明文密钥
 - Secret `ALIYUN_ACR_PASSWORD`，ACR 独立访问凭证密码
-
-还需要以下 GitHub `dev` Environment Variables：
-
-- `ALIYUN_ACR_REGISTRY=registry.cn-shenzhen.aliyuncs.com`
-- `ALIYUN_ACR_NAMESPACE=gravitation`
-- `ALIYUN_ACR_USERNAME=data_visionary`
+- Variable `ALIYUN_ACR_REGISTRY=registry.cn-shenzhen.aliyuncs.com`
+- Variable `ALIYUN_ACR_USERNAME`，ACR 独立访问凭据用户名
 
 部署流程复用已有的 `POSTGRES_PASSWORD` 和 `REDIS_PASSWORD`，生成
 `app/claude-code-hub-secrets`：

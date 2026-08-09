@@ -54,6 +54,22 @@ environments/prod/redis/values.yaml
 
 这些环境配置不会被打包进 OCI Chart，只会在本仓库通过 Helmfile 渲染或部署时使用。
 
+## dev 密码配置
+
+在 GitHub `dev` Environment Secrets 中配置 `REDIS_PASSWORD`。部署工作流会把它同步为
+`infra/redis-auth` Kubernetes Secret 的 `redis-password` 键，dev values 通过
+`auth.existingSecret` 和 `auth.existingSecretPasswordKey` 引用：
+
+```yaml
+redis:
+  auth:
+    enabled: true
+    existingSecret: redis-auth
+    existingSecretPasswordKey: redis-password
+```
+
+密码不会写入 values 或通过 Helm 命令行传递。已有持久化部署时，Secret 中必须使用 Redis 服务当前密码；轮换时需要协调更新 Redis 服务密码、`redis-auth` 和所有客户端，不能只修改 GitHub Environment Secret。
+
 ## 本地调试
 
 首次克隆仓库，或者修改 `Chart.yaml` 里的依赖后，先更新依赖：
@@ -112,11 +128,9 @@ helm upgrade --install redis oci://ghcr.io/because-of-you/charts/redis \
   --create-namespace
 ```
 
-## 获取默认密码
-
-如果没有通过 values 指定密码，Bitnami Redis 会在安装时生成默认密码，并写入 `redis` Secret：
+## 获取 dev 密码
 
 ```bash
-kubectl -n infra get secret redis \
+kubectl -n infra get secret redis-auth \
   -o go-template='{{ index .data "redis-password" | base64decode }}{{ "\n" }}'
 ```
