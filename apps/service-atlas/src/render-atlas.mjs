@@ -22,7 +22,7 @@ export function renderAtlas(catalogue) {
     .map((service) => renderLandmark(service, positions.get(service.id)))
     .join("");
 
-  return `<svg class="atlas-overlay" viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Interactive service dependency map"><g class="roads">${roads}</g><g class="landmarks">${landmarks}</g></svg>`;
+  return `<svg class="atlas-overlay" viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice" role="group" aria-label="Interactive service dependency map"><g class="roads">${roads}</g><g class="landmarks">${landmarks}</g></svg>`;
 }
 
 function renderRoad(relation, index, positions) {
