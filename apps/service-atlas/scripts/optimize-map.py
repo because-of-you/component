@@ -18,6 +18,10 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    if args.width <= 0 or args.height <= 0:
+        raise SystemExit("optimized map width and height must be positive")
+    if abs(args.width / args.height - 1.6) > 0.01:
+        raise SystemExit("optimized map width and height must use an 8:5 aspect ratio")
     args.output.parent.mkdir(parents=True, exist_ok=True)
 
     with Image.open(args.input) as source:
