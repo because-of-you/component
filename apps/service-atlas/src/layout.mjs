@@ -19,21 +19,46 @@ const ROAD_PRESENTATION = {
 
 export function assignPositions(services) {
   const positions = new Map();
+  const occupied = new Set(
+    services
+      .filter((service) => service.position != null)
+      .map((service) => positionKey(service.position)),
+  );
   let fallbackIndex = 0;
 
   for (const service of services) {
-    const position = service.position ?? FALLBACK_SLOTS[fallbackIndex++];
+    let position = service.position;
+    if (position == null) {
+      while (
+        fallbackIndex < FALLBACK_SLOTS.length &&
+        occupied.has(positionKey(FALLBACK_SLOTS[fallbackIndex]))
+      ) {
+        fallbackIndex += 1;
+      }
+      position = FALLBACK_SLOTS[fallbackIndex++];
+    }
     if (!position) {
       throw new Error(`No free map slot for ${service.id}; add an explicit position`);
     }
     positions.set(service.id, { ...position });
+    occupied.add(positionKey(position));
   }
 
   return positions;
 }
 
+function positionKey(position) {
+  return `${position.x},${position.y}`;
+}
+
 export function buildRoadPath(source, target, waypoints = []) {
-  const points = [source, ...waypoints, target];
+  if (!isValidPoint(source) || !isValidPoint(target)) {
+    throw new Error("Invalid road endpoint");
+  }
+
+  const validWaypoints =
+    Array.isArray(waypoints) && waypoints.every(isValidPoint) ? waypoints : [];
+  const points = [source, ...validWaypoints, target];
   const segments = points.slice(1).map((point, index) => {
     const previous = points[index];
     const midpointX = (previous.x + point.x) / 2;
@@ -42,6 +67,15 @@ export function buildRoadPath(source, target, waypoints = []) {
   });
 
   return `M ${formatNumber(source.x)} ${formatNumber(source.y)} ${segments.join(" ")}`;
+}
+
+function isValidPoint(point) {
+  return (
+    point != null &&
+    typeof point === "object" &&
+    Number.isFinite(point.x) &&
+    Number.isFinite(point.y)
+  );
 }
 
 export function getRoadPresentation(type) {

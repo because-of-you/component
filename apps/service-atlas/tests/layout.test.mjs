@@ -17,6 +17,61 @@ test("preserves authored positions and assigns fallback positions", () => {
   assert.deepEqual(positions.get("automatic"), { x: 22, y: 22 });
 });
 
+test("skips a fallback occupied by an earlier authored service", () => {
+  const positions = assignPositions([
+    { id: "authored", position: { x: 22, y: 22 } },
+    { id: "automatic" },
+  ]);
+
+  assert.deepEqual(positions.get("automatic"), { x: 35, y: 18 });
+});
+
+test("skips a fallback occupied by a later authored service", () => {
+  const positions = assignPositions([
+    { id: "automatic" },
+    { id: "authored", position: { x: 22, y: 22 } },
+  ]);
+
+  assert.deepEqual(positions.get("automatic"), { x: 35, y: 18 });
+});
+
+test("throws when every fallback position is occupied", () => {
+  const occupied = [
+    { x: 22, y: 22 },
+    { x: 35, y: 18 },
+    { x: 62, y: 18 },
+    { x: 82, y: 30 },
+    { x: 22, y: 66 },
+    { x: 37, y: 72 },
+    { x: 58, y: 72 },
+    { x: 83, y: 78 },
+  ].map((position, index) => ({ id: `authored-${index}`, position }));
+
+  assert.throws(
+    () => assignPositions([...occupied, { id: "overflow" }]),
+    new Error("No free map slot for overflow; add an explicit position"),
+  );
+});
+
+test("returns position clones isolated from inputs and later calls", () => {
+  const authoredPosition = { x: 14, y: 48 };
+  const positions = assignPositions([
+    { id: "authored", position: authoredPosition },
+    { id: "automatic" },
+  ]);
+
+  positions.get("authored").x = 99;
+  positions.get("automatic").x = 99;
+  const fresh = assignPositions([
+    { id: "authored", position: authoredPosition },
+    { id: "automatic" },
+  ]);
+
+  assert.deepEqual(authoredPosition, { x: 14, y: 48 });
+  assert.deepEqual(fresh.get("authored"), { x: 14, y: 48 });
+  assert.deepEqual(fresh.get("automatic"), { x: 22, y: 22 });
+});
+
 test("builds a smooth path through waypoints", () => {
   assert.equal(
     buildRoadPath(
@@ -28,9 +83,42 @@ test("builds a smooth path through waypoints", () => {
   );
 });
 
+test("falls back to a direct curve for non-finite waypoints", () => {
+  assert.equal(
+    buildRoadPath(
+      { x: 10, y: 50 },
+      { x: 80, y: 20 },
+      [{ x: 30, y: Number.NaN }],
+    ),
+    "M 10 50 C 45 50, 45 20, 80 20",
+  );
+});
+
+test("falls back to a direct curve for missing, null, or non-array waypoints", () => {
+  const source = { x: 10, y: 50 };
+  const target = { x: 80, y: 20 };
+  const directPath = "M 10 50 C 45 50, 45 20, 80 20";
+
+  assert.equal(buildRoadPath(source, target, [{ y: 40 }]), directPath);
+  assert.equal(buildRoadPath(source, target, [null]), directPath);
+  assert.equal(buildRoadPath(source, target, "not-an-array"), directPath);
+});
+
+test("rejects invalid road endpoints", () => {
+  assert.throws(
+    () => buildRoadPath({ x: Number.NaN, y: 50 }, { x: 80, y: 20 }),
+    new Error("Invalid road endpoint"),
+  );
+  assert.throws(
+    () => buildRoadPath({ x: 10, y: 50 }, { x: 80 }),
+    new Error("Invalid road endpoint"),
+  );
+});
+
 test("formats coordinates with fixed decimal rounding", () => {
-  assert.ok(
-    buildRoadPath({ x: 1.335, y: 50 }, { x: 80, y: 20 }).startsWith("M 1.33 "),
+  assert.equal(
+    buildRoadPath({ x: 1.335, y: 50 }, { x: 80, y: 20 }),
+    "M 1.33 50 C 40.67 50, 40.67 20, 80 20",
   );
 });
 
@@ -42,5 +130,23 @@ test("returns presentation metadata for route and cache roads", () => {
   assert.deepEqual(getRoadPresentation("cache"), {
     className: "road--cache",
     duration: 7,
+  });
+});
+
+test("rejects unsupported road presentation types", () => {
+  assert.throws(
+    () => getRoadPresentation("telepathy"),
+    new Error("Unsupported road type telepathy"),
+  );
+});
+
+test("returns road presentation clones isolated from mutation", () => {
+  const presentation = getRoadPresentation("route");
+  presentation.className = "changed";
+  presentation.duration = 0;
+
+  assert.deepEqual(getRoadPresentation("route"), {
+    className: "road--route",
+    duration: 12,
   });
 });
