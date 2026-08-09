@@ -201,7 +201,20 @@ def assert(condition, message)
   abort message unless condition
 end
 
-helmfile = YAML.load_stream(File.read(ARGV.fetch(0))).find do |document|
+helmfile_documents = YAML.load_stream(File.read(ARGV.fetch(0)))
+repositories = helmfile_documents.find do |document|
+  document.is_a?(Hash) && document['repositories']
+end
+assert(repositories, 'helmfile repositories document is missing')
+assert(
+  repositories['repositories'].include?(
+    'name' => 'rustfs',
+    'url' => 'https://charts.rustfs.com'
+  ),
+  'helmfile RustFS chart repository is missing'
+)
+
+helmfile = helmfile_documents.find do |document|
   document.is_a?(Hash) && document['releases']
 end
 assert(helmfile, 'helmfile releases document is missing')
@@ -235,7 +248,6 @@ assert(filters['rustfs'].is_a?(Array), 'workflow rustfs paths-filter is missing'
 expected_filter = [
   'charts/rustfs/**',
   'environments/dev/rustfs/**',
-  'environments/dev/authelia/**',
   'environments/dev/values.yaml',
   'helmfile.yaml'
 ]
@@ -244,8 +256,8 @@ assert(filters['rustfs'].sort == expected_filter.sort, 'workflow rustfs paths-fi
 deploy_steps = workflow['jobs']['deploy']['steps']
 concurrency_group = workflow['jobs']['deploy']['concurrency']['group']
 assert(
-  concurrency_group == %q(deploy-dev-${{ (matrix.component == 'authelia' || matrix.component == 'rustfs') && 'authelia-rustfs' || matrix.component }}),
-  'workflow must serialize Authelia and RustFS deployments'
+  concurrency_group == %q(deploy-dev-${{ matrix.component }}),
+  'workflow concurrency group must be scoped to the selected component'
 )
 infra_namespace_step = deploy_steps.find { |step| step['name'] == 'Ensure infra namespace' }
 assert(infra_namespace_step, 'workflow infra namespace step is missing')
@@ -257,8 +269,8 @@ assert(
 authelia_sync_step = deploy_steps.find { |step| step['name'] == 'Sync Authelia credentials' }
 assert(authelia_sync_step, 'workflow Authelia credential sync step is missing')
 assert(
-  authelia_sync_step['if'] == %q(matrix.component == 'authelia' || matrix.component == 'rustfs'),
-  'workflow must sync Authelia credentials for RustFS deployments'
+  authelia_sync_step['if'] == %q(matrix.component == 'authelia'),
+  'workflow Authelia credentials must only be synchronized for Authelia deployments'
 )
 
 rustfs_sync_step = deploy_steps.find { |step| step['name'] == 'Sync RustFS credentials' }
@@ -288,39 +300,25 @@ expected_sync_lines.each do |line|
   assert(sync_lines.include?(line), "workflow RustFS credential sync is missing: #{line}")
 end
 
-prepare_authelia_step = deploy_steps.find { |step| step['name'] == 'Prepare Authelia for RustFS' }
-assert(prepare_authelia_step, 'workflow RustFS Authelia preparation step is missing')
 assert(
-  prepare_authelia_step['if'] == %q(matrix.component == 'rustfs'),
-  'workflow RustFS Authelia preparation condition is incorrect'
-)
-prepare_lines = prepare_authelia_step['run'].lines.map(&:strip)
-expected_prepare_lines = [
-  'helmfile -e dev --selector name=authelia sync',
-  'kubectl -n infra rollout restart deployment/authelia',
-  'kubectl -n infra rollout status deployment/authelia --timeout=300s'
-]
-assert(
-  prepare_lines == expected_prepare_lines,
-  'workflow must sync, restart, and wait for Authelia before deploying RustFS'
+  deploy_steps.none? { |step| step['name'] == 'Prepare Authelia for RustFS' },
+  'workflow must not deploy Authelia as part of a RustFS deployment'
 )
 
-rustfs_deploy_step = deploy_steps.find { |step| step['name'] == 'Deploy RustFS' }
-assert(rustfs_deploy_step, 'workflow dedicated RustFS deploy step is missing')
 assert(
-  rustfs_deploy_step['if'] == %q(matrix.component == 'rustfs'),
-  'workflow RustFS deploy condition is incorrect'
-)
-assert(
-  rustfs_deploy_step['run'].strip == 'helmfile -e dev --selector name=rustfs sync',
-  'workflow RustFS deploy selector is incorrect'
+  deploy_steps.none? { |step| step['name'] == 'Deploy RustFS' },
+  'workflow must not define a dedicated RustFS deploy step'
 )
 
 generic_deploy_step = deploy_steps.find { |step| step['name'] == 'Deploy ${{ matrix.component }}' }
 assert(generic_deploy_step, 'workflow generic deploy step is missing')
 assert(
-  generic_deploy_step['if'] == %q(matrix.component != 'rustfs'),
-  'workflow generic deploy step must exclude rustfs'
+  !generic_deploy_step.key?('if'),
+  'workflow generic deploy step must run for every selected component'
+)
+assert(
+  generic_deploy_step['run'].strip == 'helmfile -e dev --selector name=${{ matrix.component }} sync',
+  'workflow generic deploy selector is incorrect'
 )
 
 rustfs_restart_step = deploy_steps.find { |step| step['name'] == 'Restart RustFS after deployment' }
@@ -341,25 +339,9 @@ assert(
 
 step_names = deploy_steps.map { |step| step['name'] }
 assert(
-  step_names.index('Sync Authelia credentials') < step_names.index('Prepare Authelia for RustFS') &&
-    step_names.index('Sync RustFS credentials') < step_names.index('Prepare Authelia for RustFS') &&
-    step_names.index('Prepare Authelia for RustFS') < step_names.index('Deploy RustFS') &&
-    step_names.index('Deploy RustFS') < step_names.index('Restart RustFS after deployment'),
-  'workflow RustFS identity-provider preparation and deployment order is incorrect'
-)
-
-readme = File.read(ARGV.fetch(2))
-manual_commands = [
-  'helmfile -e dev apply --selector name=authelia',
-  'kubectl -n infra rollout restart deployment/authelia',
-  'kubectl -n infra rollout status deployment/authelia --timeout=300s',
-  'helmfile -e dev apply --selector name=rustfs'
-]
-manual_positions = manual_commands.map { |command| readme.index(command) }
-assert(manual_positions.all?, 'RustFS README dependency-aware deployment commands are incomplete')
-assert(
-  manual_positions.each_cons(2).all? { |left, right| left < right },
-  'RustFS README must prepare Authelia before applying RustFS'
+  step_names.index('Sync RustFS credentials') < step_names.index('Deploy ${{ matrix.component }}') &&
+    step_names.index('Deploy ${{ matrix.component }}') < step_names.index('Restart RustFS after deployment'),
+  'workflow RustFS credential, deployment, and restart order is incorrect'
 )
 RUBY
 

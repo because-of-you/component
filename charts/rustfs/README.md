@@ -92,9 +92,6 @@ helm dependency update charts/rustfs
 helm lint charts/rustfs -f environments/dev/rustfs/values.yaml
 bash charts/rustfs/tests/render.sh
 helmfile -e dev template --selector name=rustfs --skip-deps
-helmfile -e dev apply --selector name=authelia
-kubectl -n infra rollout restart deployment/authelia
-kubectl -n infra rollout status deployment/authelia --timeout=300s
 helmfile -e dev apply --selector name=rustfs
 ```
 

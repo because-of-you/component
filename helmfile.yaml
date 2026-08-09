@@ -7,6 +7,8 @@ repositories:
     url: https://charts.authelia.com
   - name: lldap
     url: https://evantage-ws.github.io/lldap-kubernetes/
+  - name: rustfs
+    url: https://charts.rustfs.com
 
 helmDefaults:
   atomic: true

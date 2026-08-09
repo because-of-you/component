@@ -79,7 +79,6 @@ jobs:
             rustfs:
               - 'charts/rustfs/**'
               - 'environments/dev/rustfs/**'
-              - 'environments/dev/authelia/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
             claude-code-hub:
@@ -104,7 +103,7 @@ jobs:
       matrix:
         component: ${{ fromJSON(needs.changes.outputs.components) }}
     concurrency:
-      group: deploy-dev-${{ (matrix.component == 'authelia' || matrix.component == 'rustfs') && 'authelia-rustfs' || matrix.component }}
+      group: deploy-dev-${{ matrix.component }}
       cancel-in-progress: false
     runs-on: ubuntu-latest
     environment: dev
@@ -232,7 +231,7 @@ jobs:
           fi
 
       - name: Sync Authelia credentials
-        if: matrix.component == 'authelia' || matrix.component == 'rustfs'
+        if: matrix.component == 'authelia'
         shell: bash
         env:
           LLDAP_AUTHELIA_PASSWORD: ${{ secrets.LLDAP_AUTHELIA_PASSWORD }}
@@ -361,20 +360,7 @@ jobs:
             --dry-run=client -o yaml \
             | bash .github/scripts/kubectl-apply-retry.sh
 
-      - name: Prepare Authelia for RustFS
-        if: matrix.component == 'rustfs'
-        shell: bash
-        run: |
-          helmfile -e dev --selector name=authelia sync
-          kubectl -n infra rollout restart deployment/authelia
-          kubectl -n infra rollout status deployment/authelia --timeout=300s
-
-      - name: Deploy RustFS
-        if: matrix.component == 'rustfs'
-        run: helmfile -e dev --selector name=rustfs sync
-
       - name: Deploy ${{ matrix.component }}
-        if: matrix.component != 'rustfs'
         run: helmfile -e dev --selector name=${{ matrix.component }} sync
 
       - name: Restart Authelia after deployment
