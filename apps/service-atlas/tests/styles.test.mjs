@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 
 const stylesUrl = new URL("../src/styles.css", import.meta.url);
 const appUrl = new URL("../src/app.mjs", import.meta.url);
+const pageUrl = new URL("../index.html", import.meta.url);
 
 test("supports mobile panning and reduced motion", async () => {
   const styles = await readFile(stylesUrl, "utf8");
@@ -30,9 +31,44 @@ test("styles every road class emitted by the atlas renderer", async () => {
   assert.doesNotMatch(styles, /\.relation-(?:route|authentication|data|cache|message)\b/);
 });
 
+test("uses a dark CSS-only knowledge graph field without scenic imagery", async () => {
+  const [styles, page] = await Promise.all([
+    readFile(stylesUrl, "utf8"),
+    readFile(pageUrl, "utf8"),
+  ]);
+
+  assert.match(styles, /--ink-field:\s*#(?:070b0f|080c10|091014)\s*;/i);
+  assert.match(styles, /\.atlas-stage::before/);
+  assert.match(styles, /radial-gradient\(/);
+  assert.doesNotMatch(styles, /url\s*\(/i);
+  assert.doesNotMatch(page, /atlas-map\.webp|atlas-landscape/);
+  assert.doesNotMatch(page, /<img\b/i);
+});
+
+test("styles knowledge graph plaques, hierarchy, road halos, and focus states", async () => {
+  const styles = await readFile(stylesUrl, "utf8");
+
+  for (const selector of [
+    ".road-halo",
+    ".landmark-plaque",
+    ".landmark-frame",
+    ".landmark-corners",
+    ".landmark--hub",
+    ".landmark--major",
+    ".landmark--standard",
+    ".landmark.is-selected",
+    ".landmark.is-direct",
+    ".landmark.is-indirect",
+    ".landmark.is-muted",
+    ".road-group.is-direct",
+  ]) {
+    assert.match(styles, new RegExp(`${selector.replaceAll(".", "\\.")}\\s*[{,]`));
+  }
+});
+
 test("keeps road strokes visible when the atlas SVG scales", async () => {
   const styles = await readFile(stylesUrl, "utf8");
-  const roadBaseRule = styles.match(/\.road-base,\s*\.road\s*\{([^}]*)\}/s);
+  const roadBaseRule = styles.match(/\.road-halo,\s*\.road\s*\{([^}]*)\}/s);
 
   assert.ok(roadBaseRule, "expected the shared road stroke rule");
   assert.doesNotMatch(roadBaseRule[1], /vector-effect\s*:/);

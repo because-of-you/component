@@ -1,6 +1,6 @@
 # Service Atlas
 
-这是一个无边框的山水运行时调用导航图：服务是地图地标，调用依赖是道路，点击可直接前往对应服务。它只表达导航与运行时调用关系，不负责健康检查、状态监控或调用追踪。
+这是一个无边框的运行时知识图谱：服务是图谱节点，调用依赖是流动的连线，点击可直接前往对应服务。它只表达导航与运行时调用关系，不负责健康检查、状态监控或调用追踪。
 
 ## 本地预览
 
@@ -21,16 +21,16 @@ python3 -m http.server 4173 --directory apps/service-atlas
   id: "example",
   name: "Example",
   href: "https://example.com",
+  landmark: "application",
   position: { x: 60, y: 42 },
-  label: { dx: 0, dy: -6, align: "middle" },
 }
 ```
 
 - `id`：全局唯一标识。
 - `name`：地图上显示的名称。
 - `href`：可选跳转地址；外部 URL 会经过安全校验。
-- `position`：组件在地图中的百分比坐标。
-- `label`：名称相对组件的偏移与对齐方式。
+- `landmark`：组件的语义类别，方便后续扩展图谱表现。
+- `position`：组件在 100 × 100 逻辑画布中的百分比坐标；界面会根据连接数量自动区分枢纽、重要和标准节点。
 
 ## 添加调用关系
 
@@ -45,7 +45,7 @@ python3 -m http.server 4173 --directory apps/service-atlas
 }
 ```
 
-`source` 与 `target` 对应服务 `id`，`waypoints` 可选，用于控制道路经过的位置。支持的关系类型为 `route`、`authentication`、`data`、`cache` 和 `message`。
+`source` 与 `target` 对应服务 `id`，`waypoints` 可选，用于控制连线经过的位置。支持的关系类型为 `route`、`authentication`、`data`、`cache` 和 `message`。
 
 当前页面使用易于替换的 mock 目录数据，不要求 Kubernetes，也不依赖自动发现；后续可以由配置文件或服务清单生成同样的数据结构，因此扩展组件和关系只需维护目录数据。
 

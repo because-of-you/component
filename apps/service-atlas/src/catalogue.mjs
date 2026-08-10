@@ -1,13 +1,13 @@
 export const catalogue = {
   services: [
-    { id: "traefik", name: "Traefik", href: "https://traefik.acitrus.cn", landmark: "gatehouse", position: { x: 14, y: 48 }, label: { dx: 2, dy: -6, align: "start" } },
-    { id: "authelia", name: "Authelia", href: "https://auth.acitrus.cn", landmark: "checkpoint", position: { x: 48, y: 50 }, label: { dx: 0, dy: -6, align: "middle" } },
-    { id: "claude-code-hub", name: "Claude Code Hub", href: "https://inner.coding.acitrus.cn", landmark: "academy", position: { x: 48, y: 18 }, label: { dx: 0, dy: -6, align: "middle" } },
-    { id: "rustfs", name: "RustFS", href: "https://s3.acitrus.cn", landmark: "archive", position: { x: 75, y: 22 }, label: { dx: 0, dy: -6, align: "middle" } },
-    { id: "lldap", name: "LLDAP", href: "https://ldap.acitrus.cn", landmark: "registry", position: { x: 86, y: 48 }, label: { dx: 0, dy: -6, align: "middle" } },
-    { id: "rabbitmq", name: "RabbitMQ", href: "https://rabbitmq.ui.acitrus.cn", landmark: "courier-station", position: { x: 78, y: 68 }, label: { dx: 0, dy: -6, align: "middle" } },
-    { id: "postgresql", name: "PostgreSQL", landmark: "stone-vault", position: { x: 44, y: 84 }, label: { dx: 0, dy: 7, align: "middle" } },
-    { id: "redis", name: "Redis", landmark: "relay-pavilion", position: { x: 68, y: 84 }, label: { dx: 0, dy: 7, align: "middle" } },
+    { id: "traefik", name: "Traefik", href: "https://traefik.acitrus.cn", landmark: "ingress", position: { x: 14, y: 48 } },
+    { id: "authelia", name: "Authelia", href: "https://auth.acitrus.cn", landmark: "identity", position: { x: 48, y: 50 } },
+    { id: "claude-code-hub", name: "Claude Code Hub", href: "https://inner.coding.acitrus.cn", landmark: "application", position: { x: 48, y: 18 } },
+    { id: "rustfs", name: "RustFS", href: "https://s3.acitrus.cn", landmark: "storage", position: { x: 75, y: 22 } },
+    { id: "lldap", name: "LLDAP", href: "https://ldap.acitrus.cn", landmark: "directory", position: { x: 86, y: 48 } },
+    { id: "rabbitmq", name: "RabbitMQ", href: "https://rabbitmq.ui.acitrus.cn", landmark: "messaging", position: { x: 78, y: 68 } },
+    { id: "postgresql", name: "PostgreSQL", landmark: "database", position: { x: 44, y: 84 } },
+    { id: "redis", name: "Redis", landmark: "cache", position: { x: 68, y: 84 } },
   ],
   relations: [
     { source: "traefik", target: "authelia", type: "route", waypoints: [{ x: 28, y: 48 }, { x: 39, y: 49 }] },
