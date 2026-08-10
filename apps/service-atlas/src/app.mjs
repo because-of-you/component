@@ -98,6 +98,7 @@ try {
 
   overlay.addEventListener("click", (event) => {
     if (!coarsePointer.matches) return;
+    if (event.detail === 0) return;
 
     const landmark = getLandmark(event.target);
     const serviceId = landmark?.dataset.serviceId;

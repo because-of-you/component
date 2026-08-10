@@ -23,3 +23,14 @@ test("styles every road class emitted by the atlas renderer", async () => {
 
   assert.doesNotMatch(styles, /\.relation-(?:route|authentication|data|cache|message)\b/);
 });
+
+test("keeps road strokes visible when the atlas SVG scales", async () => {
+  const styles = await readFile(stylesUrl, "utf8");
+  const roadBaseRule = styles.match(/\.road-base,\s*\.road\s*\{([^}]*)\}/s);
+
+  assert.ok(roadBaseRule, "expected the shared road stroke rule");
+  assert.doesNotMatch(roadBaseRule[1], /vector-effect\s*:/);
+  for (const width of ["0.34", "0.24", "0.27", "0.18", "0.22"]) {
+    assert.match(styles, new RegExp(`stroke-width:\\s*${width.replace(".", "\\.")}\\s*;`));
+  }
+});
