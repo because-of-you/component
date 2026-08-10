@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const stylesUrl = new URL("../src/styles.css", import.meta.url);
+const appUrl = new URL("../src/app.mjs", import.meta.url);
 
 test("supports mobile panning and reduced motion", async () => {
   const styles = await readFile(stylesUrl, "utf8");
@@ -33,4 +34,18 @@ test("keeps road strokes visible when the atlas SVG scales", async () => {
   for (const width of ["0.34", "0.24", "0.27", "0.18", "0.22"]) {
     assert.match(styles, new RegExp(`stroke-width:\\s*${width.replace(".", "\\.")}\\s*;`));
   }
+});
+
+test("does not apply coarse first-tap handling to keyboard link activation", async () => {
+  const source = await readFile(appUrl, "utf8");
+  const clickHandler = source.match(
+    /addEventListener\("click",\s*\(event\)\s*=>\s*\{([\s\S]*?)\n\s*\}\);/,
+  );
+
+  assert.ok(clickHandler, "expected the delegated click handler");
+  assert.match(clickHandler[1], /if \(event\.detail === 0\) return;/);
+  assert.ok(
+    clickHandler[1].indexOf("event.detail === 0") < clickHandler[1].indexOf("event.preventDefault()"),
+    "keyboard activation must bypass preventDefault",
+  );
 });
