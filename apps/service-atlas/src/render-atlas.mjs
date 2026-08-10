@@ -1,10 +1,11 @@
 import {
+  allocateConnectionPorts,
   assignGraphPositions,
   buildRoadPath,
-  clipRoadEndpoints,
   findObstacleWaypoints,
   getNodeRadius,
   getRoadPresentation,
+  makeLaneWaypoints,
 } from "./layout.mjs";
 import { prepareCatalogue } from "./validate-catalogue.mjs";
 
@@ -29,8 +30,9 @@ export function renderAtlas(catalogue) {
     ...scalePoint(positions.get(service.id)),
     radius: getNodeRadius(degrees.get(service.id)),
   }]));
+  const ports = allocateConnectionPorts(prepared.relations, nodes);
   const relationGeometry = prepared.relations.map((relation, index) =>
-    getRelationGeometry(relation, index, nodes));
+    getRelationGeometry(relation, index, nodes, ports));
   const roads = relationGeometry
     .map(({ relation, index, presentation, path }) =>
       renderRoad(relation, index, presentation, path))
@@ -72,23 +74,26 @@ function renderLayerGuides(layers) {
   return `<g class="layer-guides" aria-hidden="true">${guides}</g>`;
 }
 
-function getRelationGeometry(relation, index, nodes) {
+function getRelationGeometry(relation, index, nodes, ports) {
   const sourceNode = nodes.get(relation.source);
   const targetNode = nodes.get(relation.target);
+  const endpoints = ports.get(index);
   const authoredWaypoints = relation.waypoints?.map(scalePoint);
   const obstacles = [...nodes]
     .filter(([id]) => id !== relation.source && id !== relation.target)
     .map(([, node]) => node);
-  const waypoints = authoredWaypoints?.length
+  let waypoints = authoredWaypoints?.length
     ? authoredWaypoints
-    : findObstacleWaypoints(sourceNode, targetNode, obstacles, index);
-  const endpoints = clipRoadEndpoints(
-    sourceNode,
-    targetNode,
-    sourceNode.radius,
-    targetNode.radius,
-    waypoints,
-  );
+    : findObstacleWaypoints(endpoints.source, endpoints.target, obstacles, index);
+  const isMultiLayer = Math.abs(targetNode.x - sourceNode.x) > 40;
+  if (!authoredWaypoints?.length && waypoints.length === 0 && isMultiLayer) {
+    waypoints = makeLaneWaypoints(
+      endpoints.source,
+      endpoints.target,
+      (endpoints.source.y + endpoints.target.y) / 2,
+      index,
+    );
+  }
 
   return {
     relation,

@@ -12,6 +12,9 @@ test("renders one road and landmark per catalogue record", () => {
   assert.match(markup, /viewBox="0 0 160 100" preserveAspectRatio="xMidYMid meet"/);
   assert.match(markup, /data-service-id="claude-code-hub"/);
   assert.match(markup, /<tspan[^>]*>Claude<\/tspan><tspan[^>]*>Code Hub<\/tspan>/);
+  assert.equal(catalogue.services.length, 7);
+  assert.equal(catalogue.relations.length, 12);
+  assert.doesNotMatch(markup, /rabbitmq/i);
 });
 
 test("renders ordered runtime flow stages before roads and tags every landmark", () => {
@@ -85,12 +88,35 @@ test("clips roads to node rings and layers traffic above landmarks", () => {
   assert.equal((markup.match(/class="road-mote /g) ?? []).length, catalogue.relations.length);
 });
 
+test("fans Traefik roads across distinct boundary ports", () => {
+  const markup = renderAtlas(catalogue);
+  const starts = [...markup.matchAll(
+    /<g class="road-group"[^>]+data-source="traefik"[^>]*><path[^>]+d="M ([\d.]+) ([\d.]+)/g,
+  )].map((match) => `${match[1]},${match[2]}`);
+
+  assert.equal(starts.length, 4);
+  assert.equal(new Set(starts).size, starts.length);
+  assert.ok(starts.every((start) => !start.startsWith("16,")), "ports must not start at center x");
+});
+
+test("allocates distinct incoming ports for Authelia", () => {
+  const markup = renderAtlas(catalogue);
+  const paths = [...markup.matchAll(
+    /<g class="road-group"[^>]+data-target="authelia"[^>]*><path[^>]+d="([^"]+)"/g,
+  )].map((match) => match[1]);
+  const endpoints = paths.map((path) => path.match(/, ([\d.]+) ([\d.]+)$/)?.slice(1).join(","));
+
+  assert.equal(paths.length, 3);
+  assert.equal(new Set(endpoints).size, endpoints.length);
+  assert.ok(endpoints.every(Boolean));
+});
+
 test("routes Traefik to Authelia around RustFS", () => {
   const markup = renderAtlas(catalogue);
   const firstRoad = markup.match(/id="road-0"[^>]+d="([^"]+)"/);
 
   assert.ok(firstRoad);
-  assert.match(firstRoad[1], /C .* (?:4[0-3](?:\.\d+)?|5[7-9](?:\.\d+)?),/);
+  assert.doesNotMatch(firstRoad[1], /(?:^|[, ])(?:7[0-9]|8[0-2])(?:\.\d+)?(?:,|$)/);
   assert.doesNotMatch(firstRoad[1], /^M \S+ 50 C \S+ 50, \S+ 50, \S+ 50$/);
 });
 
@@ -131,7 +157,7 @@ test("exposes interactive landmarks through the root SVG accessibility role", ()
 test("renders Neo4j-inspired graph bubbles with degree hierarchy and role tones", () => {
   const markup = renderAtlas(catalogue);
 
-  assert.match(markup, /class="landmark landmark--link landmark--hub landmark--tone-ingress"[^>]+data-service-id="traefik"/);
+  assert.match(markup, /class="landmark landmark--link landmark--major landmark--tone-ingress"[^>]+data-service-id="traefik"/);
   assert.match(markup, /class="landmark landmark--link landmark--hub landmark--tone-auth"[^>]+data-service-id="authelia"/);
   assert.match(markup, /landmark--tone-ingress/);
   assert.match(markup, /landmark--tone-auth/);
@@ -152,7 +178,7 @@ test("degrades unsafe service links to static landmarks", (t) => {
 
   assert.match(
     markup,
-    /<g class="landmark landmark--static landmark--hub landmark--tone-ingress" data-service-id="traefik" tabindex="0" role="button"/,
+    /<g class="landmark landmark--static landmark--major landmark--tone-ingress" data-service-id="traefik" tabindex="0" role="button"/,
   );
   assert.doesNotMatch(markup, /javascript:/);
 });

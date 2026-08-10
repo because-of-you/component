@@ -16,10 +16,10 @@ test("focuses Claude Code Hub on direct services and one dependency layer", () =
   ]);
   assert.deepEqual([...state.indirectNodes], ["lldap"]);
   assert.equal(state.activeRelations.has(2), false);
-  assert.equal(state.activeRelations.has(5), true);
-  assert.equal(state.activeRelations.has(7), true);
-  assert.equal(state.directRelations.has(5), true);
-  assert.equal(state.indirectRelations.has(7), true);
+  assert.equal(state.activeRelations.has(4), true);
+  assert.equal(state.activeRelations.has(6), true);
+  assert.equal(state.directRelations.has(4), true);
+  assert.equal(state.indirectRelations.has(6), true);
 });
 
 test("does not traverse route siblings through Traefik", () => {
@@ -29,7 +29,6 @@ test("does not traverse route siblings through Traefik", () => {
     "authelia",
     "claude-code-hub",
     "lldap",
-    "rabbitmq",
     "rustfs",
     "traefik",
   ]);

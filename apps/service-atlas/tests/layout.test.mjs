@@ -2,12 +2,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  allocateConnectionPorts,
   assignGraphPositions,
   assignPositions,
   buildRoadPath,
   clipRoadEndpoints,
   findObstacleWaypoints,
   getRoadPresentation,
+  makeLaneWaypoints,
 } from "../src/layout.mjs";
 
 const graphServices = [
@@ -16,7 +18,6 @@ const graphServices = [
   { id: "claude" },
   { id: "rust" },
   { id: "lldap" },
-  { id: "rabbit" },
   { id: "postgres" },
   { id: "redis" },
 ];
@@ -25,7 +26,6 @@ const graphRelations = [
   { source: "traefik", target: "authelia" },
   { source: "traefik", target: "claude" },
   { source: "traefik", target: "rust" },
-  { source: "traefik", target: "rabbit" },
   { source: "claude", target: "authelia" },
   { source: "rust", target: "authelia" },
   { source: "authelia", target: "lldap" },
@@ -40,7 +40,6 @@ test("automatically assigns deterministic longest-path layers", () => {
   assert.deepEqual([...first], [...second]);
   assert.ok(first.get("traefik").x < first.get("claude").x);
   assert.ok(first.get("traefik").x < first.get("rust").x);
-  assert.ok(first.get("traefik").x < first.get("rabbit").x);
   assert.ok(first.get("claude").x < first.get("authelia").x);
   assert.ok(first.get("rust").x < first.get("authelia").x);
   assert.ok(first.get("authelia").x < first.get("lldap").x);
@@ -64,8 +63,8 @@ test("reserves top and bottom space for flow stage headings", () => {
   const positions = assignGraphPositions(graphServices, graphRelations);
 
   assert.deepEqual(
-    [positions.get("claude").y, positions.get("rust").y, positions.get("rabbit").y],
-    [24, 50, 76],
+    [positions.get("claude").y, positions.get("rust").y],
+    [24, 76],
   );
 });
 
@@ -85,11 +84,84 @@ test("places disconnected and cyclic services without throwing", () => {
 
 test("automatically places a newly related service without coordinates", () => {
   const services = [...graphServices, { id: "new-worker" }];
-  const relations = [...graphRelations, { source: "rabbit", target: "new-worker" }];
+  const relations = [...graphRelations, { source: "rust", target: "new-worker" }];
   const positions = assignGraphPositions(services, relations);
 
   assert.ok(positions.has("new-worker"));
-  assert.ok(positions.get("rabbit").x < positions.get("new-worker").x);
+  assert.ok(positions.get("rust").x < positions.get("new-worker").x);
+});
+
+test("allocates stable distinct ports for a five-edge fan-out", () => {
+  const nodes = new Map([
+    ["source", { x: 20, y: 50, radius: 5 }],
+    ...[20, 35, 50, 65, 80].map((y, index) => [
+      `target-${index}`,
+      { x: 80, y, radius: 4 },
+    ]),
+  ]);
+  const relations = [...nodes.keys()].slice(1).map((target) => ({
+    source: "source",
+    target,
+    type: "route",
+  }));
+
+  const first = allocateConnectionPorts(relations, nodes);
+  const second = allocateConnectionPorts(relations, nodes);
+  const sourcePorts = relations.map((_, index) => first.get(index).source);
+
+  assert.deepEqual([...first], [...second]);
+  assert.equal(new Set(sourcePorts.map(({ x, y }) => `${x},${y}`)).size, 5);
+  assert.ok(sourcePorts.every(({ x }) => x > 20), "outgoing ports belong on the right semicircle");
+  assert.deepEqual(sourcePorts.map(({ y }) => y), [...sourcePorts].map(({ y }) => y).sort((a, b) => a - b));
+});
+
+test("places ports on the correct node sides and radius clearance", () => {
+  const nodes = new Map([
+    ["left", { x: 20, y: 50, radius: 5 }],
+    ["right", { x: 80, y: 50, radius: 4 }],
+  ]);
+  const ports = allocateConnectionPorts(
+    [{ source: "left", target: "right", type: "route" }],
+    nodes,
+    0.75,
+  ).get(0);
+
+  assert.ok(ports.source.x > 20);
+  assert.ok(ports.target.x < 80);
+  assert.ok(Math.abs(Math.hypot(ports.source.x - 20, ports.source.y - 50) - 5.75) < 0.02);
+  assert.ok(Math.abs(Math.hypot(ports.target.x - 80, ports.target.y - 50) - 4.75) < 0.02);
+  assert.deepEqual(ports.source, { x: 25.75, y: 50 });
+  assert.deepEqual(ports.target, { x: 75.25, y: 50 });
+
+  const reverse = allocateConnectionPorts(
+    [{ source: "right", target: "left", type: "route" }],
+    nodes,
+  ).get(0);
+  assert.ok(reverse.source.x < 80);
+  assert.ok(reverse.target.x > 20);
+});
+
+test("uses top and bottom ports for same-column edges", () => {
+  const nodes = new Map([
+    ["top", { x: 50, y: 20, radius: 4 }],
+    ["bottom", { x: 50, y: 80, radius: 4 }],
+  ]);
+  const ports = allocateConnectionPorts([
+    { source: "top", target: "bottom", type: "data" },
+  ], nodes).get(0);
+
+  assert.ok(ports.source.y > 20);
+  assert.ok(ports.target.y < 80);
+});
+
+test("builds bounded two-point lanes with room for smooth endpoint turns", () => {
+  const lane = makeLaneWaypoints({ x: 20, y: 50 }, { x: 120, y: 70 }, 34, 3);
+
+  assert.equal(lane.length, 2);
+  assert.ok(lane[0].x - 20 >= 8);
+  assert.ok(120 - lane[1].x >= 8);
+  assert.equal(lane[0].y, lane[1].y);
+  assert.ok(lane.every(({ y }) => y >= 7 && y <= 93));
 });
 
 test("preserves authored positions and assigns fallback positions", () => {

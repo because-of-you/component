@@ -201,6 +201,97 @@ export function getNodeRadius(degree = 0) {
   return 4.25;
 }
 
+/**
+ * Allocate one stable boundary port for every relation endpoint.
+ * Horizontal graph flow uses the left/right semicircles; vertical relations use
+ * the top/bottom semicircles. Siblings are ordered by the opposite node so that
+ * catalogue insertions do not randomly cross existing edges.
+ */
+export function allocateConnectionPorts(relations, nodes, clearance = 0.75) {
+  const ports = new Map(relations.map((_, index) => [index, {}]));
+  const groups = new Map();
+
+  relations.forEach((relation, relationIndex) => {
+    const source = nodes.get(relation.source);
+    const target = nodes.get(relation.target);
+    if (!isValidNode(source) || !isValidNode(target)) {
+      throw new Error(`Missing node geometry for relation ${relationIndex}`);
+    }
+
+    const [sourceSide, targetSide] = getConnectionSides(source, target);
+    addPortCandidate(groups, relation.source, sourceSide, {
+      relationIndex,
+      endpoint: "source",
+      node: source,
+      opposite: target,
+    });
+    addPortCandidate(groups, relation.target, targetSide, {
+      relationIndex,
+      endpoint: "target",
+      node: target,
+      opposite: source,
+    });
+  });
+
+  for (const [groupKey, candidates] of groups) {
+    const side = groupKey.slice(groupKey.lastIndexOf("|") + 1);
+    candidates.sort((left, right) => comparePortCandidates(left, right, side));
+    const step = candidates.length <= 1
+      ? 0
+      : Math.min(24, 96 / Math.max(4, candidates.length - 1));
+
+    candidates.forEach((candidate, rank) => {
+      const offset = (rank - (candidates.length - 1) / 2) * step;
+      ports.get(candidate.relationIndex)[candidate.endpoint] = portPoint(
+        candidate.node,
+        side,
+        offset,
+        clearance,
+      );
+    });
+  }
+
+  return ports;
+}
+
+function getConnectionSides(source, target) {
+  const dx = target.x - source.x;
+  const dy = target.y - source.y;
+  if (Math.abs(dx) > 0.01) {
+    return dx > 0 ? ["right", "left"] : ["left", "right"];
+  }
+  return dy >= 0 ? ["bottom", "top"] : ["top", "bottom"];
+}
+
+function addPortCandidate(groups, nodeId, side, candidate) {
+  const key = `${nodeId}|${side}`;
+  if (!groups.has(key)) groups.set(key, []);
+  groups.get(key).push(candidate);
+}
+
+function comparePortCandidates(left, right, side) {
+  const primary = side === "left" || side === "right" ? "y" : "x";
+  return left.opposite[primary] - right.opposite[primary]
+    || left.relationIndex - right.relationIndex;
+}
+
+function portPoint(node, side, offsetDegrees, clearance) {
+  const distance = Math.max(0, node.radius + clearance);
+  const offset = offsetDegrees * Math.PI / 180;
+  const along = Math.sin(offset) * distance;
+  const outward = Math.cos(offset) * distance;
+  const vectors = {
+    right: { x: outward, y: along },
+    left: { x: -outward, y: along },
+    top: { x: along, y: -outward },
+    bottom: { x: along, y: outward },
+  };
+  return roundPoint({
+    x: node.x + vectors[side].x,
+    y: node.y + vectors[side].y,
+  });
+}
+
 export function clipRoadEndpoints(
   source,
   target,
@@ -239,7 +330,6 @@ export function findObstacleWaypoints(source, target, obstacles, relationIndex =
   );
   if (blocking.length === 0) return [];
 
-  const midpointX = blocking.reduce((total, point) => total + point.x, 0) / blocking.length;
   const upperY = Math.max(
     7,
     Math.min(...blocking.map((point) => point.y - point.radius - corridorPadding)),
@@ -248,10 +338,10 @@ export function findObstacleWaypoints(source, target, obstacles, relationIndex =
     93,
     Math.max(...blocking.map((point) => point.y + point.radius + corridorPadding)),
   );
-  const candidates = [
-    [{ x: midpointX, y: upperY }],
-    [{ x: midpointX, y: lowerY }],
-  ].filter((waypoints) => laneClearsObstacles(source, target, waypoints, blocking));
+  const laneNudge = ((relationIndex % 5) - 2) * 0.55;
+  const candidates = [upperY - Math.abs(laneNudge), lowerY + Math.abs(laneNudge)]
+    .map((laneY) => makeLaneWaypoints(source, target, Math.min(93, Math.max(7, laneY))))
+    .filter((waypoints) => laneClearsObstacles(source, target, waypoints, blocking));
 
   if (candidates.length > 0) {
     candidates.sort((left, right) => {
@@ -265,7 +355,26 @@ export function findObstacleWaypoints(source, target, obstacles, relationIndex =
   // A bounded deterministic escape lane keeps dense future graphs predictable.
   const direction = relationIndex % 2 === 0 ? -1 : 1;
   const fallbackY = Math.min(93, Math.max(7, (source.y + target.y) / 2 + direction * 14));
-  return [{ x: roundCoordinate((source.x + target.x) / 2), y: roundCoordinate(fallbackY) }];
+  return makeLaneWaypoints(source, target, fallbackY).map(roundPoint);
+}
+
+export function makeLaneWaypoints(source, target, laneY, relationIndex = 0) {
+  if (!isValidPoint(source) || !isValidPoint(target) || !Number.isFinite(laneY)) {
+    throw new Error("Invalid lane geometry");
+  }
+  const dx = target.x - source.x;
+  const direction = Math.sign(dx) || 1;
+  const horizontalDistance = Math.abs(dx);
+  const margin = Math.min(18, Math.max(8, horizontalDistance * 0.27));
+  const siblingNudge = ((relationIndex % 5) - 2) * 0.45;
+  const boundedY = Math.min(93, Math.max(7, laneY + siblingNudge));
+  if (horizontalDistance <= margin * 2 + 2) {
+    return [{ x: roundCoordinate((source.x + target.x) / 2), y: roundCoordinate(boundedY) }];
+  }
+  return [
+    { x: roundCoordinate(source.x + direction * margin), y: roundCoordinate(boundedY) },
+    { x: roundCoordinate(target.x - direction * margin), y: roundCoordinate(boundedY) },
+  ];
 }
 
 function moveToward(origin, destination, distance) {
@@ -321,6 +430,10 @@ function isValidPoint(point) {
     Number.isFinite(point.x) &&
     Number.isFinite(point.y)
   );
+}
+
+function isValidNode(node) {
+  return isValidPoint(node) && Number.isFinite(node.radius) && node.radius >= 0;
 }
 
 export function getRoadPresentation(type) {

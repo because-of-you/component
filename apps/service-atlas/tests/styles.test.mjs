@@ -82,6 +82,23 @@ test("keeps road strokes visible when the atlas SVG scales", async () => {
   }
 });
 
+test("uses an airy dashed rhythm for every edge type", async () => {
+  const styles = await readFile(stylesUrl, "utf8");
+  const base = styles.match(/\.road\s*\{([^}]*)\}/s)?.[1] ?? "";
+  const baseDash = base.match(/stroke-dasharray:\s*([\d.]+)\s+([\d.]+)/);
+
+  assert.ok(baseDash, "expected a common dashed road rhythm");
+  assert.ok(Number(baseDash[1]) >= 1.2 && Number(baseDash[1]) <= 1.6);
+  assert.ok(Number(baseDash[2]) >= 1.8 && Number(baseDash[2]) <= 2.6);
+  for (const type of ["route", "authentication", "data", "cache", "message"]) {
+    const rule = styles.match(new RegExp(`\\.road\\.road--${type}\\s*\\{([^}]*)\\}`, "s"))?.[1] ?? "";
+    const ownDash = rule.match(/stroke-dasharray:\s*([\d.]+)\s+([\d.]+)/);
+    if (ownDash) {
+      assert.ok(Number(ownDash[1]) >= 1.2 && Number(ownDash[2]) >= 1.8);
+    }
+  }
+});
+
 test("avoids passive SVG filters and pauses SMIL animation when appropriate", async () => {
   const [styles, source] = await Promise.all([
     readFile(stylesUrl, "utf8"),
