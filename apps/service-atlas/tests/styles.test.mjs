@@ -17,7 +17,7 @@ test("supports mobile panning and reduced motion", async () => {
   assert.match(mobileRule[1], /height:\s*max\(600px,\s*100vh\)\s*;/);
   assert.match(styles, /min-width: 960px/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
-  assert.match(styles, /\.road-mote\s*{\s*display: none;/s);
+  assert.match(styles, /\.flow-overlay\s*{\s*display: none;/s);
 });
 
 test("styles every road class emitted by the atlas renderer", async () => {
@@ -25,7 +25,6 @@ test("styles every road class emitted by the atlas renderer", async () => {
 
   for (const type of ["route", "authentication", "data", "cache", "message"]) {
     assert.match(styles, new RegExp(`\\.road\\.road--${type}\\s*\\{`));
-    assert.match(styles, new RegExp(`\\.road-mote\\.road--${type}\\s*\\{`));
   }
 
   assert.doesNotMatch(styles, /\.relation-(?:route|authentication|data|cache|message)\b/);
@@ -82,44 +81,51 @@ test("keeps road strokes visible when the atlas SVG scales", async () => {
   }
 });
 
-test("uses an airy dashed rhythm for every edge type", async () => {
+test("uses one fixed dashed rhythm for every road", async () => {
   const styles = await readFile(stylesUrl, "utf8");
   const base = styles.match(/\.road\s*\{([^}]*)\}/s)?.[1] ?? "";
   const baseDash = base.match(/stroke-dasharray:\s*([\d.]+)\s+([\d.]+)/);
 
   assert.ok(baseDash, "expected a common dashed road rhythm");
-  assert.ok(Number(baseDash[1]) >= 1.2 && Number(baseDash[1]) <= 1.6);
-  assert.ok(Number(baseDash[2]) >= 1.8 && Number(baseDash[2]) <= 2.6);
+  assert.equal(Number(baseDash[1]), 0.8);
+  assert.equal(Number(baseDash[2]), 0.8);
   for (const type of ["route", "authentication", "data", "cache", "message"]) {
     const rule = styles.match(new RegExp(`\\.road\\.road--${type}\\s*\\{([^}]*)\\}`, "s"))?.[1] ?? "";
-    const ownDash = rule.match(/stroke-dasharray:\s*([\d.]+)\s+([\d.]+)/);
-    if (ownDash) {
-      assert.ok(Number(ownDash[1]) >= 1.2 && Number(ownDash[2]) >= 1.8);
-    }
+    assert.doesNotMatch(rule, /stroke-dasharray\s*:/);
   }
 });
 
-test("avoids passive SVG filters and pauses SMIL animation when appropriate", async () => {
+test("avoids passive SVG filters and coordinates dynamic flow pausing", async () => {
   const [styles, source] = await Promise.all([
     readFile(stylesUrl, "utf8"),
     readFile(appUrl, "utf8"),
   ]);
 
-  const moteRule = styles.match(/\.road-mote\s*\{([^}]*)\}/s);
-  assert.ok(moteRule);
-  assert.doesNotMatch(moteRule[1], /filter\s*:/);
+  const flowRule = styles.match(/\.flow-particle-core\s*\{([^}]*)\}/s);
+  assert.ok(flowRule);
+  assert.doesNotMatch(flowRule[1], /filter\s*:/);
   for (const hierarchy of ["hub", "major", "standard"]) {
     const rule = styles.match(new RegExp(`\\.landmark--${hierarchy}\\s*\\{([^}]*)\\}`, "s"));
     assert.ok(rule, `expected ${hierarchy} hierarchy rule`);
     assert.doesNotMatch(rule[1], /filter\s*:/);
   }
   assert.doesNotMatch(styles, /\.road-group\.is-direct\s*\{[^}]*filter\s*:/s);
-  assert.doesNotMatch(styles, /\.traffic-group(?:\.is-direct)?\s*\{[^}]*filter\s*:/s);
-  assert.match(source, /\.road-group\[data-relation-index\],\s*\.traffic-group\[data-relation-index\]/);
+  assert.doesNotMatch(styles, /\.flow-overlay\s*\{[^}]*filter\s*:/s);
+  assert.match(source, /\.road-group\[data-relation-index\]/);
   assert.match(source, /document\.addEventListener\("visibilitychange"/);
   assert.match(source, /prefers-reduced-motion:\s*reduce/);
-  assert.match(source, /\.pauseAnimations\(\)/);
-  assert.match(source, /\.unpauseAnimations\(\)/);
+  assert.match(source, /flowPlayer\?\.sync\(\)/);
+});
+
+test("styles restrained flow particles and node pulse without a thick trace", async () => {
+  const styles = await readFile(stylesUrl, "utf8");
+
+  assert.match(styles, /\.flow-overlay\s*\{/);
+  assert.match(styles, /\.flow-particle-halo\s*\{/);
+  assert.match(styles, /\.flow-particle-core\s*\{/);
+  assert.doesNotMatch(styles, /\.flow-trace\s*\{/);
+  assert.match(styles, /\.landmark\.is-flow-pulse \.landmark-aura\s*\{/);
+  assert.match(styles, /@keyframes node-flow-pulse/);
 });
 
 test("does not apply coarse first-tap handling to keyboard link activation", async () => {

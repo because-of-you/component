@@ -5,3 +5,4 @@ charts/**/charts/
 .helmfile/
 .worktrees/
 .idea
+node_modules/

@@ -1,15 +1,9 @@
 import {
-  allocateConnectionPorts,
-  assignGraphPositions,
-  buildRoadPath,
-  findObstacleWaypoints,
   getNodeRadius,
   getRoadPresentation,
-  makeLaneWaypoints,
 } from "./layout.mjs";
+import { DOMAIN_TIERS, buildTierBands, layoutRuntimeGraph } from "./graphviz-layout.mjs";
 import { prepareCatalogue } from "./validate-catalogue.mjs";
-
-export const VIEWBOX_X_SCALE = 1.6;
 
 export function escapeMarkup(value) {
   return String(value)
@@ -20,115 +14,61 @@ export function escapeMarkup(value) {
     .replaceAll("'", "&#39;");
 }
 
-export function renderAtlas(catalogue) {
+export async function renderAtlas(catalogue) {
   const prepared = prepareCatalogue(catalogue);
-  const positions = assignGraphPositions(prepared.services, prepared.relations);
-  const layers = getLayers(positions);
-  const layerByX = new Map(layers.map(({ x }, index) => [x, index]));
+  const layout = await layoutRuntimeGraph(prepared.services, prepared.relations);
   const degrees = getDegrees(prepared.services, prepared.relations);
   const nodes = new Map(prepared.services.map((service) => [service.id, {
-    ...scalePoint(positions.get(service.id)),
-    radius: getNodeRadius(degrees.get(service.id)),
+    ...layout.nodes.get(service.id),
   }]));
-  const ports = allocateConnectionPorts(prepared.relations, nodes);
-  const relationGeometry = prepared.relations.map((relation, index) =>
-    getRelationGeometry(relation, index, nodes, ports));
-  const roads = relationGeometry
-    .map(({ relation, index, presentation, path }) =>
-      renderRoad(relation, index, presentation, path))
+  const layers = buildTierBands(prepared.services, nodes, layout.tierAnchors);
+  const roads = prepared.relations
+    .map((relation, index) =>
+      renderRoad(relation, index, getRoadPresentation(relation.type), layout.paths[index]))
     .join("");
   const landmarks = prepared.services
     .map((service) => {
-      const position = positions.get(service.id);
-      return renderLandmark(service, position, degrees.get(service.id), layerByX.get(position.x));
+      return renderLandmark(
+        service,
+        nodes.get(service.id),
+        degrees.get(service.id),
+        DOMAIN_TIERS.findIndex(({ id }) => id === service.tier),
+      );
     })
     .join("");
-  const traffic = relationGeometry
-    .map(({ relation, index, presentation }) => renderMote(relation, index, presentation))
-    .join("");
-
-  return `<svg class="atlas-overlay" viewBox="0 0 160 100" preserveAspectRatio="xMidYMid meet" role="group" aria-label="Interactive service dependency map">${renderLayerGuides(layers)}<g class="roads">${roads}</g><g class="landmarks">${landmarks}</g><g class="traffic-motes">${traffic}</g></svg>`;
-}
-
-function getLayers(positions) {
-  return [...new Set([...positions.values()].map(({ x }) => x))]
-    .sort((left, right) => left - right)
-    .map((x) => ({ x, scaledX: x * VIEWBOX_X_SCALE }));
-}
-
-function getLayerLabel(index, count) {
-  if (count === 5) {
-    return ["流量入口", "对外服务", "身份校验", "内部资源", "数据落点"][index];
-  }
-  if (index === 0) return "流量入口";
-  if (index === count - 1) return "数据落点";
-  return `调用阶段 ${index + 1}`;
+  return `<svg class="atlas-overlay" viewBox="0 0 160 100" preserveAspectRatio="xMidYMid meet" role="group" aria-label="Interactive service dependency map">${renderLayerGuides(layers)}<g class="roads">${roads}</g><g class="landmarks">${landmarks}</g><g class="flow-overlay" aria-hidden="true"></g></svg>`;
 }
 
 function renderLayerGuides(layers) {
-  const guides = layers.map(({ scaledX }, index) => {
+  const guides = layers.map(({ x, left, right }, index) => {
     const step = String(index + 1).padStart(2, "0");
-    const label = getLayerLabel(index, layers.length);
-    return `<g class="layer-guide" data-layer="${index}"><rect class="layer-band" x="${formatCoordinate(scaledX - 12)}" y="5" width="24" height="90" rx="4"/><line class="layer-axis" x1="${formatCoordinate(scaledX)}" y1="18" x2="${formatCoordinate(scaledX)}" y2="92"/><text class="layer-index" x="${formatCoordinate(scaledX)}" y="9.3" text-anchor="middle">${step}</text><text class="layer-label" x="${formatCoordinate(scaledX)}" y="13.1" text-anchor="middle">${label}</text></g>`;
+    const label = layers[index].label;
+    return `<g class="layer-guide" data-layer="${index}"><rect class="layer-band" x="${formatCoordinate(left)}" y="5" width="${formatCoordinate(right - left)}" height="90" rx="4"/><line class="layer-axis" x1="${formatCoordinate(x)}" y1="18" x2="${formatCoordinate(x)}" y2="92"/><text class="layer-index" x="${formatCoordinate(x)}" y="9.3" text-anchor="middle">${step}</text><text class="layer-label" x="${formatCoordinate(x)}" y="13.1" text-anchor="middle">${label}</text></g>`;
   }).join("");
   return `<g class="layer-guides" aria-hidden="true">${guides}</g>`;
 }
 
-function getRelationGeometry(relation, index, nodes, ports) {
-  const sourceNode = nodes.get(relation.source);
-  const targetNode = nodes.get(relation.target);
-  const endpoints = ports.get(index);
-  const authoredWaypoints = relation.waypoints?.map(scalePoint);
-  const obstacles = [...nodes]
-    .filter(([id]) => id !== relation.source && id !== relation.target)
-    .map(([, node]) => node);
-  let waypoints = authoredWaypoints?.length
-    ? authoredWaypoints
-    : findObstacleWaypoints(endpoints.source, endpoints.target, obstacles, index);
-  const isMultiLayer = Math.abs(targetNode.x - sourceNode.x) > 40;
-  if (!authoredWaypoints?.length && waypoints.length === 0 && isMultiLayer) {
-    waypoints = makeLaneWaypoints(
-      endpoints.source,
-      endpoints.target,
-      (endpoints.source.y + endpoints.target.y) / 2,
-      index,
-    );
-  }
-
-  return {
-    relation,
-    index,
-    presentation: getRoadPresentation(relation.type),
-    path: buildRoadPath(endpoints.source, endpoints.target, waypoints),
-  };
-}
-
 function renderRoad(relation, index, presentation, path) {
   const pathId = `road-${index}`;
-  return `<g class="road-group" data-relation-index="${index}" data-source="${escapeMarkup(relation.source)}" data-target="${escapeMarkup(relation.target)}"><path id="${pathId}" class="road ${presentation.className}" d="${path}" pathLength="100"/></g>`;
-}
-
-function renderMote(relation, index, presentation) {
-  const delay = (index % 5) * 1.7;
-  const begin = delay === 0 ? "0s" : `-${delay}s`;
-  return `<g class="traffic-group" data-relation-index="${index}" data-source="${escapeMarkup(relation.source)}" data-target="${escapeMarkup(relation.target)}"><circle class="road-mote ${presentation.className}" r="0.3"><animateMotion dur="${presentation.duration}s" begin="${begin}" repeatCount="indefinite"><mpath href="#road-${index}"/></animateMotion></circle></g>`;
+  return `<g class="road-group" data-relation-index="${index}" data-source="${escapeMarkup(relation.source)}" data-target="${escapeMarkup(relation.target)}"><path id="${pathId}" class="road ${presentation.className}" d="${path}"/></g>`;
 }
 
 function renderLandmark(service, position, degree = 0, layer = 0) {
-  const x = position.x * VIEWBOX_X_SCALE;
+  const x = position.x;
   const y = position.y;
   const name = escapeMarkup(service.name);
   const hierarchy = degree >= 5 ? "hub" : degree >= 3 ? "major" : "standard";
-  const radius = getNodeRadius(degree);
+  const radius = position.radius ?? getNodeRadius(degree);
   const tone = getServiceTone(service);
+  const colorStyle = service.color ? ` style="--node-accent:${escapeMarkup(service.color)}"` : "";
   const content = `<circle class="landmark-hit" cx="${x}" cy="${y}" r="${radius + 2.1}"/><circle class="landmark-aura" cx="${x}" cy="${y}" r="${radius + 1.05}"/><circle class="landmark-bubble" cx="${x}" cy="${y}" r="${radius}"/><circle class="landmark-ring" cx="${x}" cy="${y}" r="${Math.max(radius - 0.5, 1)}"/><circle class="landmark-core" cx="${x}" cy="${y}" r="${Math.max(radius - 1.8, 1)}"/>${renderLabel(service.name, x, y)}`;
   const classes = `landmark ${service.href ? "landmark--link" : "landmark--static"} landmark--${hierarchy} landmark--tone-${tone}`;
 
   if (service.href) {
-    return `<a class="${classes}" data-service-id="${escapeMarkup(service.id)}" href="${escapeMarkup(service.href)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${name} in a new tab" data-layer="${layer}">${content}</a>`;
+    return `<a class="${classes}" data-service-id="${escapeMarkup(service.id)}" href="${escapeMarkup(service.href)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${name} in a new tab" data-layer="${layer}"${colorStyle}>${content}</a>`;
   }
 
-  return `<g class="${classes}" data-service-id="${escapeMarkup(service.id)}" tabindex="0" role="button" aria-label="Explore ${name} dependencies" data-layer="${layer}">${content}</g>`;
+  return `<g class="${classes}" data-service-id="${escapeMarkup(service.id)}" tabindex="0" role="button" aria-label="Explore ${name} dependencies" data-layer="${layer}"${colorStyle}>${content}</g>`;
 }
 
 function renderLabel(rawName, x, y) {
@@ -180,10 +120,6 @@ function getDegrees(services, relations) {
     degrees.set(relation.target, (degrees.get(relation.target) ?? 0) + 1);
   }
   return degrees;
-}
-
-function scalePoint(point) {
-  return { x: point.x * VIEWBOX_X_SCALE, y: point.y };
 }
 
 function formatCoordinate(value) {

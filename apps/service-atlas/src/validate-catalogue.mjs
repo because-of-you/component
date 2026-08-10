@@ -9,7 +9,9 @@ const RELATION_TYPE_VALUES = Object.freeze([
 export const RELATION_TYPES = new Set(RELATION_TYPE_VALUES);
 
 const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
 const ALIGNMENTS = new Set(["start", "middle", "end"]);
+const TIERS = new Set(["ingress", "application", "identity", "middleware", "data"]);
 
 export class CatalogueValidationError extends Error {
   constructor(errors) {
@@ -46,7 +48,9 @@ export function validateCatalogue(catalogue) {
   const errors = [];
   const services = Array.isArray(catalogue?.services) ? catalogue.services : [];
   const relations = Array.isArray(catalogue?.relations) ? catalogue.relations : [];
+  const flows = Array.isArray(catalogue?.flows) ? catalogue.flows : [];
   const ids = new Set();
+  const flowIds = new Set();
 
   if (!Array.isArray(catalogue?.services)) errors.push("services must be an array");
   if (!Array.isArray(catalogue?.relations)) errors.push("relations must be an array");
@@ -66,6 +70,14 @@ export function validateCatalogue(catalogue) {
     }
     if (typeof service?.landmark !== "string" || service.landmark.trim() === "") {
       errors.push(`${path}.landmark must be a non-empty string`);
+    }
+    if (!TIERS.has(service?.tier)) {
+      errors.push(`${path}.tier must be ingress, application, identity, middleware, or data`);
+    }
+    if (service?.color !== undefined && (
+      typeof service.color !== "string" || !HEX_COLOR_PATTERN.test(service.color)
+    )) {
+      errors.push(`${path}.color must be a six-digit hex color`);
     }
     if (service?.position !== undefined) {
       validateCoordinate(errors, service.position?.x, `${path}.position.x`);
@@ -92,6 +104,11 @@ export function validateCatalogue(catalogue) {
     if (!RELATION_TYPE_VALUES.includes(relation?.type)) {
       errors.push(`${path}.type ${relation?.type} is unsupported`);
     }
+    if (relation?.particles !== undefined && (
+      !Number.isInteger(relation.particles) || relation.particles < 1 || relation.particles > 4
+    )) {
+      errors.push(`${path}.particles must be an integer between 1 and 4`);
+    }
     if (relation?.waypoints !== undefined) {
       if (!Array.isArray(relation.waypoints)) {
         errors.push(`${path}.waypoints must be an array`);
@@ -101,6 +118,42 @@ export function validateCatalogue(catalogue) {
           validateCoordinate(errors, point?.y, `${path}.waypoints[${pointIndex}].y`);
         });
       }
+    }
+  });
+
+  if (catalogue?.flows !== undefined && !Array.isArray(catalogue.flows)) {
+    errors.push("flows must be an array");
+  }
+  flows.forEach((flow, index) => {
+    const path = `flows[${index}]`;
+    if (typeof flow?.id !== "string" || !ID_PATTERN.test(flow.id)) {
+      errors.push(`${path}.id must be a kebab-case identifier`);
+    } else if (flowIds.has(flow.id)) {
+      errors.push(`${path}.id duplicates ${flow.id}`);
+    } else {
+      flowIds.add(flow.id);
+    }
+    if (typeof flow?.name !== "string" || flow.name.trim() === "") {
+      errors.push(`${path}.name must be a non-empty string`);
+    }
+    if (!Array.isArray(flow?.path) || flow.path.length < 2) {
+      errors.push(`${path}.path must contain at least two service ids`);
+    } else {
+      flow.path.forEach((serviceId, pathIndex) => {
+        if (!ids.has(serviceId)) {
+          errors.push(`${path}.path[${pathIndex}] references missing service ${serviceId}`);
+        }
+      });
+      flow.path.slice(0, -1).forEach((source, pathIndex) => {
+        const target = flow.path[pathIndex + 1];
+        const connected = relations.some((relation) =>
+          (relation.source === source && relation.target === target)
+          || (relation.source === target && relation.target === source));
+        if (!connected) errors.push(`${path}.path ${source} -> ${target} has no relation`);
+      });
+    }
+    if (typeof flow?.return !== "boolean") {
+      errors.push(`${path}.return must be a boolean`);
     }
   });
 

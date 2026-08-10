@@ -1,4 +1,5 @@
-import { catalogue } from "./catalogue.mjs";
+import { loadCatalogue } from "./config.mjs";
+import { createFlowPlayer } from "./flow-player.mjs";
 import { getFocusState } from "./graph.mjs";
 import { renderAtlas } from "./render-atlas.mjs";
 
@@ -8,15 +9,11 @@ const coarsePointer = window.matchMedia("(pointer: coarse)");
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 let selectedId = null;
 let rootSvg = null;
+let catalogue = null;
+let flowPlayer = null;
 
 function syncAnimations() {
-  if (!rootSvg) return;
-  const shouldPause = document.hidden || reducedMotion.matches;
-  if (shouldPause && typeof rootSvg.pauseAnimations === "function") {
-    rootSvg.pauseAnimations();
-  } else if (!shouldPause && typeof rootSvg.unpauseAnimations === "function") {
-    rootSvg.unpauseAnimations();
-  }
+  flowPlayer?.sync();
 }
 
 function clearFocus() {
@@ -60,7 +57,7 @@ function applyFocus(serviceId) {
   });
 
   overlay
-    .querySelectorAll(".road-group[data-relation-index], .traffic-group[data-relation-index]")
+    .querySelectorAll(".road-group[data-relation-index]")
     .forEach((relationGroup) => {
       const index = Number.parseInt(relationGroup.dataset.relationIndex ?? "", 10);
       if (state.directRelations.has(index)) relationGroup.classList.add("is-direct");
@@ -90,8 +87,10 @@ function getLandmarkId(target) {
 
 try {
   if (!overlay) throw new Error("Missing atlas overlay mount point");
-  overlay.innerHTML = renderAtlas(catalogue);
+  catalogue = await loadCatalogue();
+  overlay.innerHTML = await renderAtlas(catalogue);
   rootSvg = overlay.querySelector(".atlas-overlay");
+  flowPlayer = createFlowPlayer({ svg: rootSvg, catalogue, reducedMotion });
   document.addEventListener("visibilitychange", syncAnimations);
   reducedMotion.addEventListener?.("change", syncAnimations);
   syncAnimations();

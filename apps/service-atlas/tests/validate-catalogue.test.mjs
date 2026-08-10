@@ -17,6 +17,7 @@ const valid = {
       name: "Gateway",
       href: "https://gateway.example.com",
       landmark: "gatehouse",
+      tier: "ingress",
       position: { x: 14, y: 48 },
       label: { dx: 2, dy: -3, align: "start" },
     },
@@ -24,6 +25,7 @@ const valid = {
       id: "database",
       name: "Database",
       landmark: "vault",
+      tier: "data",
       position: { x: 44, y: 84 },
       label: { dx: 0, dy: 5, align: "middle" },
     },
@@ -36,6 +38,35 @@ test("accepts a valid catalogue", () => {
   assert.equal(assertCatalogue(valid), valid);
   assert.deepEqual(validateCatalogue(catalogue), []);
   assert.equal(assertCatalogue(catalogue), catalogue);
+});
+
+test("validates optional service colors as safe six-digit hex values", () => {
+  const colored = structuredClone(valid);
+  colored.services[0].color = "#49aff4";
+  colored.services[1].color = "red";
+
+  assert.deepEqual(validateCatalogue(colored), [
+    "services[1].color must be a six-digit hex color",
+  ]);
+});
+
+test("validates flow identity, path nodes, and adjacent relations", () => {
+  const flowed = structuredClone(valid);
+  flowed.flows = [
+    { id: "", name: "", path: ["gateway", "missing"], return: "yes" },
+    { id: "orphan", name: "Orphan", path: ["gateway", "database", "gateway"], return: false },
+  ];
+  flowed.relations = [];
+
+  assert.deepEqual(validateCatalogue(flowed), [
+    "flows[0].id must be a kebab-case identifier",
+    "flows[0].name must be a non-empty string",
+    "flows[0].path[1] references missing service missing",
+    "flows[0].path gateway -> missing has no relation",
+    "flows[0].return must be a boolean",
+    "flows[1].path gateway -> database has no relation",
+    "flows[1].path database -> gateway has no relation",
+  ]);
 });
 
 test("rejects duplicate IDs, unknown targets, and unsupported relation types", () => {
@@ -53,6 +84,30 @@ test("rejects duplicate IDs, unknown targets, and unsupported relation types", (
     "relations[1].type telepathy is unsupported",
   ]);
   assert.throws(() => assertCatalogue(broken), CatalogueValidationError);
+});
+
+test("accepts one to four particles per relation and rejects other values", () => {
+  const configured = structuredClone(valid);
+  configured.relations[0].particles = 4;
+  assert.deepEqual(validateCatalogue(configured), []);
+
+  for (const value of [0, 1.5, 5, "2"]) {
+    configured.relations[0].particles = value;
+    assert.deepEqual(validateCatalogue(configured), [
+      "relations[0].particles must be an integer between 1 and 4",
+    ]);
+  }
+});
+
+test("requires a supported domain tier for every service", () => {
+  const broken = structuredClone(valid);
+  delete broken.services[0].tier;
+  broken.services[1].tier = "misc";
+
+  assert.deepEqual(validateCatalogue(broken), [
+    "services[0].tier must be ingress, application, identity, middleware, or data",
+    "services[1].tier must be ingress, application, identity, middleware, or data",
+  ]);
 });
 
 test("rejects unsafe URLs and out-of-range coordinates", () => {
@@ -110,6 +165,7 @@ test("reports malformed catalogue structures through CatalogueValidationError", 
         "services[0].id must be a kebab-case identifier",
         "services[0].name must be a non-empty string",
         "services[0].landmark must be a non-empty string",
+        "services[0].tier must be ingress, application, identity, middleware, or data",
       ]);
       return true;
     },
@@ -125,7 +181,7 @@ test("rejects non-string IDs without coercing them", () => {
     },
   };
   const broken = {
-    services: [{ id, name: "Gateway", landmark: "gatehouse" }],
+    services: [{ id, name: "Gateway", landmark: "gatehouse", tier: "ingress" }],
     relations: [],
   };
 
@@ -174,7 +230,7 @@ test("validates required service strings and label fields in order", () => {
 
   assert.deepEqual(validateCatalogue(broken), [
     "services[0].name must be a non-empty string",
-    "services[0].landmark must be a non-empty string",
+        "services[0].landmark must be a non-empty string",
     "services[0].label.dx must be a number",
     "services[0].label.dy must be a number",
     "services[0].label.align must be start, middle, or end",

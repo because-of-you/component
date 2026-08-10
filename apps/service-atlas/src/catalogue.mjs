@@ -1,12 +1,12 @@
 export const catalogue = {
   services: [
-    { id: "traefik", name: "Traefik", href: "https://traefik.acitrus.cn", landmark: "ingress" },
-    { id: "authelia", name: "Authelia", href: "https://auth.acitrus.cn", landmark: "identity" },
-    { id: "claude-code-hub", name: "Claude Code Hub", href: "https://inner.coding.acitrus.cn", landmark: "application" },
-    { id: "rustfs", name: "RustFS", href: "https://s3.acitrus.cn", landmark: "storage" },
-    { id: "lldap", name: "LLDAP", href: "https://ldap.acitrus.cn", landmark: "directory" },
-    { id: "postgresql", name: "PostgreSQL", landmark: "database" },
-    { id: "redis", name: "Redis", landmark: "cache" },
+    { id: "traefik", name: "Traefik", href: "https://traefik.acitrus.cn", landmark: "ingress", tier: "ingress", color: "#49aff4" },
+    { id: "authelia", name: "Authelia", href: "https://auth.acitrus.cn", landmark: "identity", tier: "identity", color: "#e7b547" },
+    { id: "claude-code-hub", name: "Claude Code Hub", href: "https://inner.coding.acitrus.cn", landmark: "application", tier: "application", color: "#a782f4" },
+    { id: "rustfs", name: "RustFS", href: "https://s3.acitrus.cn", landmark: "storage", tier: "data", color: "#48c98e" },
+    { id: "lldap", name: "LLDAP", href: "https://ldap.acitrus.cn", landmark: "directory", tier: "identity", color: "#ee884d" },
+    { id: "postgresql", name: "PostgreSQL", landmark: "database", tier: "data", color: "#42bec7" },
+    { id: "redis", name: "Redis", landmark: "cache", tier: "middleware", color: "#ee779e" },
   ],
   relations: [
     { source: "traefik", target: "authelia", type: "route" },
@@ -21,5 +21,9 @@ export const catalogue = {
     { source: "lldap", target: "postgresql", type: "data" },
     { source: "claude-code-hub", target: "redis", type: "cache" },
     { source: "authelia", target: "redis", type: "cache" },
+  ],
+  flows: [
+    { id: "login", name: "登录链路", path: ["traefik", "authelia", "lldap"], return: true },
+    { id: "claude-query", name: "Claude 查询", path: ["traefik", "claude-code-hub", "postgresql"], return: true },
   ],
 };

@@ -155,7 +155,7 @@ body {
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-dasharray: 1.4 2.2;
+  stroke-dasharray: 0.8 0.8;
 }
 
 .road.road--route {
@@ -166,25 +166,21 @@ body {
 .road.road--authentication {
   stroke: rgba(239, 178, 69, 0.8);
   stroke-width: 0.24;
-  stroke-dasharray: 1.5 2.3;
 }
 
 .road.road--data {
   stroke: rgba(69, 197, 143, 0.72);
   stroke-width: 0.27;
-  stroke-dasharray: 1.35 2.1;
 }
 
 .road.road--cache {
   stroke: rgba(240, 110, 162, 0.74);
   stroke-width: 0.18;
-  stroke-dasharray: 1.2 2.4;
 }
 
 .road.road--message {
   stroke: rgba(154, 123, 238, 0.78);
   stroke-width: 0.22;
-  stroke-dasharray: 1.25 2.5;
 }
 
 .road-mote {
@@ -198,6 +194,30 @@ body {
 .road-mote.road--data { fill: #77e6ac; color: #77e6ac; }
 .road-mote.road--cache { fill: #ff9bc8; color: #ff9bc8; }
 .road-mote.road--message { fill: #c3a8ff; color: #c3a8ff; }
+
+.flow-overlay {
+  pointer-events: none;
+}
+
+.flow-particle {
+  --flow-color: #72c9ff;
+  opacity: 0;
+}
+
+.flow-particle.is-visible { opacity: 0.72; }
+
+.flow-particle-halo {
+  fill: color-mix(in srgb, var(--flow-color) 14%, transparent);
+  stroke: color-mix(in srgb, var(--flow-color) 32%, transparent);
+  stroke-width: 0.08;
+}
+
+.flow-particle-core {
+  fill: var(--flow-color);
+  stroke: rgba(255, 255, 255, 0.94);
+  stroke-width: 0.1;
+  vector-effect: non-scaling-stroke;
+}
 
 .landmark {
   outline: none;
@@ -284,6 +304,16 @@ body {
 .landmark.is-selected .landmark-bubble { fill: color-mix(in srgb, var(--node-accent) 42%, #132331); stroke: #ffffff; stroke-width: 0.58; }
 .landmark.is-selected .landmark-label { fill: #fff; font-weight: 760; }
 
+.landmark.is-flow-pulse .landmark-aura {
+  animation: node-flow-pulse 620ms ease-out;
+}
+
+@keyframes node-flow-pulse {
+  0% { opacity: 0.35; stroke-width: 0.28; }
+  42% { opacity: 1; stroke-width: 0.82; }
+  100% { opacity: 0.35; stroke-width: 0.28; }
+}
+
 .landmark.is-direct { opacity: 1; }
 .landmark.is-indirect,
 .road-group.is-indirect,
@@ -327,7 +357,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .road-mote { display: none; }
+  .road-mote,
+  .flow-overlay { display: none; }
+  .landmark.is-flow-pulse .landmark-aura { animation: none; }
   .landmark,
   .landmark-aura,
   .landmark-bubble,

@@ -1,0 +1,16 @@
+{
+  "name": "component-service-atlas",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite apps/service-atlas --host 127.0.0.1",
+    "build": "vite build apps/service-atlas",
+    "test:atlas": "node --test apps/service-atlas/tests/*.test.mjs"
+  },
+  "devDependencies": {
+    "vite": "^7.3.6"
+  },
+  "dependencies": {
+    "@viz-js/viz": "3.28.0"
+  }
+}
