@@ -45,14 +45,16 @@ test("uses a dark CSS-only knowledge graph field without scenic imagery", async 
   assert.doesNotMatch(page, /<img\b/i);
 });
 
-test("styles knowledge graph plaques, hierarchy, road halos, and focus states", async () => {
+test("styles Neo4j-inspired graph bubbles, hierarchy, road halos, and focus states", async () => {
   const styles = await readFile(stylesUrl, "utf8");
 
   for (const selector of [
     ".road-halo",
-    ".landmark-plaque",
-    ".landmark-frame",
-    ".landmark-corners",
+    ".landmark-bubble",
+    ".landmark-ring",
+    ".landmark--tone-ingress",
+    ".landmark--tone-auth",
+    ".landmark--tone-data",
     ".landmark--hub",
     ".landmark--major",
     ".landmark--standard",
@@ -64,6 +66,8 @@ test("styles knowledge graph plaques, hierarchy, road halos, and focus states", 
   ]) {
     assert.match(styles, new RegExp(`${selector.replaceAll(".", "\\.")}\\s*[{,]`));
   }
+
+  assert.doesNotMatch(styles, /landmark-(?:plaque|frame|corners)/);
 });
 
 test("keeps road strokes visible when the atlas SVG scales", async () => {

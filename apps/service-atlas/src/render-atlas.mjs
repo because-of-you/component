@@ -44,23 +44,35 @@ function renderLandmark(service, position, degree = 0) {
   const y = position.y;
   const name = escapeMarkup(service.name);
   const hierarchy = degree >= 5 ? "hub" : degree >= 3 ? "major" : "standard";
-  const width = hierarchy === "hub" ? 27 : hierarchy === "major" ? 25 : 22;
-  const height = hierarchy === "hub" ? 9.4 : 8.4;
-  const left = x - width / 2;
-  const top = y - height / 2;
-  const innerLeft = left + 1.05;
-  const innerTop = top + 0.9;
-  const innerWidth = width - 2.1;
-  const innerHeight = height - 1.8;
-  const corner = 1.7;
-  const content = `<rect class="landmark-hit" x="${left - 2}" y="${top - 2}" width="${width + 4}" height="${height + 4}" rx="2"/><rect class="landmark-aura" x="${left - 0.7}" y="${top - 0.7}" width="${width + 1.4}" height="${height + 1.4}" rx="1.8"/><rect class="landmark-plaque" x="${left}" y="${top}" width="${width}" height="${height}" rx="1.35"/><rect class="landmark-frame" x="${innerLeft}" y="${innerTop}" width="${innerWidth}" height="${innerHeight}" rx="0.75"/><path class="landmark-corners" d="M ${left} ${top + corner} V ${top} H ${left + corner} M ${left + width - corner} ${top} H ${left + width} V ${top + corner} M ${left + width} ${top + height - corner} V ${top + height} H ${left + width - corner} M ${left + corner} ${top + height} H ${left} V ${top + height - corner}"/><text class="landmark-label" x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle">${name}</text>`;
-  const classes = `landmark ${service.href ? "landmark--link" : "landmark--static"} landmark--${hierarchy}`;
+  const radius = hierarchy === "hub" ? 8.2 : hierarchy === "major" ? 7.15 : 6.25;
+  const tone = getServiceTone(service);
+  const content = `<circle class="landmark-hit" cx="${x}" cy="${y}" r="${radius + 2.1}"/><circle class="landmark-aura" cx="${x}" cy="${y}" r="${radius + 1.05}"/><circle class="landmark-bubble" cx="${x}" cy="${y}" r="${radius}"/><circle class="landmark-ring" cx="${x}" cy="${y}" r="${radius - 0.62}"/><circle class="landmark-core" cx="${x}" cy="${y}" r="${Math.max(radius - 2.3, 1)}"/><text class="landmark-label" x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle">${name}</text>`;
+  const classes = `landmark ${service.href ? "landmark--link" : "landmark--static"} landmark--${hierarchy} landmark--tone-${tone}`;
 
   if (service.href) {
     return `<a class="${classes}" data-service-id="${escapeMarkup(service.id)}" href="${escapeMarkup(service.href)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${name} in a new tab">${content}</a>`;
   }
 
   return `<g class="${classes}" data-service-id="${escapeMarkup(service.id)}" tabindex="0" role="button" aria-label="Explore ${name} dependencies">${content}</g>`;
+}
+
+function getServiceTone(service) {
+  const roleTones = {
+    ingress: "ingress",
+    identity: "auth",
+    directory: "auth",
+    application: "application",
+    storage: "data",
+    database: "data",
+    cache: "cache",
+    messaging: "message",
+  };
+
+  return roleTones[service.landmark] ?? (hashId(service.id) % 2 === 0 ? "application" : "data");
+}
+
+function hashId(id) {
+  return [...id].reduce((hash, char) => ((hash * 31) + char.charCodeAt(0)) >>> 0, 0);
 }
 
 function getDegrees(services, relations) {

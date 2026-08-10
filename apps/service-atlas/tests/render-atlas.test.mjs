@@ -18,7 +18,7 @@ test("renders safe links and non-link infrastructure landmarks", () => {
   const markup = renderAtlas(catalogue);
 
   assert.match(markup, /<a[^>]+href="https:\/\/inner\.coding\.acitrus\.cn"[^>]+target="_blank"[^>]+rel="noopener noreferrer"/);
-  assert.match(markup, /<g class="landmark landmark--static landmark--major" data-service-id="postgresql" tabindex="0" role="button"/);
+  assert.match(markup, /<g class="landmark landmark--static landmark--major landmark--tone-data" data-service-id="postgresql" tabindex="0" role="button"/);
 });
 
 test("renders route motes without arrowheads or chevrons", () => {
@@ -46,14 +46,18 @@ test("exposes interactive landmarks through the root SVG accessibility role", ()
   assert.doesNotMatch(markup, /role="img"/);
 });
 
-test("renders compact knowledge-graph plaques with degree hierarchy", () => {
+test("renders Neo4j-inspired graph bubbles with degree hierarchy and role tones", () => {
   const markup = renderAtlas(catalogue);
 
-  assert.match(markup, /class="landmark landmark--link landmark--hub"[^>]+data-service-id="traefik"/);
-  assert.match(markup, /class="landmark landmark--link landmark--hub"[^>]+data-service-id="authelia"/);
-  assert.match(markup, /class="landmark-plaque"/);
-  assert.match(markup, /class="landmark-frame"/);
-  assert.match(markup, /class="landmark-corners"/);
+  assert.match(markup, /class="landmark landmark--link landmark--hub landmark--tone-ingress"[^>]+data-service-id="traefik"/);
+  assert.match(markup, /class="landmark landmark--link landmark--hub landmark--tone-auth"[^>]+data-service-id="authelia"/);
+  assert.match(markup, /landmark--tone-ingress/);
+  assert.match(markup, /landmark--tone-auth/);
+  assert.match(markup, /landmark--tone-data/);
+  assert.match(markup, /class="landmark-bubble"/);
+  assert.match(markup, /class="landmark-ring"/);
+  assert.match(markup, /<circle class="landmark-hit"/);
+  assert.doesNotMatch(markup, /landmark-(?:plaque|frame|corners)/);
   assert.match(markup, /class="landmark-label"[^>]+dominant-baseline="middle"/);
 });
 
@@ -66,7 +70,7 @@ test("degrades unsafe service links to static landmarks", (t) => {
 
   assert.match(
     markup,
-    /<g class="landmark landmark--static landmark--hub" data-service-id="traefik" tabindex="0" role="button"/,
+    /<g class="landmark landmark--static landmark--hub landmark--tone-ingress" data-service-id="traefik" tabindex="0" role="button"/,
   );
   assert.doesNotMatch(markup, /javascript:/);
 });

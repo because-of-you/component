@@ -1,24 +1,17 @@
 :root {
   --ink-field: #070b0f;
-  --ink-raised: #0d1519;
-  --paper: #e7dfca;
-  --gold: #bda46d;
-  --gold-bright: #e4cf94;
-  --jade: #5f9c94;
-  --blue: #6d98b3;
-  --cinnabar: #b56552;
-  --stone-jade: #718d85;
-  --indigo: #777c9d;
-  font-family: "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", Georgia, serif;
-  color: var(--paper);
+  --ink-raised: #101820;
+  --line: rgba(154, 177, 197, 0.16);
+  --text: #e6edf3;
+  --muted-text: #a8b5c1;
+  color: var(--text);
   background: var(--ink-field);
   color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-synthesis: none;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 html,
 body,
@@ -42,9 +35,7 @@ body {
   -ms-overflow-style: none;
 }
 
-.atlas-scroll::-webkit-scrollbar {
-  display: none;
-}
+.atlas-scroll::-webkit-scrollbar { display: none; }
 
 .atlas-stage {
   position: relative;
@@ -55,10 +46,10 @@ body {
   min-height: 600px;
   overflow: hidden;
   background:
-    radial-gradient(ellipse at 48% 46%, rgba(46, 76, 76, 0.2) 0%, rgba(12, 22, 26, 0.05) 39%, transparent 68%),
-    radial-gradient(circle at 79% 17%, rgba(169, 137, 77, 0.08) 0%, transparent 27%),
-    radial-gradient(circle at 14% 80%, rgba(60, 99, 107, 0.09) 0%, transparent 31%),
-    linear-gradient(135deg, #0b1116 0%, var(--ink-field) 52%, #080d11 100%);
+    radial-gradient(ellipse at 50% 48%, rgba(35, 55, 72, 0.28), transparent 56%),
+    radial-gradient(circle at 18% 24%, rgba(27, 104, 148, 0.12), transparent 25%),
+    radial-gradient(circle at 82% 73%, rgba(104, 58, 130, 0.1), transparent 31%),
+    linear-gradient(135deg, #111923 0%, var(--ink-field) 48%, #0b1018 100%);
 }
 
 .atlas-stage::before,
@@ -71,18 +62,17 @@ body {
 }
 
 .atlas-stage::before {
-  opacity: 0.2;
+  opacity: 0.36;
   background:
-    repeating-linear-gradient(90deg, transparent 0, transparent calc(6.25% - 1px), rgba(185, 165, 115, 0.12) 6.25%),
-    repeating-linear-gradient(0deg, transparent 0, transparent calc(10% - 1px), rgba(185, 165, 115, 0.08) 10%);
-  -webkit-mask-image: radial-gradient(ellipse at center, black 12%, rgba(0, 0, 0, 0.65) 48%, transparent 82%);
-  mask-image: radial-gradient(ellipse at center, black 12%, rgba(0, 0, 0, 0.65) 48%, transparent 82%);
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 80px 80px;
+  -webkit-mask-image: radial-gradient(ellipse at center, black 10%, rgba(0, 0, 0, 0.7) 56%, transparent 92%);
+  mask-image: radial-gradient(ellipse at center, black 10%, rgba(0, 0, 0, 0.7) 56%, transparent 92%);
 }
 
 .atlas-stage::after {
-  box-shadow:
-    inset 0 0 12vw rgba(0, 0, 0, 0.72),
-    inset 0 0 1px rgba(225, 204, 151, 0.2);
+  box-shadow: inset 0 0 13vw rgba(0, 0, 0, 0.7), inset 0 0 1px rgba(184, 205, 221, 0.13);
 }
 
 #atlas-overlay,
@@ -94,20 +84,16 @@ body {
   height: 100%;
 }
 
-.atlas-overlay {
-  overflow: visible;
-}
+.atlas-overlay { overflow: visible; }
 
 .roads,
 .road-group,
 .road-halo,
-.road {
-  pointer-events: none;
-}
+.road { pointer-events: none; }
 
 .road-group {
-  opacity: 0.86;
-  transition: opacity 280ms ease, filter 280ms ease;
+  opacity: 0.76;
+  transition: opacity 240ms ease, filter 240ms ease;
 }
 
 .road-halo,
@@ -118,107 +104,102 @@ body {
 }
 
 .road-halo {
-  stroke: rgba(115, 148, 150, 0.075);
+  stroke: rgba(125, 157, 184, 0.13);
   stroke-width: 1.42;
-  filter: blur(0.38px);
+  filter: blur(0.4px);
 }
 
 .road.road--route {
-  stroke: rgba(87, 161, 158, 0.78);
+  stroke: rgba(75, 174, 235, 0.78);
   stroke-width: 0.34;
 }
 
 .road.road--authentication {
-  stroke: rgba(181, 101, 82, 0.76);
+  stroke: rgba(239, 178, 69, 0.8);
   stroke-width: 0.24;
   stroke-dasharray: 1.1 1.15;
 }
 
 .road.road--data {
-  stroke: rgba(113, 141, 133, 0.66);
+  stroke: rgba(69, 197, 143, 0.72);
   stroke-width: 0.27;
 }
 
 .road.road--cache {
-  stroke: rgba(189, 164, 109, 0.7);
+  stroke: rgba(240, 110, 162, 0.74);
   stroke-width: 0.18;
   stroke-dasharray: 0.62 1.05;
 }
 
 .road.road--message {
-  stroke: rgba(119, 124, 157, 0.72);
+  stroke: rgba(154, 123, 238, 0.78);
   stroke-width: 0.22;
   stroke-dasharray: 0.72 1.2;
 }
 
-.road-halo.road--route { stroke: rgba(77, 164, 158, 0.11); }
-.road-halo.road--authentication { stroke: rgba(181, 101, 82, 0.1); }
-.road-halo.road--data { stroke: rgba(113, 141, 133, 0.09); }
-.road-halo.road--cache { stroke: rgba(189, 164, 109, 0.09); }
-.road-halo.road--message { stroke: rgba(119, 124, 157, 0.1); }
+.road-halo.road--route { stroke: rgba(75, 174, 235, 0.18); }
+.road-halo.road--authentication { stroke: rgba(239, 178, 69, 0.16); }
+.road-halo.road--data { stroke: rgba(69, 197, 143, 0.14); }
+.road-halo.road--cache { stroke: rgba(240, 110, 162, 0.14); }
+.road-halo.road--message { stroke: rgba(154, 123, 238, 0.16); }
 
 .road-mote {
-  stroke: rgba(255, 247, 218, 0.95);
+  stroke: rgba(247, 251, 255, 0.94);
   stroke-width: 0.12;
   vector-effect: non-scaling-stroke;
-  filter: drop-shadow(0 0 0.9px rgba(255, 236, 181, 0.9));
+  filter: drop-shadow(0 0 1.2px currentColor);
 }
 
-.road-mote.road--route { fill: #82c2bb; }
-.road-mote.road--authentication { fill: #ce806a; }
-.road-mote.road--data { fill: #91aaa3; }
-.road-mote.road--cache { fill: #d9bd78; }
-.road-mote.road--message { fill: #9da1c2; }
+.road-mote.road--route { fill: #72c9ff; color: #72c9ff; }
+.road-mote.road--authentication { fill: #ffd170; color: #ffd170; }
+.road-mote.road--data { fill: #77e6ac; color: #77e6ac; }
+.road-mote.road--cache { fill: #ff9bc8; color: #ff9bc8; }
+.road-mote.road--message { fill: #c3a8ff; color: #c3a8ff; }
 
 .landmark {
   outline: none;
   opacity: 1;
-  transition: opacity 280ms ease, filter 280ms ease;
+  transition: opacity 240ms ease, filter 240ms ease;
 }
 
-.landmark-hit {
-  fill: transparent;
-  stroke: none;
-}
+.landmark-hit { fill: transparent; stroke: none; }
 
 .landmark-aura {
-  fill: rgba(175, 215, 207, 0.025);
-  stroke: rgba(202, 178, 119, 0.06);
-  stroke-width: 0.25;
-  opacity: 0.6;
-  transition: fill 240ms ease, stroke 240ms ease, opacity 240ms ease, filter 240ms ease;
+  fill: color-mix(in srgb, var(--node-accent) 9%, transparent);
+  stroke: color-mix(in srgb, var(--node-accent) 24%, transparent);
+  stroke-width: 0.28;
+  opacity: 0.35;
+  transition: opacity 220ms ease, filter 220ms ease, stroke 220ms ease;
 }
 
-.landmark-plaque {
-  fill: rgba(10, 18, 22, 0.92);
-  stroke: rgba(189, 164, 109, 0.66);
-  stroke-width: 0.24;
-  vector-effect: non-scaling-stroke;
-  transition: fill 240ms ease, stroke 240ms ease;
-}
-
-.landmark-frame {
-  fill: rgba(30, 48, 51, 0.24);
-  stroke: rgba(212, 192, 139, 0.2);
-  stroke-width: 0.12;
-  vector-effect: non-scaling-stroke;
-  transition: fill 240ms ease, stroke 240ms ease;
-}
-
-.landmark-corners {
-  fill: none;
-  stroke: rgba(225, 202, 143, 0.74);
+.landmark-bubble {
+  fill: color-mix(in srgb, var(--node-accent) 22%, #111b25);
+  stroke: color-mix(in srgb, var(--node-accent) 72%, #dce9f4);
   stroke-width: 0.38;
-  vector-effect: non-scaling-stroke;
-  transition: stroke 240ms ease;
+  transition: fill 220ms ease, stroke 220ms ease;
+}
+
+.landmark-ring {
+  fill: transparent;
+  stroke: color-mix(in srgb, var(--node-accent) 38%, transparent);
+  stroke-width: 0.15;
+  transition: stroke 220ms ease, stroke-width 220ms ease;
+}
+
+.landmark-core {
+  fill: color-mix(in srgb, var(--node-accent) 10%, transparent);
+  opacity: 0.55;
+  pointer-events: none;
 }
 
 .landmark-label {
-  fill: rgba(237, 231, 211, 0.93);
-  font-family: "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", Georgia, serif;
-  font-size: 2.45px;
-  font-weight: 500;
-  letter-spacing: 0.065em;
+  fill: var(--text);
+  font-size: 2.35px;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  paint-order: stroke;
+  stroke: rgba(7, 11, 15, 0.5);
+  stroke-width: 0.55px;
   pointer-events: none;
   user-select: none;
 }
@@ -226,94 +207,50 @@ body {
 .landmark--link { cursor: pointer; }
 .landmark--static { cursor: default; }
 
-.landmark--hub {
-  filter: drop-shadow(0 0 2.4px rgba(84, 145, 139, 0.16));
-}
+.landmark--tone-ingress { --node-accent: #49aff4; }
+.landmark--tone-auth { --node-accent: #f1b94f; }
+.landmark--tone-application { --node-accent: #a782f4; }
+.landmark--tone-data { --node-accent: #4ed294; }
+.landmark--tone-cache { --node-accent: #ee779e; }
+.landmark--tone-message { --node-accent: #63cbbf; }
 
-.landmark--hub .landmark-plaque {
-  fill: rgba(13, 27, 30, 0.96);
-  stroke: rgba(218, 190, 125, 0.84);
-  stroke-width: 0.34;
-}
-
-.landmark--hub .landmark-label {
-  fill: #f0e4c2;
-  font-size: 2.66px;
-  font-weight: 600;
-}
-
-.landmark--major {
-  filter: drop-shadow(0 0 1.5px rgba(84, 145, 139, 0.1));
-}
-
-.landmark--major .landmark-plaque {
-  stroke: rgba(202, 177, 116, 0.75);
-}
-
-.landmark--standard {
-  filter: drop-shadow(0 0 1px rgba(84, 145, 139, 0.06));
-}
+.landmark--hub { filter: drop-shadow(0 0 4.6px color-mix(in srgb, var(--node-accent) 58%, transparent)); }
+.landmark--hub .landmark-bubble { stroke-width: 0.5; }
+.landmark--hub .landmark-ring { stroke-width: 0.21; }
+.landmark--hub .landmark-label { font-size: 2.65px; font-weight: 720; }
+.landmark--major { filter: drop-shadow(0 0 2.8px color-mix(in srgb, var(--node-accent) 38%, transparent)); }
+.landmark--major .landmark-label { font-size: 2.25px; }
+.landmark--standard { filter: drop-shadow(0 0 1.8px color-mix(in srgb, var(--node-accent) 25%, transparent)); }
+.landmark--standard .landmark-label { font-size: 1.95px; }
 
 .landmark:hover .landmark-aura,
 .landmark:focus-visible .landmark-aura,
 .landmark.is-direct .landmark-aura {
-  fill: rgba(87, 161, 158, 0.11);
-  stroke: rgba(201, 176, 113, 0.42);
   opacity: 1;
-  filter: drop-shadow(0 0 2px rgba(101, 190, 178, 0.32));
+  stroke: var(--node-accent);
+  filter: drop-shadow(0 0 2.4px var(--node-accent));
 }
 
-.landmark:hover .landmark-plaque,
-.landmark:focus-visible .landmark-plaque,
-.landmark.is-direct .landmark-plaque {
-  fill: rgba(17, 36, 39, 0.98);
-  stroke: rgba(224, 201, 142, 0.95);
+.landmark:hover .landmark-bubble,
+.landmark:focus-visible .landmark-bubble,
+.landmark.is-direct .landmark-bubble {
+  fill: color-mix(in srgb, var(--node-accent) 32%, #121e2a);
+  stroke: #f1f7fb;
 }
 
-.landmark:focus-visible .landmark-frame {
-  stroke: rgba(118, 207, 194, 0.82);
-  stroke-width: 0.28;
-}
+.landmark:focus-visible .landmark-ring { stroke: #ffffff; stroke-width: 0.45; }
 
-.landmark.is-selected {
-  filter: drop-shadow(0 0 3.4px rgba(92, 188, 176, 0.46));
-}
+.landmark.is-selected { filter: drop-shadow(0 0 6px var(--node-accent)); }
+.landmark.is-selected .landmark-aura { opacity: 1; stroke: #ffffff; }
+.landmark.is-selected .landmark-bubble { fill: color-mix(in srgb, var(--node-accent) 42%, #132331); stroke: #ffffff; stroke-width: 0.58; }
+.landmark.is-selected .landmark-label { fill: #fff; font-weight: 760; }
 
-.landmark.is-selected .landmark-aura {
-  fill: rgba(95, 188, 176, 0.15);
-  stroke: rgba(228, 200, 130, 0.65);
-  opacity: 1;
-}
-
-.landmark.is-selected .landmark-plaque {
-  fill: rgba(20, 47, 48, 0.98);
-  stroke: var(--gold-bright);
-  stroke-width: 0.45;
-}
-
-.landmark.is-selected .landmark-label {
-  fill: #fff3cf;
-  font-weight: 700;
-}
-
-.landmark.is-direct {
-  opacity: 1;
-}
-
+.landmark.is-direct { opacity: 1; }
 .landmark.is-indirect,
-.road-group.is-indirect {
-  opacity: 0.5;
-}
-
+.road-group.is-indirect { opacity: 0.5; }
 .landmark.is-muted,
-.road-group.is-muted {
-  opacity: 0.1;
-}
-
-.road-group.is-direct {
-  opacity: 1;
-  filter: drop-shadow(0 0 1.4px rgba(132, 211, 200, 0.52));
-}
+.road-group.is-muted { opacity: 0.14; }
+.road-group.is-direct { opacity: 1; filter: drop-shadow(0 0 1.8px rgba(166, 221, 255, 0.76)); }
 
 #atlas-error {
   position: fixed;
@@ -322,13 +259,13 @@ body {
   left: 50%;
   margin: 0;
   padding: 0.8rem 1.1rem;
-  color: #ded1ae;
-  background: rgba(10, 17, 20, 0.94);
-  border: 1px solid rgba(189, 164, 109, 0.38);
+  color: var(--text);
+  background: rgba(16, 24, 32, 0.96);
+  border: 1px solid rgba(154, 177, 197, 0.35);
+  border-radius: 0.45rem;
   transform: translate(-50%, -50%);
   font-size: 0.92rem;
-  letter-spacing: 0.08em;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.38);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
 }
 
 @media (max-width: 720px) {
@@ -339,24 +276,15 @@ body {
     min-height: 600px;
   }
 
-  .landmark-label {
-    font-size: 2.55px;
-  }
-
-  .landmark--hub .landmark-label {
-    font-size: 2.78px;
-  }
+  .landmark-label { font-size: 2.5px; }
+  .landmark--hub .landmark-label { font-size: 2.76px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .road-mote { display: none; }
-
   .landmark,
   .landmark-aura,
-  .landmark-plaque,
-  .landmark-frame,
-  .landmark-corners,
-  .road-group {
-    transition: none;
-  }
+  .landmark-bubble,
+  .landmark-ring,
+  .road-group { transition: none; }
 }
