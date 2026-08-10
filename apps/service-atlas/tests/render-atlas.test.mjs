@@ -11,7 +11,7 @@ test("renders one road and landmark per catalogue record", () => {
   assert.equal((markup.match(/class="landmark /g) ?? []).length, catalogue.services.length);
   assert.match(markup, /viewBox="0 0 160 100" preserveAspectRatio="xMidYMid meet"/);
   assert.match(markup, /data-service-id="claude-code-hub"/);
-  assert.match(markup, />Claude Code Hub<\/text>/);
+  assert.match(markup, /<tspan[^>]*>Claude<\/tspan><tspan[^>]*>Code Hub<\/tspan>/);
 });
 
 test("renders safe links and non-link infrastructure landmarks", () => {
@@ -24,9 +24,26 @@ test("renders safe links and non-link infrastructure landmarks", () => {
 test("renders route motes without arrowheads or chevrons", () => {
   const markup = renderAtlas(catalogue);
 
-  assert.equal((markup.match(/class="road-halo /g) ?? []).length, catalogue.relations.length);
+  assert.doesNotMatch(markup, /road-halo/);
   assert.match(markup, /<animateMotion/);
   assert.doesNotMatch(markup, /marker(?:-start|-mid|-end)?=|polygon|chevron|&gt;&gt;&gt;|›|→|↗/i);
+});
+
+test("renders smaller Neo4j nodes", () => {
+  const markup = renderAtlas(catalogue);
+
+  assert.match(markup, /class="landmark-bubble"[^>]+r="5\.8"/);
+  assert.match(markup, /class="landmark-bubble"[^>]+r="5"/);
+  assert.match(markup, /class="landmark-bubble"[^>]+r="4\.25"/);
+  assert.doesNotMatch(markup, /r="(?:8\.2|7\.15|6\.25)"/);
+});
+
+test("automatically bends long same-row roads around intermediate nodes", () => {
+  const markup = renderAtlas(catalogue);
+  const firstRoad = markup.match(/id="road-0"[^>]+d="([^"]+)"/);
+
+  assert.ok(firstRoad, "expected the first runtime road");
+  assert.doesNotMatch(firstRoad[1], /^M \S+ 50 C \S+ 50, \S+ 50, \S+ 50$/);
 });
 
 test("renders the first mote with stable numeric attributes", () => {

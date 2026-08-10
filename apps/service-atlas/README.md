@@ -22,7 +22,6 @@ python3 -m http.server 4173 --directory apps/service-atlas
   name: "Example",
   href: "https://example.com",
   landmark: "application",
-  position: { x: 60, y: 42 },
 }
 ```
 
@@ -30,7 +29,8 @@ python3 -m http.server 4173 --directory apps/service-atlas
 - `name`：地图上显示的名称。
 - `href`：可选跳转地址；外部 URL 会经过安全校验。
 - `landmark`：组件的语义类别，方便后续扩展图谱表现。
-- `position`：组件在 100 × 100 逻辑画布中的百分比坐标；界面会根据连接数量自动区分枢纽、重要和标准节点。
+
+不需要维护坐标：运行时关系会自动生成稳定的从左到右分层布局，界面也会根据连接数量自动区分枢纽、重要和标准节点。
 
 ## 添加调用关系
 
@@ -41,11 +41,10 @@ python3 -m http.server 4173 --directory apps/service-atlas
   source: "example",
   target: "postgresql",
   type: "data",
-  waypoints: [{ x: 56, y: 58 }, { x: 49, y: 73 }],
 }
 ```
 
-`source` 与 `target` 对应服务 `id`，`waypoints` 可选，用于控制连线经过的位置。支持的关系类型为 `route`、`authentication`、`data`、`cache` 和 `message`。
+`source` 与 `target` 对应服务 `id`，调用方向会直接决定自动布局的层级。支持的关系类型为 `route`、`authentication`、`data`、`cache` 和 `message`。
 
 当前页面使用易于替换的 mock 目录数据，不要求 Kubernetes，也不依赖自动发现；后续可以由配置文件或服务清单生成同样的数据结构，因此扩展组件和关系只需维护目录数据。
 

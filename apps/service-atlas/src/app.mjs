@@ -5,7 +5,19 @@ import { renderAtlas } from "./render-atlas.mjs";
 const overlay = document.querySelector("#atlas-overlay");
 const error = document.querySelector("#atlas-error");
 const coarsePointer = window.matchMedia("(pointer: coarse)");
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 let selectedId = null;
+let rootSvg = null;
+
+function syncAnimations() {
+  if (!rootSvg) return;
+  const shouldPause = document.hidden || reducedMotion.matches;
+  if (shouldPause && typeof rootSvg.pauseAnimations === "function") {
+    rootSvg.pauseAnimations();
+  } else if (!shouldPause && typeof rootSvg.unpauseAnimations === "function") {
+    rootSvg.unpauseAnimations();
+  }
+}
 
 function clearFocus() {
   if (!overlay) return;
@@ -69,6 +81,10 @@ function getLandmarkId(target) {
 try {
   if (!overlay) throw new Error("Missing atlas overlay mount point");
   overlay.innerHTML = renderAtlas(catalogue);
+  rootSvg = overlay.querySelector(".atlas-overlay");
+  document.addEventListener("visibilitychange", syncAnimations);
+  reducedMotion.addEventListener?.("change", syncAnimations);
+  syncAnimations();
 
   overlay.addEventListener("pointerover", (event) => {
     if (coarsePointer.matches) return;

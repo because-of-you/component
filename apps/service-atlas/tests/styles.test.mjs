@@ -45,11 +45,10 @@ test("uses a dark CSS-only knowledge graph field without scenic imagery", async 
   assert.doesNotMatch(page, /<img\b/i);
 });
 
-test("styles Neo4j-inspired graph bubbles, hierarchy, road halos, and focus states", async () => {
+test("styles Neo4j-inspired graph bubbles, hierarchy, and focus states", async () => {
   const styles = await readFile(stylesUrl, "utf8");
 
   for (const selector of [
-    ".road-halo",
     ".landmark-bubble",
     ".landmark-ring",
     ".landmark--tone-ingress",
@@ -68,17 +67,40 @@ test("styles Neo4j-inspired graph bubbles, hierarchy, road halos, and focus stat
   }
 
   assert.doesNotMatch(styles, /landmark-(?:plaque|frame|corners)/);
+  assert.doesNotMatch(styles, /\.road-halo/);
 });
 
 test("keeps road strokes visible when the atlas SVG scales", async () => {
   const styles = await readFile(stylesUrl, "utf8");
-  const roadBaseRule = styles.match(/\.road-halo,\s*\.road\s*\{([^}]*)\}/s);
+  const roadBaseRule = styles.match(/\.road\s*\{([^}]*)\}/s);
 
-  assert.ok(roadBaseRule, "expected the shared road stroke rule");
+  assert.ok(roadBaseRule, "expected the common road stroke rule");
   assert.doesNotMatch(roadBaseRule[1], /vector-effect\s*:/);
+  assert.match(roadBaseRule[1], /stroke-dasharray:\s*[\d.]+\s+[\d.]+\s*;/);
   for (const width of ["0.34", "0.24", "0.27", "0.18", "0.22"]) {
     assert.match(styles, new RegExp(`stroke-width:\\s*${width.replace(".", "\\.")}\\s*;`));
   }
+});
+
+test("avoids passive SVG filters and pauses SMIL animation when appropriate", async () => {
+  const [styles, source] = await Promise.all([
+    readFile(stylesUrl, "utf8"),
+    readFile(appUrl, "utf8"),
+  ]);
+
+  const moteRule = styles.match(/\.road-mote\s*\{([^}]*)\}/s);
+  assert.ok(moteRule);
+  assert.doesNotMatch(moteRule[1], /filter\s*:/);
+  for (const hierarchy of ["hub", "major", "standard"]) {
+    const rule = styles.match(new RegExp(`\\.landmark--${hierarchy}\\s*\\{([^}]*)\\}`, "s"));
+    assert.ok(rule, `expected ${hierarchy} hierarchy rule`);
+    assert.doesNotMatch(rule[1], /filter\s*:/);
+  }
+  assert.doesNotMatch(styles, /\.road-group\.is-direct\s*\{[^}]*filter\s*:/s);
+  assert.match(source, /document\.addEventListener\("visibilitychange"/);
+  assert.match(source, /prefers-reduced-motion:\s*reduce/);
+  assert.match(source, /\.pauseAnimations\(\)/);
+  assert.match(source, /\.unpauseAnimations\(\)/);
 });
 
 test("does not apply coarse first-tap handling to keyboard link activation", async () => {

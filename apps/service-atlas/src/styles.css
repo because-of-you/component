@@ -87,26 +87,19 @@ body {
 .atlas-overlay { overflow: visible; }
 
 .roads,
-.road-group,
-.road-halo,
-.road { pointer-events: none; }
+.road-group { pointer-events: none; }
 
 .road-group {
   opacity: 0.76;
-  transition: opacity 240ms ease, filter 240ms ease;
+  transition: opacity 180ms ease;
 }
 
-.road-halo,
 .road {
+  pointer-events: none;
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
-}
-
-.road-halo {
-  stroke: rgba(125, 157, 184, 0.13);
-  stroke-width: 1.42;
-  filter: blur(0.4px);
+  stroke-dasharray: 0.9 1.2;
 }
 
 .road.road--route {
@@ -117,7 +110,7 @@ body {
 .road.road--authentication {
   stroke: rgba(239, 178, 69, 0.8);
   stroke-width: 0.24;
-  stroke-dasharray: 1.1 1.15;
+  stroke-dasharray: 1.15 1.35;
 }
 
 .road.road--data {
@@ -128,26 +121,19 @@ body {
 .road.road--cache {
   stroke: rgba(240, 110, 162, 0.74);
   stroke-width: 0.18;
-  stroke-dasharray: 0.62 1.05;
+  stroke-dasharray: 0.65 1.1;
 }
 
 .road.road--message {
   stroke: rgba(154, 123, 238, 0.78);
   stroke-width: 0.22;
-  stroke-dasharray: 0.72 1.2;
+  stroke-dasharray: 0.75 1.25;
 }
-
-.road-halo.road--route { stroke: rgba(75, 174, 235, 0.18); }
-.road-halo.road--authentication { stroke: rgba(239, 178, 69, 0.16); }
-.road-halo.road--data { stroke: rgba(69, 197, 143, 0.14); }
-.road-halo.road--cache { stroke: rgba(240, 110, 162, 0.14); }
-.road-halo.road--message { stroke: rgba(154, 123, 238, 0.16); }
 
 .road-mote {
   stroke: rgba(247, 251, 255, 0.94);
   stroke-width: 0.12;
   vector-effect: non-scaling-stroke;
-  filter: drop-shadow(0 0 1.2px currentColor);
 }
 
 .road-mote.road--route { fill: #72c9ff; color: #72c9ff; }
@@ -159,7 +145,7 @@ body {
 .landmark {
   outline: none;
   opacity: 1;
-  transition: opacity 240ms ease, filter 240ms ease;
+  transition: opacity 180ms ease;
 }
 
 .landmark-hit { fill: transparent; stroke: none; }
@@ -169,21 +155,18 @@ body {
   stroke: color-mix(in srgb, var(--node-accent) 24%, transparent);
   stroke-width: 0.28;
   opacity: 0.35;
-  transition: opacity 220ms ease, filter 220ms ease, stroke 220ms ease;
 }
 
 .landmark-bubble {
   fill: color-mix(in srgb, var(--node-accent) 22%, #111b25);
   stroke: color-mix(in srgb, var(--node-accent) 72%, #dce9f4);
   stroke-width: 0.38;
-  transition: fill 220ms ease, stroke 220ms ease;
 }
 
 .landmark-ring {
   fill: transparent;
   stroke: color-mix(in srgb, var(--node-accent) 38%, transparent);
   stroke-width: 0.15;
-  transition: stroke 220ms ease, stroke-width 220ms ease;
 }
 
 .landmark-core {
@@ -194,7 +177,7 @@ body {
 
 .landmark-label {
   fill: var(--text);
-  font-size: 2.35px;
+  font-size: var(--node-label-size, 1.95px);
   font-weight: 650;
   letter-spacing: -0.025em;
   paint-order: stroke;
@@ -214,14 +197,13 @@ body {
 .landmark--tone-cache { --node-accent: #ee779e; }
 .landmark--tone-message { --node-accent: #63cbbf; }
 
-.landmark--hub { filter: drop-shadow(0 0 4.6px color-mix(in srgb, var(--node-accent) 58%, transparent)); }
+.landmark--hub { --node-label-size: 2.35px; }
 .landmark--hub .landmark-bubble { stroke-width: 0.5; }
 .landmark--hub .landmark-ring { stroke-width: 0.21; }
-.landmark--hub .landmark-label { font-size: 2.65px; font-weight: 720; }
-.landmark--major { filter: drop-shadow(0 0 2.8px color-mix(in srgb, var(--node-accent) 38%, transparent)); }
-.landmark--major .landmark-label { font-size: 2.25px; }
-.landmark--standard { filter: drop-shadow(0 0 1.8px color-mix(in srgb, var(--node-accent) 25%, transparent)); }
-.landmark--standard .landmark-label { font-size: 1.95px; }
+.landmark--hub .landmark-label { font-weight: 720; }
+.landmark--major { --node-label-size: 2.05px; }
+.landmark--standard { --node-label-size: 1.8px; }
+.landmark .landmark-label--compact { font-size: 1.72px; }
 
 .landmark:hover .landmark-aura,
 .landmark:focus-visible .landmark-aura,
@@ -250,7 +232,8 @@ body {
 .road-group.is-indirect { opacity: 0.5; }
 .landmark.is-muted,
 .road-group.is-muted { opacity: 0.14; }
-.road-group.is-direct { opacity: 1; filter: drop-shadow(0 0 1.8px rgba(166, 221, 255, 0.76)); }
+.road-group.is-direct { opacity: 1; }
+.road-group.is-direct .road { stroke-width: 0.48; }
 
 #atlas-error {
   position: fixed;
@@ -278,6 +261,7 @@ body {
 
   .landmark-label { font-size: 2.5px; }
   .landmark--hub .landmark-label { font-size: 2.76px; }
+  .landmark .landmark-label--compact { font-size: 2px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

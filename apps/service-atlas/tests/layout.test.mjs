@@ -2,10 +2,84 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  assignGraphPositions,
   assignPositions,
   buildRoadPath,
   getRoadPresentation,
 } from "../src/layout.mjs";
+
+const graphServices = [
+  { id: "traefik" },
+  { id: "authelia" },
+  { id: "claude" },
+  { id: "rust" },
+  { id: "lldap" },
+  { id: "rabbit" },
+  { id: "postgres" },
+  { id: "redis" },
+];
+
+const graphRelations = [
+  { source: "traefik", target: "authelia" },
+  { source: "traefik", target: "claude" },
+  { source: "traefik", target: "rust" },
+  { source: "traefik", target: "rabbit" },
+  { source: "claude", target: "authelia" },
+  { source: "rust", target: "authelia" },
+  { source: "authelia", target: "lldap" },
+  { source: "authelia", target: "redis" },
+  { source: "lldap", target: "postgres" },
+];
+
+test("automatically assigns deterministic longest-path layers", () => {
+  const first = assignGraphPositions(graphServices, graphRelations);
+  const second = assignGraphPositions(graphServices, graphRelations);
+
+  assert.deepEqual([...first], [...second]);
+  assert.ok(first.get("traefik").x < first.get("claude").x);
+  assert.ok(first.get("traefik").x < first.get("rust").x);
+  assert.ok(first.get("traefik").x < first.get("rabbit").x);
+  assert.ok(first.get("claude").x < first.get("authelia").x);
+  assert.ok(first.get("rust").x < first.get("authelia").x);
+  assert.ok(first.get("authelia").x < first.get("lldap").x);
+  assert.ok(first.get("authelia").x < first.get("redis").x);
+  assert.ok(first.get("lldap").x < first.get("postgres").x);
+});
+
+test("keeps automatically assigned nodes in bounds with unique positions", () => {
+  const positions = assignGraphPositions(graphServices, graphRelations);
+  const keys = new Set();
+
+  for (const position of positions.values()) {
+    assert.ok(position.x >= 10 && position.x <= 90);
+    assert.ok(position.y >= 16 && position.y <= 84);
+    keys.add(`${position.x},${position.y}`);
+  }
+  assert.equal(keys.size, graphServices.length);
+});
+
+test("places disconnected and cyclic services without throwing", () => {
+  const services = [{ id: "a" }, { id: "b" }, { id: "c" }, { id: "alone" }];
+  const relations = [
+    { source: "a", target: "b" },
+    { source: "b", target: "c" },
+    { source: "c", target: "a" },
+  ];
+  const positions = assignGraphPositions(services, relations);
+
+  assert.deepEqual([...positions], [...assignGraphPositions(services, relations)]);
+  assert.equal(positions.size, services.length);
+  assert.equal(new Set([...positions.values()].map(({ x, y }) => `${x},${y}`)).size, services.length);
+});
+
+test("automatically places a newly related service without coordinates", () => {
+  const services = [...graphServices, { id: "new-worker" }];
+  const relations = [...graphRelations, { source: "rabbit", target: "new-worker" }];
+  const positions = assignGraphPositions(services, relations);
+
+  assert.ok(positions.has("new-worker"));
+  assert.ok(positions.get("rabbit").x < positions.get("new-worker").x);
+});
 
 test("preserves authored positions and assigns fallback positions", () => {
   const positions = assignPositions([
