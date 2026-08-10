@@ -247,8 +247,8 @@ body {
 
 @media (max-width: 720px) {
   .atlas-stage {
-    width: 960px;
-    height: 600px;
+    width: max(960px, 160vh);
+    height: max(600px, 100vh);
     min-width: 960px;
     min-height: 600px;
   }

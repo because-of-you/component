@@ -7,8 +7,13 @@ const appUrl = new URL("../src/app.mjs", import.meta.url);
 
 test("supports mobile panning and reduced motion", async () => {
   const styles = await readFile(stylesUrl, "utf8");
+  const mobileRule = styles.match(
+    /@media \(max-width: 720px\)\s*\{\s*\.atlas-stage\s*\{([^}]*)\}/s,
+  );
 
-  assert.match(styles, /@media \(max-width: 720px\)/);
+  assert.ok(mobileRule, "expected the mobile atlas stage rule");
+  assert.match(mobileRule[1], /width:\s*max\(960px,\s*160vh\)\s*;/);
+  assert.match(mobileRule[1], /height:\s*max\(600px,\s*100vh\)\s*;/);
   assert.match(styles, /min-width: 960px/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(styles, /\.road-mote\s*{\s*display: none;/s);
