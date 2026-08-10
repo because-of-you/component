@@ -51,12 +51,14 @@ function applyFocus(serviceId) {
     else landmark.classList.add("is-muted");
   });
 
-  overlay.querySelectorAll(".road-group[data-relation-index]").forEach((road) => {
-    const index = Number.parseInt(road.dataset.relationIndex ?? "", 10);
-    if (state.directRelations.has(index)) road.classList.add("is-direct");
-    else if (state.indirectRelations.has(index)) road.classList.add("is-indirect");
-    else road.classList.add("is-muted");
-  });
+  overlay
+    .querySelectorAll(".road-group[data-relation-index], .traffic-group[data-relation-index]")
+    .forEach((relationGroup) => {
+      const index = Number.parseInt(relationGroup.dataset.relationIndex ?? "", 10);
+      if (state.directRelations.has(index)) relationGroup.classList.add("is-direct");
+      else if (state.indirectRelations.has(index)) relationGroup.classList.add("is-indirect");
+      else relationGroup.classList.add("is-muted");
+    });
 
   return true;
 }

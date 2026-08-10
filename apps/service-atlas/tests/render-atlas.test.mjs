@@ -27,6 +27,30 @@ test("renders route motes without arrowheads or chevrons", () => {
   assert.doesNotMatch(markup, /road-halo/);
   assert.match(markup, /<animateMotion/);
   assert.doesNotMatch(markup, /marker(?:-start|-mid|-end)?=|polygon|chevron|&gt;&gt;&gt;|›|→|↗/i);
+  assert.doesNotMatch(markup, /road-halo|filter=/);
+});
+
+test("clips roads to node rings and layers traffic above landmarks", () => {
+  const markup = renderAtlas(catalogue);
+  const firstRoad = markup.match(/id="road-0"[^>]+d="M ([\d.]+) ([\d.]+)/);
+  const roadsIndex = markup.indexOf('<g class="roads">');
+  const landmarksIndex = markup.indexOf('<g class="landmarks">');
+  const trafficIndex = markup.indexOf('<g class="traffic-motes">');
+
+  assert.ok(firstRoad, "expected first road path coordinates");
+  assert.notEqual(Number(firstRoad[1]), 16, "road must not start at Traefik's center");
+  assert.ok(roadsIndex < landmarksIndex && landmarksIndex < trafficIndex);
+  assert.equal((markup.match(/class="traffic-group"/g) ?? []).length, catalogue.relations.length);
+  assert.equal((markup.match(/class="road-mote /g) ?? []).length, catalogue.relations.length);
+});
+
+test("routes Traefik to Authelia around RustFS", () => {
+  const markup = renderAtlas(catalogue);
+  const firstRoad = markup.match(/id="road-0"[^>]+d="([^"]+)"/);
+
+  assert.ok(firstRoad);
+  assert.match(firstRoad[1], /C .* (?:4[0-3](?:\.\d+)?|5[7-9](?:\.\d+)?),/);
+  assert.doesNotMatch(firstRoad[1], /^M \S+ 50 C \S+ 50, \S+ 50, \S+ 50$/);
 });
 
 test("renders smaller Neo4j nodes", () => {
@@ -50,7 +74,7 @@ test("renders the first mote with stable numeric attributes", () => {
   const markup = renderAtlas(catalogue);
 
   assert.match(markup, /begin="0s"/);
-  assert.match(markup, /r="0.28"/);
+  assert.match(markup, /r="0.3"/);
 });
 
 test("exposes interactive landmarks through the root SVG accessibility role", () => {

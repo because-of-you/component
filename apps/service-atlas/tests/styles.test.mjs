@@ -97,6 +97,8 @@ test("avoids passive SVG filters and pauses SMIL animation when appropriate", as
     assert.doesNotMatch(rule[1], /filter\s*:/);
   }
   assert.doesNotMatch(styles, /\.road-group\.is-direct\s*\{[^}]*filter\s*:/s);
+  assert.doesNotMatch(styles, /\.traffic-group(?:\.is-direct)?\s*\{[^}]*filter\s*:/s);
+  assert.match(source, /\.road-group\[data-relation-index\],\s*\.traffic-group\[data-relation-index\]/);
   assert.match(source, /document\.addEventListener\("visibilitychange"/);
   assert.match(source, /prefers-reduced-motion:\s*reduce/);
   assert.match(source, /\.pauseAnimations\(\)/);

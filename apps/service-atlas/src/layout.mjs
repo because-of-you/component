@@ -195,6 +195,125 @@ export function buildRoadPath(source, target, waypoints = []) {
   return `M ${formatNumber(source.x)} ${formatNumber(source.y)} ${segments.join(" ")}`;
 }
 
+export function getNodeRadius(degree = 0) {
+  if (degree >= 5) return 5.8;
+  if (degree >= 3) return 5;
+  return 4.25;
+}
+
+export function clipRoadEndpoints(
+  source,
+  target,
+  sourceRadius,
+  targetRadius,
+  waypoints = [],
+  clearance = 0.75,
+) {
+  if (!isValidPoint(source) || !isValidPoint(target)) {
+    throw new Error("Invalid road endpoint");
+  }
+
+  const validWaypoints = Array.isArray(waypoints) && waypoints.every(isValidPoint)
+    ? waypoints
+    : [];
+  const firstDirection = validWaypoints[0] ?? target;
+  const lastDirection = validWaypoints.at(-1) ?? source;
+
+  return {
+    source: moveToward(source, firstDirection, Math.max(0, sourceRadius + clearance)),
+    target: moveToward(target, lastDirection, Math.max(0, targetRadius + clearance)),
+  };
+}
+
+export function findObstacleWaypoints(source, target, obstacles, relationIndex = 0) {
+  if (!isValidPoint(source) || !isValidPoint(target)) {
+    throw new Error("Invalid road endpoint");
+  }
+  if (!Array.isArray(obstacles) || obstacles.length === 0) return [];
+
+  const corridorPadding = 2.75;
+  const blocking = obstacles.filter((obstacle) =>
+    isValidPoint(obstacle) &&
+    Number.isFinite(obstacle.radius) &&
+    distanceToSegment(obstacle, source, target) < obstacle.radius + corridorPadding
+  );
+  if (blocking.length === 0) return [];
+
+  const midpointX = blocking.reduce((total, point) => total + point.x, 0) / blocking.length;
+  const upperY = Math.max(
+    7,
+    Math.min(...blocking.map((point) => point.y - point.radius - corridorPadding)),
+  );
+  const lowerY = Math.min(
+    93,
+    Math.max(...blocking.map((point) => point.y + point.radius + corridorPadding)),
+  );
+  const candidates = [
+    [{ x: midpointX, y: upperY }],
+    [{ x: midpointX, y: lowerY }],
+  ].filter((waypoints) => laneClearsObstacles(source, target, waypoints, blocking));
+
+  if (candidates.length > 0) {
+    candidates.sort((left, right) => {
+      const difference = pathLength(source, target, left) - pathLength(source, target, right);
+      if (Math.abs(difference) > 0.001) return difference;
+      return relationIndex % 2 === 0 ? left[0].y - right[0].y : right[0].y - left[0].y;
+    });
+    return candidates[0].map(roundPoint);
+  }
+
+  // A bounded deterministic escape lane keeps dense future graphs predictable.
+  const direction = relationIndex % 2 === 0 ? -1 : 1;
+  const fallbackY = Math.min(93, Math.max(7, (source.y + target.y) / 2 + direction * 14));
+  return [{ x: roundCoordinate((source.x + target.x) / 2), y: roundCoordinate(fallbackY) }];
+}
+
+function moveToward(origin, destination, distance) {
+  const dx = destination.x - origin.x;
+  const dy = destination.y - origin.y;
+  const length = Math.hypot(dx, dy);
+  if (length <= Number.EPSILON) return { ...origin };
+  const usableDistance = Math.min(distance, length / 2);
+  return roundPoint({
+    x: origin.x + (dx / length) * usableDistance,
+    y: origin.y + (dy / length) * usableDistance,
+  });
+}
+
+function distanceToSegment(point, start, end) {
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const lengthSquared = dx * dx + dy * dy;
+  if (lengthSquared <= Number.EPSILON) return Math.hypot(point.x - start.x, point.y - start.y);
+  const projection = Math.min(1, Math.max(
+    0,
+    ((point.x - start.x) * dx + (point.y - start.y) * dy) / lengthSquared,
+  ));
+  return Math.hypot(
+    point.x - (start.x + projection * dx),
+    point.y - (start.y + projection * dy),
+  );
+}
+
+function laneClearsObstacles(source, target, waypoints, obstacles) {
+  const points = [source, ...waypoints, target];
+  return obstacles.every((obstacle) =>
+    points.slice(1).every((point, index) =>
+      distanceToSegment(obstacle, points[index], point) >= obstacle.radius + 2
+    )
+  );
+}
+
+function pathLength(source, target, waypoints) {
+  const points = [source, ...waypoints, target];
+  return points.slice(1).reduce((total, point, index) =>
+    total + Math.hypot(point.x - points[index].x, point.y - points[index].y), 0);
+}
+
+function roundPoint(point) {
+  return { x: roundCoordinate(point.x), y: roundCoordinate(point.y) };
+}
+
 function isValidPoint(point) {
   return (
     point != null &&

@@ -1,4 +1,11 @@
-import { assignGraphPositions, buildRoadPath, getRoadPresentation } from "./layout.mjs";
+import {
+  assignGraphPositions,
+  buildRoadPath,
+  clipRoadEndpoints,
+  findObstacleWaypoints,
+  getNodeRadius,
+  getRoadPresentation,
+} from "./layout.mjs";
 import { prepareCatalogue } from "./validate-catalogue.mjs";
 
 export const VIEWBOX_X_SCALE = 1.6;
@@ -16,37 +23,61 @@ export function renderAtlas(catalogue) {
   const prepared = prepareCatalogue(catalogue);
   const positions = assignGraphPositions(prepared.services, prepared.relations);
   const degrees = getDegrees(prepared.services, prepared.relations);
-  const roads = prepared.relations
-    .map((relation, index) => renderRoad(relation, index, positions))
+  const nodes = new Map(prepared.services.map((service) => [service.id, {
+    ...scalePoint(positions.get(service.id)),
+    radius: getNodeRadius(degrees.get(service.id)),
+  }]));
+  const relationGeometry = prepared.relations.map((relation, index) =>
+    getRelationGeometry(relation, index, nodes));
+  const roads = relationGeometry
+    .map(({ relation, index, presentation, path }) =>
+      renderRoad(relation, index, presentation, path))
     .join("");
   const landmarks = prepared.services
     .map((service) => renderLandmark(service, positions.get(service.id), degrees.get(service.id)))
     .join("");
+  const traffic = relationGeometry
+    .map(({ relation, index, presentation }) => renderMote(relation, index, presentation))
+    .join("");
 
-  return `<svg class="atlas-overlay" viewBox="0 0 160 100" preserveAspectRatio="xMidYMid meet" role="group" aria-label="Interactive service dependency map"><g class="roads">${roads}</g><g class="landmarks">${landmarks}</g></svg>`;
+  return `<svg class="atlas-overlay" viewBox="0 0 160 100" preserveAspectRatio="xMidYMid meet" role="group" aria-label="Interactive service dependency map"><g class="roads">${roads}</g><g class="landmarks">${landmarks}</g><g class="traffic-motes">${traffic}</g></svg>`;
 }
 
-function renderRoad(relation, index, positions) {
-  const presentation = getRoadPresentation(relation.type);
-  const source = scalePoint(positions.get(relation.source));
-  const target = scalePoint(positions.get(relation.target));
+function getRelationGeometry(relation, index, nodes) {
+  const sourceNode = nodes.get(relation.source);
+  const targetNode = nodes.get(relation.target);
+  const authoredWaypoints = relation.waypoints?.map(scalePoint);
+  const obstacles = [...nodes]
+    .filter(([id]) => id !== relation.source && id !== relation.target)
+    .map(([, node]) => node);
+  const waypoints = authoredWaypoints?.length
+    ? authoredWaypoints
+    : findObstacleWaypoints(sourceNode, targetNode, obstacles, index);
+  const endpoints = clipRoadEndpoints(
+    sourceNode,
+    targetNode,
+    sourceNode.radius,
+    targetNode.radius,
+    waypoints,
+  );
+
+  return {
+    relation,
+    index,
+    presentation: getRoadPresentation(relation.type),
+    path: buildRoadPath(endpoints.source, endpoints.target, waypoints),
+  };
+}
+
+function renderRoad(relation, index, presentation, path) {
   const pathId = `road-${index}`;
+  return `<g class="road-group" data-relation-index="${index}" data-source="${escapeMarkup(relation.source)}" data-target="${escapeMarkup(relation.target)}"><path id="${pathId}" class="road ${presentation.className}" d="${path}" pathLength="100"/></g>`;
+}
+
+function renderMote(relation, index, presentation) {
   const delay = (index % 5) * 1.7;
   const begin = delay === 0 ? "0s" : `-${delay}s`;
-  const path = buildRoadPath(source, target, getAutomaticWaypoints(source, target, index));
-
-  return `<g class="road-group" data-relation-index="${index}" data-source="${escapeMarkup(relation.source)}" data-target="${escapeMarkup(relation.target)}"><path id="${pathId}" class="road ${presentation.className}" d="${path}" pathLength="100"/><circle class="road-mote ${presentation.className}" r="0.28"><animateMotion dur="${presentation.duration}s" begin="${begin}" repeatCount="indefinite"><mpath href="#${pathId}"/></animateMotion></circle></g>`;
-}
-
-function getAutomaticWaypoints(source, target, index) {
-  const isLongSameRow = Math.abs(target.x - source.x) > 40 && Math.abs(target.y - source.y) < 1;
-  if (!isLongSameRow) return [];
-
-  const direction = index % 2 === 0 ? -1 : 1;
-  return [{
-    x: (source.x + target.x) / 2,
-    y: Math.min(92, Math.max(8, source.y + direction * 7)),
-  }];
+  return `<g class="traffic-group" data-relation-index="${index}" data-source="${escapeMarkup(relation.source)}" data-target="${escapeMarkup(relation.target)}"><circle class="road-mote ${presentation.className}" r="0.3"><animateMotion dur="${presentation.duration}s" begin="${begin}" repeatCount="indefinite"><mpath href="#road-${index}"/></animateMotion></circle></g>`;
 }
 
 function renderLandmark(service, position, degree = 0) {
@@ -54,7 +85,7 @@ function renderLandmark(service, position, degree = 0) {
   const y = position.y;
   const name = escapeMarkup(service.name);
   const hierarchy = degree >= 5 ? "hub" : degree >= 3 ? "major" : "standard";
-  const radius = hierarchy === "hub" ? 5.8 : hierarchy === "major" ? 5 : 4.25;
+  const radius = getNodeRadius(degree);
   const tone = getServiceTone(service);
   const content = `<circle class="landmark-hit" cx="${x}" cy="${y}" r="${radius + 2.1}"/><circle class="landmark-aura" cx="${x}" cy="${y}" r="${radius + 1.05}"/><circle class="landmark-bubble" cx="${x}" cy="${y}" r="${radius}"/><circle class="landmark-ring" cx="${x}" cy="${y}" r="${Math.max(radius - 0.5, 1)}"/><circle class="landmark-core" cx="${x}" cy="${y}" r="${Math.max(radius - 1.8, 1)}"/>${renderLabel(service.name, x, y)}`;
   const classes = `landmark ${service.href ? "landmark--link" : "landmark--static"} landmark--${hierarchy} landmark--tone-${tone}`;

@@ -5,6 +5,8 @@ import {
   assignGraphPositions,
   assignPositions,
   buildRoadPath,
+  clipRoadEndpoints,
+  findObstacleWaypoints,
   getRoadPresentation,
 } from "../src/layout.mjs";
 
@@ -155,6 +157,72 @@ test("builds a smooth path through waypoints", () => {
     ),
     "M 10 50 C 20 50, 20 40, 30 40 C 42.5 40, 42.5 24, 55 24 C 67.5 24, 67.5 20, 80 20",
   );
+});
+
+test("clips road endpoints to node boundaries using the first and last path legs", () => {
+  const clipped = clipRoadEndpoints(
+    { x: 10, y: 50 },
+    { x: 80, y: 20 },
+    5,
+    4,
+    [{ x: 30, y: 50 }, { x: 60, y: 20 }],
+    0.75,
+  );
+
+  assert.deepEqual(clipped.source, { x: 15.75, y: 50 });
+  assert.deepEqual(clipped.target, { x: 75.25, y: 20 });
+  assert.equal(Math.hypot(clipped.source.x - 10, clipped.source.y - 50), 5.75);
+  assert.equal(Math.hypot(clipped.target.x - 80, clipped.target.y - 20), 4.75);
+});
+
+test("clips zero-length roads safely without non-finite coordinates", () => {
+  const clipped = clipRoadEndpoints({ x: 20, y: 20 }, { x: 20, y: 20 }, 5, 5);
+
+  assert.deepEqual(clipped, {
+    source: { x: 20, y: 20 },
+    target: { x: 20, y: 20 },
+  });
+});
+
+test("deterministically routes around a node in the edge corridor", () => {
+  const obstacles = [{ id: "middle", x: 50, y: 50, radius: 5 }];
+  const first = findObstacleWaypoints(
+    { x: 10, y: 50 },
+    { x: 90, y: 50 },
+    obstacles,
+    0,
+  );
+  const second = findObstacleWaypoints(
+    { x: 10, y: 50 },
+    { x: 90, y: 50 },
+    obstacles,
+    0,
+  );
+
+  assert.deepEqual(first, second);
+  assert.ok(first.length >= 1 && first.length <= 2);
+  assert.ok(first.every(({ y }) => y >= 7 && y <= 93));
+  assert.ok(first.some(({ y }) => Math.abs(y - 50) >= 7));
+});
+
+test("keeps clear roads direct and bounds fallback lanes", () => {
+  assert.deepEqual(
+    findObstacleWaypoints(
+      { x: 10, y: 20 },
+      { x: 90, y: 20 },
+      [{ id: "far", x: 50, y: 70, radius: 5 }],
+      1,
+    ),
+    [],
+  );
+
+  const nearTop = findObstacleWaypoints(
+    { x: 10, y: 8 },
+    { x: 90, y: 8 },
+    [{ id: "near-top", x: 50, y: 8, radius: 5 }],
+    1,
+  );
+  assert.ok(nearTop.every(({ y }) => y >= 7 && y <= 93));
 });
 
 test("falls back to a direct curve for non-finite waypoints", () => {
