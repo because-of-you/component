@@ -91,29 +91,29 @@ body {
   vector-effect: non-scaling-stroke;
 }
 
-.road.relation-route {
+.road.road--route {
   stroke: rgba(65, 111, 143, 0.72);
   stroke-width: 0.34;
 }
 
-.road.relation-authentication {
+.road.road--authentication {
   stroke: rgba(161, 94, 67, 0.65);
   stroke-width: 0.24;
   stroke-dasharray: 1.1 1.15;
 }
 
-.road.relation-data {
+.road.road--data {
   stroke: rgba(84, 104, 101, 0.55);
   stroke-width: 0.27;
 }
 
-.road.relation-cache {
+.road.road--cache {
   stroke: rgba(157, 126, 62, 0.56);
   stroke-width: 0.18;
   stroke-dasharray: 0.62 1.05;
 }
 
-.road.relation-message {
+.road.road--message {
   stroke: rgba(103, 108, 133, 0.6);
   stroke-width: 0.22;
   stroke-dasharray: 0.72 1.2;
@@ -126,23 +126,23 @@ body {
   filter: drop-shadow(0 0 0.7px rgba(255, 250, 218, 0.95));
 }
 
-.road-mote.relation-route {
+.road-mote.road--route {
   fill: #6b91ab;
 }
 
-.road-mote.relation-authentication {
+.road-mote.road--authentication {
   fill: #b66f53;
 }
 
-.road-mote.relation-data {
+.road-mote.road--data {
   fill: #738a84;
 }
 
-.road-mote.relation-cache {
+.road-mote.road--cache {
   fill: #b49551;
 }
 
-.road-mote.relation-message {
+.road-mote.road--message {
   fill: #8186a0;
 }
 
