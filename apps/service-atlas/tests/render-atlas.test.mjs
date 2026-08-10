@@ -14,6 +14,47 @@ test("renders one road and landmark per catalogue record", () => {
   assert.match(markup, /<tspan[^>]*>Claude<\/tspan><tspan[^>]*>Code Hub<\/tspan>/);
 });
 
+test("renders ordered runtime flow stages before roads and tags every landmark", () => {
+  const markup = renderAtlas(catalogue);
+  const guides = [...markup.matchAll(
+    /<g class="layer-guide" data-layer="(\d+)"[\s\S]*?<text class="layer-index"[^>]*>(\d{2})<\/text><text class="layer-label"[^>]*>([^<]+)<\/text><\/g>/g,
+  )];
+
+  assert.equal(guides.length, 5);
+  assert.deepEqual(
+    guides.map((match) => match.slice(1)),
+    [
+      ["0", "01", "流量入口"],
+      ["1", "02", "对外服务"],
+      ["2", "03", "身份校验"],
+      ["3", "04", "内部资源"],
+      ["4", "05", "数据落点"],
+    ],
+  );
+  assert.ok(markup.indexOf('<g class="layer-guides"') < markup.indexOf('<g class="roads">'));
+  assert.equal((markup.match(/class="landmark [^>]+data-layer="\d+"/g) ?? []).length, catalogue.services.length);
+});
+
+test("uses deterministic generic stage labels when the graph has another layer count", () => {
+  const threeStageCatalogue = {
+    services: [
+      { id: "entry", name: "Entry", landmark: "ingress" },
+      { id: "middle", name: "Middle", landmark: "application" },
+      { id: "sink", name: "Sink", landmark: "database" },
+    ],
+    relations: [
+      { source: "entry", target: "middle", type: "route" },
+      { source: "middle", target: "sink", type: "data" },
+    ],
+  };
+
+  const markup = renderAtlas(threeStageCatalogue);
+
+  assert.match(markup, />01<\/text><text class="layer-label"[^>]*>流量入口<\/text>/);
+  assert.match(markup, />02<\/text><text class="layer-label"[^>]*>调用阶段 2<\/text>/);
+  assert.match(markup, />03<\/text><text class="layer-label"[^>]*>数据落点<\/text>/);
+});
+
 test("renders safe links and non-link infrastructure landmarks", () => {
   const markup = renderAtlas(catalogue);
 

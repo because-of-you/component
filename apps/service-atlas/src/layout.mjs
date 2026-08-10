@@ -120,7 +120,7 @@ export function assignGraphPositions(services, relations) {
   for (const [layer, ids] of servicesByLayer) {
     const x = maxLayer === 0 ? 50 : 10 + (80 * layer) / maxLayer;
     ids.forEach((id, index) => {
-      const y = ids.length === 1 ? 50 : 16 + (68 * index) / (ids.length - 1);
+      const y = ids.length === 1 ? 50 : 24 + (52 * index) / (ids.length - 1);
       positions.set(id, { x: roundCoordinate(x), y: roundCoordinate(y) });
     });
   }

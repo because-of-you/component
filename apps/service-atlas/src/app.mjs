@@ -23,9 +23,9 @@ function clearFocus() {
   if (!overlay) return;
 
   overlay
-    .querySelectorAll(".is-direct, .is-indirect, .is-muted, .is-selected")
+    .querySelectorAll(".is-active, .is-direct, .is-indirect, .is-muted, .is-selected")
     .forEach((node) => {
-      node.classList.remove("is-direct", "is-indirect", "is-muted", "is-selected");
+      node.classList.remove("is-active", "is-direct", "is-indirect", "is-muted", "is-selected");
     });
   selectedId = null;
 }
@@ -42,13 +42,21 @@ function applyFocus(serviceId) {
 
   clearFocus();
   selectedId = serviceId;
+  const activeLayers = new Set();
 
   overlay.querySelectorAll("[data-service-id]").forEach((landmark) => {
     const id = landmark.dataset.serviceId;
+    const isRelated = id === serviceId || state.directNodes.has(id) || state.indirectNodes.has(id);
     if (id === serviceId) landmark.classList.add("is-selected", "is-direct");
     else if (state.directNodes.has(id)) landmark.classList.add("is-direct");
     else if (state.indirectNodes.has(id)) landmark.classList.add("is-indirect");
     else landmark.classList.add("is-muted");
+    if (isRelated && landmark.dataset.layer != null) activeLayers.add(landmark.dataset.layer);
+  });
+
+  overlay.querySelectorAll(".layer-guide[data-layer]").forEach((guide) => {
+    if (activeLayers.has(guide.dataset.layer)) guide.classList.add("is-active");
+    else guide.classList.add("is-muted");
   });
 
   overlay

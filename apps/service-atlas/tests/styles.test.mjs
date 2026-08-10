@@ -118,3 +118,30 @@ test("does not apply coarse first-tap handling to keyboard link activation", asy
     "keyboard activation must bypass preventDefault",
   );
 });
+
+test("styles restrained runtime stage guides and focus integration", async () => {
+  const [styles, source] = await Promise.all([
+    readFile(stylesUrl, "utf8"),
+    readFile(appUrl, "utf8"),
+  ]);
+
+  for (const selector of [
+    ".layer-guides",
+    ".layer-guide",
+    ".layer-band",
+    ".layer-axis",
+    ".layer-index",
+    ".layer-label",
+    ".layer-guide.is-active",
+    ".layer-guide.is-muted",
+  ]) {
+    assert.match(styles, new RegExp(`${selector.replaceAll(".", "\\.")}\\s*[{,]`));
+  }
+
+  const guideRules = styles.match(/\.layer-[^{]+\{[^}]*\}/gs)?.join("\n") ?? "";
+  assert.doesNotMatch(guideRules, /filter\s*:|mask(?:-image)?\s*:|animation\s*:/);
+  assert.match(source, /\.layer-guide\[data-layer\]/);
+  assert.match(source, /activeLayers/);
+  assert.match(source, /guide\.classList\.add\("is-active"\)/);
+  assert.match(source, /guide\.classList\.add\("is-muted"\)/);
+});

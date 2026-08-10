@@ -54,10 +54,19 @@ test("keeps automatically assigned nodes in bounds with unique positions", () =>
 
   for (const position of positions.values()) {
     assert.ok(position.x >= 10 && position.x <= 90);
-    assert.ok(position.y >= 16 && position.y <= 84);
+    assert.ok(position.y >= 24 && position.y <= 76);
     keys.add(`${position.x},${position.y}`);
   }
   assert.equal(keys.size, graphServices.length);
+});
+
+test("reserves top and bottom space for flow stage headings", () => {
+  const positions = assignGraphPositions(graphServices, graphRelations);
+
+  assert.deepEqual(
+    [positions.get("claude").y, positions.get("rust").y, positions.get("rabbit").y],
+    [24, 50, 76],
+  );
 });
 
 test("places disconnected and cyclic services without throwing", () => {

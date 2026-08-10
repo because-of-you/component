@@ -86,6 +86,59 @@ body {
 
 .atlas-overlay { overflow: visible; }
 
+.layer-guides {
+  pointer-events: none;
+}
+
+.layer-guide {
+  opacity: 0.62;
+  transition: opacity 180ms ease;
+}
+
+.layer-band {
+  fill: rgba(100, 135, 163, 0.025);
+  stroke: rgba(156, 190, 216, 0.08);
+  stroke-width: 0.12;
+}
+
+.layer-axis {
+  stroke: rgba(162, 194, 218, 0.11);
+  stroke-width: 0.12;
+  stroke-dasharray: 0.45 1.4;
+}
+
+.layer-index {
+  fill: rgba(139, 176, 204, 0.5);
+  font-size: 1.35px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.layer-label {
+  fill: rgba(213, 227, 237, 0.68);
+  font-family: "Songti SC", "Noto Serif CJK SC", serif;
+  font-size: 1.72px;
+  font-weight: 560;
+  letter-spacing: 0.12em;
+}
+
+.layer-guide.is-active {
+  opacity: 1;
+}
+
+.layer-guide.is-active .layer-band {
+  fill: rgba(79, 160, 211, 0.055);
+  stroke: rgba(112, 191, 239, 0.2);
+}
+
+.layer-guide.is-active .layer-axis {
+  stroke: rgba(127, 203, 247, 0.32);
+}
+
+.layer-guide.is-muted {
+  opacity: 0.16;
+}
+
 .roads,
 .traffic-motes,
 .road-group,
@@ -268,6 +321,8 @@ body {
   .landmark-label { font-size: 2.5px; }
   .landmark--hub .landmark-label { font-size: 2.76px; }
   .landmark .landmark-label--compact { font-size: 2px; }
+  .layer-index { font-size: 1.7px; }
+  .layer-label { font-size: 2.05px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -276,6 +331,7 @@ body {
   .landmark-aura,
   .landmark-bubble,
   .landmark-ring,
+  .layer-guide,
   .road-group,
   .traffic-group { transition: none; }
 }
