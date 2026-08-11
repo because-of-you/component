@@ -55,6 +55,9 @@ traefik:
       entryPoints:
         - websecure
         - web
+      middlewares:
+        - name: authelia-forwardauth
+          namespace: infra
 
   providers:
     kubernetesCRD:
