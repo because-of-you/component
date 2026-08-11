@@ -16,6 +16,10 @@ authelia:
           policy: one_factor
           subject:
             - group:lldap_admin
+        - domain: traefik.acitrus.cn
+          policy: one_factor
+          subject:
+            - group:lldap_admin
 
     authentication_backend:
       ldap:
