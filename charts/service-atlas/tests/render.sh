@@ -15,6 +15,8 @@ grep -Fq 'kind: ConfigMap' "$rendered"
 grep -Fq 'name: service-atlas-config' "$rendered"
 grep -Fq '"id": "traefik"' "$rendered"
 grep -Fq '"id": "redis"' "$rendered"
+grep -Fq '"id": "dbx"' "$rendered"
+grep -Fq '"href": "https://db.acitrus.cn"' "$rendered"
 if grep -Fiq 'rabbitmq' "$rendered"; then
   echo 'RabbitMQ must not appear in the Service Atlas catalogue' >&2
   exit 1

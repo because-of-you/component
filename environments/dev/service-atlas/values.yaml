@@ -36,6 +36,12 @@ catalogue:
       landmark: application
       tier: application
       color: "#a782f4"
+    - id: dbx
+      name: DBX
+      href: https://db.acitrus.cn
+      landmark: application
+      tier: application
+      color: "#5bd6c0"
     - id: rustfs
       name: RustFS
       href: https://s3.acitrus.cn
@@ -61,9 +67,11 @@ catalogue:
   relations:
     - { source: traefik, target: authelia, type: route }
     - { source: traefik, target: claude-code-hub, type: route }
+    - { source: traefik, target: dbx, type: route }
     - { source: traefik, target: rustfs, type: route }
     - { source: traefik, target: lldap, type: route }
     - { source: claude-code-hub, target: authelia, type: authentication }
+    - { source: dbx, target: authelia, type: authentication }
     - { source: rustfs, target: authelia, type: authentication }
     - { source: authelia, target: lldap, type: authentication }
     - { source: claude-code-hub, target: postgresql, type: data }

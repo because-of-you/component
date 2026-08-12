@@ -17,11 +17,15 @@ test("builds a forward login path followed by the exact reverse path", () => {
     return: true,
   };
 
+  const relationIndex = (source, target) => catalogue.relations.findIndex((relation) => (
+    relation.source === source && relation.target === target
+  ));
+
   assert.deepEqual(buildFlowSequence(catalogue, flow), [
-    { relationIndex: 0, from: "traefik", to: "authelia", roadForward: true, phase: "forward" },
-    { relationIndex: 6, from: "authelia", to: "lldap", roadForward: true, phase: "forward" },
-    { relationIndex: 6, from: "lldap", to: "authelia", roadForward: false, phase: "return" },
-    { relationIndex: 0, from: "authelia", to: "traefik", roadForward: false, phase: "return" },
+    { relationIndex: relationIndex("traefik", "authelia"), from: "traefik", to: "authelia", roadForward: true, phase: "forward" },
+    { relationIndex: relationIndex("authelia", "lldap"), from: "authelia", to: "lldap", roadForward: true, phase: "forward" },
+    { relationIndex: relationIndex("authelia", "lldap"), from: "lldap", to: "authelia", roadForward: false, phase: "return" },
+    { relationIndex: relationIndex("traefik", "authelia"), from: "authelia", to: "traefik", roadForward: false, phase: "return" },
   ]);
 });
 

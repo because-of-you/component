@@ -33,5 +33,20 @@ test("production entry loads JSON instead of importing the test fixture", async 
   assert.doesNotMatch(appSource, /from\s+["'].\/catalogue\.mjs["']/);
   assert.match(appSource, /loadCatalogue\(/);
   assert.equal(config.flows.length, 2);
+  assert.ok(config.services.some((service) => (
+    service.id === "dbx"
+    && service.href === "https://db.acitrus.cn"
+    && service.tier === "application"
+  )));
+  assert.ok(config.relations.some((relation) => (
+    relation.source === "traefik"
+    && relation.target === "dbx"
+    && relation.type === "route"
+  )));
+  assert.ok(config.relations.some((relation) => (
+    relation.source === "dbx"
+    && relation.target === "authelia"
+    && relation.type === "authentication"
+  )));
   assert.equal(new Set(config.services.map((service) => service.color)).size, config.services.length);
 });

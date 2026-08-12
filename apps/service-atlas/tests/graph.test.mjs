@@ -6,6 +6,10 @@ import { getFocusState } from "../src/graph.mjs";
 
 test("focuses Claude Code Hub on direct services and one dependency layer", () => {
   const state = getFocusState(catalogue, "claude-code-hub");
+  const relationKey = (index) => {
+    const relation = catalogue.relations[index];
+    return `${relation.source}->${relation.target}:${relation.type}`;
+  };
 
   assert.deepEqual([...state.directNodes].sort(), [
     "authelia",
@@ -15,11 +19,9 @@ test("focuses Claude Code Hub on direct services and one dependency layer", () =
     "traefik",
   ]);
   assert.deepEqual([...state.indirectNodes], ["lldap"]);
-  assert.equal(state.activeRelations.has(2), false);
-  assert.equal(state.activeRelations.has(4), true);
-  assert.equal(state.activeRelations.has(6), true);
-  assert.equal(state.directRelations.has(4), true);
-  assert.equal(state.indirectRelations.has(6), true);
+  assert.equal([...state.activeRelations].map(relationKey).includes("traefik->dbx:route"), false);
+  assert.equal([...state.directRelations].map(relationKey).includes("claude-code-hub->authelia:authentication"), true);
+  assert.equal([...state.indirectRelations].map(relationKey).includes("authelia->lldap:authentication"), true);
 });
 
 test("does not traverse route siblings through Traefik", () => {
@@ -28,6 +30,7 @@ test("does not traverse route siblings through Traefik", () => {
   assert.deepEqual([...state.directNodes].sort(), [
     "authelia",
     "claude-code-hub",
+    "dbx",
     "lldap",
     "rustfs",
     "traefik",

@@ -31,8 +31,8 @@ test("places every service in a tier on exactly the same x coordinate", async ()
       .map((service) => result.nodes.get(service.id).x);
     assert.equal(new Set(xs).size, 1, `${id} must occupy one strict column`);
   });
-  assert.equal(result.nodes.size, 7);
-  assert.equal(result.paths.length, 12);
+  assert.equal(result.nodes.size, catalogue.services.length);
+  assert.equal(result.paths.length, catalogue.relations.length);
 });
 
 test("spaces one through four services into fixed vertical tier slots", async () => {

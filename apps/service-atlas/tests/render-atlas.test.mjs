@@ -12,8 +12,7 @@ test("renders one road and landmark per catalogue record", async () => {
   assert.match(markup, /viewBox="0 0 160 100" preserveAspectRatio="xMidYMid meet"/);
   assert.match(markup, /data-service-id="claude-code-hub"/);
   assert.match(markup, /<tspan[^>]*>Claude<\/tspan><tspan[^>]*>Code Hub<\/tspan>/);
-  assert.equal(catalogue.services.length, 7);
-  assert.equal(catalogue.relations.length, 12);
+  assert.match(markup, /data-service-id="dbx"[^>]+href="https:\/\/db\.acitrus\.cn"/);
   assert.doesNotMatch(markup, /rabbitmq/i);
 });
 
@@ -103,7 +102,7 @@ test("fans Traefik roads across distinct boundary ports", async () => {
     /<g class="road-group"[^>]+data-source="traefik"[^>]*><path[^>]+d="M ([\d.]+) ([\d.]+)/g,
   )].map((match) => `${match[1]},${match[2]}`);
 
-  assert.equal(starts.length, 4);
+  assert.equal(starts.length, catalogue.relations.filter(({ source }) => source === "traefik").length);
   assert.equal(new Set(starts).size, starts.length);
   assert.ok(starts.every((start) => !start.startsWith("16,")), "ports must not start at center x");
 });
@@ -115,7 +114,7 @@ test("allocates distinct incoming ports for Authelia", async () => {
   )].map((match) => match[1]);
   const endpoints = paths.map((path) => path.match(/, ([\d.]+) ([\d.]+)$/)?.slice(1).join(","));
 
-  assert.equal(paths.length, 3);
+  assert.equal(paths.length, catalogue.relations.filter(({ target }) => target === "authelia").length);
   assert.equal(new Set(endpoints).size, endpoints.length);
   assert.ok(endpoints.every(Boolean));
 });
@@ -168,7 +167,7 @@ test("exposes interactive landmarks through the root SVG accessibility role", as
 test("renders Neo4j-inspired graph bubbles with degree hierarchy and role tones", async () => {
   const markup = await renderAtlas(catalogue);
 
-  assert.match(markup, /class="landmark landmark--link landmark--major landmark--tone-ingress"[^>]+data-service-id="traefik"/);
+  assert.match(markup, /class="landmark landmark--link landmark--hub landmark--tone-ingress"[^>]+data-service-id="traefik"/);
   assert.match(markup, /class="landmark landmark--link landmark--hub landmark--tone-auth"[^>]+data-service-id="authelia"/);
   assert.match(markup, /landmark--tone-ingress/);
   assert.match(markup, /landmark--tone-auth/);
@@ -197,7 +196,7 @@ test("degrades unsafe service links to static landmarks", async (t) => {
 
   assert.match(
     markup,
-    /<g class="landmark landmark--static landmark--major landmark--tone-ingress" data-service-id="traefik" tabindex="0" role="button"/,
+    /<g class="landmark landmark--static landmark--hub landmark--tone-ingress" data-service-id="traefik" tabindex="0" role="button"/,
   );
   assert.doesNotMatch(markup, /javascript:/);
 });
