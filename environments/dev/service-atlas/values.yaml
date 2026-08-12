@@ -41,7 +41,7 @@ catalogue:
       href: https://db.acitrus.cn
       landmark: application
       tier: application
-      color: "#5bd6c0"
+      color: "#b8d957"
     - id: rustfs
       name: RustFS
       href: https://s3.acitrus.cn
