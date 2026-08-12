@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "replicaCount",
+    "strategy",
+    "image",
+    "service",
+    "ingressRoute",
+    "persistence",
+    "networkPolicy",
+    "config",
+    "probes"
+  ],
+  "properties": {
+    "replicaCount": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1
+    },
+    "revisionHistoryLimit": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "terminationGracePeriodSeconds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "strategy": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["Recreate"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "image": {
+      "type": "object",
+      "required": ["repository", "tag", "pullPolicy"],
+      "properties": {
+        "repository": {"type": "string", "minLength": 1},
+        "tag": {"type": "string", "minLength": 1},
+        "pullPolicy": {
+          "type": "string",
+          "enum": ["Always", "IfNotPresent", "Never"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "service": {
+      "type": "object",
+      "required": ["type", "port", "targetPort", "annotations"],
+      "properties": {
+        "type": {"type": "string", "enum": ["ClusterIP"]},
+        "port": {"type": "integer", "minimum": 1, "maximum": 65535},
+        "targetPort": {"type": "integer", "minimum": 1, "maximum": 65535},
+        "annotations": {"type": "object"}
+      },
+      "additionalProperties": false
+    },
+    "ingressRoute": {
+      "type": "object",
+      "required": ["enabled", "host", "entryPoints", "middlewares", "tls"],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "host": {"type": "string"},
+        "entryPoints": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1}
+        },
+        "middlewares": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "properties": {
+              "name": {"type": "string", "minLength": 1},
+              "namespace": {"type": "string", "minLength": 1}
+            },
+            "additionalProperties": false
+          }
+        },
+        "tls": {"type": "object"}
+      },
+      "additionalProperties": false
+    },
+    "persistence": {
+      "type": "object",
+      "required": ["enabled", "existingClaim", "storageClass", "accessModes", "size", "annotations"],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "existingClaim": {"type": "string"},
+        "storageClass": {"type": "string"},
+        "accessModes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "size": {"type": "string", "minLength": 1},
+        "annotations": {"type": "object"}
+      },
+      "additionalProperties": false
+    },
+    "networkPolicy": {
+      "type": "object",
+      "required": ["enabled", "ingressNamespace"],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "ingressNamespace": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "config": {
+      "type": "object",
+      "required": ["disablePassword", "dataDir", "publicBasePath", "timezone"],
+      "properties": {
+        "disablePassword": {"type": "boolean"},
+        "dataDir": {"type": "string", "minLength": 1},
+        "publicBasePath": {"type": "string"},
+        "timezone": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "extraEnv": {"type": "array"},
+    "resources": {"type": "object"},
+    "probes": {
+      "type": "object",
+      "required": ["path", "startup", "readiness", "liveness"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "startup": {"type": "object"},
+        "readiness": {"type": "object"},
+        "liveness": {"type": "object"}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "ingressRoute": {
+            "properties": {"enabled": {"const": true}}
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "ingressRoute": {
+            "properties": {
+              "host": {"minLength": 1},
+              "entryPoints": {"minItems": 1},
+              "middlewares": {"minItems": 1}
+            }
+          }
+        }
+      }
+    }
+  ]
+}

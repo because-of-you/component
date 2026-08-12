@@ -1,0 +1,33 @@
+image:
+  repository: t8y2/dbx
+  pullPolicy: IfNotPresent
+
+config:
+  disablePassword: true
+
+ingressRoute:
+  enabled: true
+  host: db.acitrus.cn
+  entryPoints:
+    - websecure
+  middlewares:
+    - name: authelia-forwardauth
+      namespace: infra
+  tls:
+    certResolver: leresolver
+
+persistence:
+  enabled: true
+  size: 5Gi
+
+networkPolicy:
+  enabled: true
+  ingressNamespace: traefik
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi

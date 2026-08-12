@@ -107,6 +107,12 @@ helm upgrade --install rustfs oci://ghcr.io/because-of-you/charts/rustfs \
   --create-namespace \
   -f values.yaml
 
+helm upgrade --install dbx oci://ghcr.io/because-of-you/charts/dbx \
+  --version 0.0.0-dev \
+  --namespace app \
+  --create-namespace \
+  -f values.yaml
+
 helm upgrade --install traefik oci://ghcr.io/because-of-you/charts/traefik \
   --version 0.0.0-dev \
   --namespace traefik \
@@ -117,7 +123,7 @@ helm upgrade --install traefik oci://ghcr.io/because-of-you/charts/traefik \
 
 ```text
 infra: redis, postgresql, rabbitmq, lldap, authelia, rustfs
-app: claude-code-hub, test-charts
+app: claude-code-hub, dbx, test-charts
 traefik: traefik
 ```
 
@@ -161,6 +167,13 @@ OIDC、Secrets、验证、PVC 保留和清理说明见：
 charts/rustfs/README.md
 ```
 
+DBX 使用仓库自有 Chart 部署官方 Web 镜像，通过 `db.acitrus.cn` 暴露，并由现有 Authelia ForwardAuth
+保护。应用数据保存在 PVC；dev 环境关闭 DBX 自身密码，仅允许 `lldap_admin` 组访问。配置见：
+
+```text
+charts/dbx/README.md
+```
+
 ## 本地开发
 
 本仓库使用 Helmfile 管理本地环境渲染和部署。
@@ -187,6 +200,12 @@ helmfile -e dev template --selector name=rustfs --skip-deps
 
 ```bash
 helmfile -e dev template --selector name=lldap --skip-deps
+```
+
+渲染 dev 环境的 DBX：
+
+```bash
+helmfile -e dev template --selector name=dbx --skip-deps
 ```
 
 部署到当前 kubeconfig 指向的集群：
@@ -260,7 +279,7 @@ PR 合并前会执行：
 
 ## dev 集群部署
 
-Push 到 `dev` 分支并修改 Redis、PostgreSQL、LLDAP、Authelia、Claude Code Hub、RustFS 或 Traefik
+Push 到 `dev` 分支并修改 Redis、PostgreSQL、LLDAP、Authelia、Claude Code Hub、RustFS、DBX 或 Traefik
 的 Chart/values 后，
 [deploy-dev.yaml](./.github/workflows/deploy-dev.yaml) 会检测发生变化的组件，并为每个组件创建独立 Matrix Job。
 每个 Job 通过 Tailscale 连接 K3s，并按组件名执行 Helmfile。例如只修改 Redis 时只运行：

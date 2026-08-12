@@ -11,6 +11,7 @@ on:
       - 'charts/authelia/**'
       - 'charts/rustfs/**'
       - 'charts/claude-code-hub/**'
+      - 'charts/dbx/**'
       - 'charts/traefik/**'
       - 'environments/dev/redis/**'
       - 'environments/dev/postgresql/**'
@@ -18,6 +19,7 @@ on:
       - 'environments/dev/authelia/**'
       - 'environments/dev/rustfs/**'
       - 'environments/dev/claude-code-hub/**'
+      - 'environments/dev/dbx/**'
       - 'environments/dev/traefik/**'
       - 'environments/dev/values.yaml'
       - 'helmfile.yaml'
@@ -35,6 +37,7 @@ on:
           - authelia
           - rustfs
           - claude-code-hub
+          - dbx
           - traefik
 
 jobs:
@@ -87,6 +90,11 @@ jobs:
               - 'charts/claude-code-hub/values.schema.json'
               - 'charts/claude-code-hub/templates/**'
               - 'environments/dev/claude-code-hub/**'
+              - 'environments/dev/values.yaml'
+              - 'helmfile.yaml'
+            dbx:
+              - 'charts/dbx/**'
+              - 'environments/dev/dbx/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
             traefik:
@@ -155,7 +163,7 @@ jobs:
         run: kubectl create namespace infra --dry-run=client -o yaml | bash .github/scripts/kubectl-apply-retry.sh
 
       - name: Ensure app namespace
-        if: matrix.component == 'claude-code-hub'
+        if: matrix.component == 'claude-code-hub' || matrix.component == 'dbx'
         run: kubectl create namespace app --dry-run=client -o yaml | bash .github/scripts/kubectl-apply-retry.sh
 
       - name: Ensure traefik namespace
