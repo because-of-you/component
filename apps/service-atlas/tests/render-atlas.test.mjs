@@ -183,6 +183,9 @@ test("uses configured node colors and reserves one dynamic flow overlay", async 
   const markup = await renderAtlas(catalogue);
 
   assert.match(markup, /data-service-id="traefik"[^>]+style="--node-accent:#3478f6"/);
+  assert.match(markup, /data-source="claude-code-hub" data-target="postgresql"><path[^>]+style="--road-color:#42bec7"/);
+  assert.match(markup, /data-source="traefik" data-target="dbx"><path[^>]+style="--road-color:#b8d957"/);
+  assert.match(markup, /data-source="dbx" data-target="authelia"><path[^>]+style="--road-color:#e7b547"/);
   assert.match(markup, /<g class="flow-overlay" aria-hidden="true"><\/g>/);
   assert.doesNotMatch(markup, /<animateMotion|class="traffic-group"|class="road-mote /);
 });

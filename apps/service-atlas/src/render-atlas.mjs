@@ -21,10 +21,17 @@ export async function renderAtlas(catalogue) {
   const nodes = new Map(prepared.services.map((service) => [service.id, {
     ...layout.nodes.get(service.id),
   }]));
+  const servicesById = new Map(prepared.services.map((service) => [service.id, service]));
   const layers = buildTierBands(prepared.services, nodes, layout.tierAnchors);
   const roads = prepared.relations
     .map((relation, index) =>
-      renderRoad(relation, index, getRoadPresentation(relation.type), layout.paths[index]))
+      renderRoad(
+        relation,
+        index,
+        getRoadPresentation(relation.type),
+        layout.paths[index],
+        servicesById.get(relation.target)?.color,
+      ))
     .join("");
   const landmarks = prepared.services
     .map((service) => {
@@ -48,9 +55,10 @@ function renderLayerGuides(layers) {
   return `<g class="layer-guides" aria-hidden="true">${guides}</g>`;
 }
 
-function renderRoad(relation, index, presentation, path) {
+function renderRoad(relation, index, presentation, path, targetColor) {
   const pathId = `road-${index}`;
-  return `<g class="road-group" data-relation-index="${index}" data-source="${escapeMarkup(relation.source)}" data-target="${escapeMarkup(relation.target)}"><path id="${pathId}" class="road ${presentation.className}" d="${path}"/></g>`;
+  const colorStyle = targetColor ? ` style="--road-color:${escapeMarkup(targetColor)}"` : "";
+  return `<g class="road-group" data-relation-index="${index}" data-source="${escapeMarkup(relation.source)}" data-target="${escapeMarkup(relation.target)}"><path id="${pathId}" class="road ${presentation.className}" d="${path}"${colorStyle}/></g>`;
 }
 
 function renderLandmark(service, position, degree = 0, layer = 0) {

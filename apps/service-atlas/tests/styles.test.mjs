@@ -23,8 +23,12 @@ test("supports mobile panning and reduced motion", async () => {
 test("styles every road class emitted by the atlas renderer", async () => {
   const styles = await readFile(stylesUrl, "utf8");
 
+  assert.match(styles, /\.road\s*\{[^}]*stroke:\s*var\(--road-color/s);
+
   for (const type of ["route", "authentication", "data", "cache", "message"]) {
-    assert.match(styles, new RegExp(`\\.road\\.road--${type}\\s*\\{`));
+    const rule = styles.match(new RegExp(`\\.road\\.road--${type}\\s*\\{([^}]*)\\}`, "s"));
+    assert.ok(rule, `expected ${type} road rule`);
+    assert.doesNotMatch(rule[1], /stroke\s*:/);
   }
 
   assert.doesNotMatch(styles, /\.relation-(?:route|authentication|data|cache|message)\b/);

@@ -153,33 +153,29 @@ body {
 .road {
   pointer-events: none;
   fill: none;
+  stroke: var(--road-color, #668da8);
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-dasharray: 0.8 0.8;
 }
 
 .road.road--route {
-  stroke: rgba(52, 120, 246, 0.78);
   stroke-width: 0.34;
 }
 
 .road.road--authentication {
-  stroke: rgba(239, 178, 69, 0.8);
   stroke-width: 0.24;
 }
 
 .road.road--data {
-  stroke: rgba(69, 197, 143, 0.72);
   stroke-width: 0.27;
 }
 
 .road.road--cache {
-  stroke: rgba(240, 110, 162, 0.74);
   stroke-width: 0.18;
 }
 
 .road.road--message {
-  stroke: rgba(154, 123, 238, 0.78);
   stroke-width: 0.22;
 }
 
