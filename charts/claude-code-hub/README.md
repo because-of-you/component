@@ -1,11 +1,11 @@
 # Claude Code Hub
 
 该 Chart 参考 Claude Code Hub 官方 Kubernetes 清单维护，但只部署应用本体，复用集群中已有的
-PostgreSQL 和 Redis。开发阶段固定使用 fork 的 `codex/authelia-oidc` 分支镜像标签，并从深圳
-阿里云 ACR 拉取：
+PostgreSQL 和 Redis。当前发布固定使用 fork 的不可变提交镜像标签
+`codex-authelia-oidc-65de3fe`，并从深圳阿里云 ACR 拉取：
 
 ```text
-registry.cn-shenzhen.aliyuncs.com/gravitation/claude-code-hub:codex-authelia-oidc
+registry.cn-shenzhen.aliyuncs.com/gravitation/claude-code-hub:codex-authelia-oidc-65de3fe
 ```
 
 源码工作流只构建 GHCR 镜像。CCH 的同步关系声明在 `images/claude-code-hub/images.yaml`；该文件在
@@ -14,8 +14,8 @@ registry.cn-shenzhen.aliyuncs.com/gravitation/claude-code-hub:codex-authelia-oid
 `Deploy Dev` 只部署 ACR 中已有的镜像，不执行镜像同步。
 
 国内 K3s 从公开 ACR 仓库匿名拉取。新增其他镜像时，在对应的 `images/<component>/images.yaml`
-追加声明即可，不需要复制登录、重试和清理逻辑。dev 对固定可变标签使用 `imagePullPolicy: Always`，
-保证 Pod 重建时检查最新镜像。
+追加声明即可，不需要复制登录、重试和清理逻辑。每次发布都会更新不可变提交标签；dev 保留
+`imagePullPolicy: Always`，确保 Pod 重建时拉取并校验指定镜像。
 
 ## 部署内容
 
