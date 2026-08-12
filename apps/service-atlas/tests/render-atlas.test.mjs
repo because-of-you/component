@@ -182,7 +182,7 @@ test("renders Neo4j-inspired graph bubbles with degree hierarchy and role tones"
 test("uses configured node colors and reserves one dynamic flow overlay", async () => {
   const markup = await renderAtlas(catalogue);
 
-  assert.match(markup, /data-service-id="traefik"[^>]+style="--node-accent:#49aff4"/);
+  assert.match(markup, /data-service-id="traefik"[^>]+style="--node-accent:#3478f6"/);
   assert.match(markup, /<g class="flow-overlay" aria-hidden="true"><\/g>/);
   assert.doesNotMatch(markup, /<animateMotion|class="traffic-group"|class="road-mote /);
 });

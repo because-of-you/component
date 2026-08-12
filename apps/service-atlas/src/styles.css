@@ -159,7 +159,7 @@ body {
 }
 
 .road.road--route {
-  stroke: rgba(75, 174, 235, 0.78);
+  stroke: rgba(52, 120, 246, 0.78);
   stroke-width: 0.34;
 }
 
@@ -189,7 +189,7 @@ body {
   vector-effect: non-scaling-stroke;
 }
 
-.road-mote.road--route { fill: #72c9ff; color: #72c9ff; }
+.road-mote.road--route { fill: #3478f6; color: #3478f6; }
 .road-mote.road--authentication { fill: #ffd170; color: #ffd170; }
 .road-mote.road--data { fill: #77e6ac; color: #77e6ac; }
 .road-mote.road--cache { fill: #ff9bc8; color: #ff9bc8; }
@@ -267,7 +267,7 @@ body {
 .landmark--link { cursor: pointer; }
 .landmark--static { cursor: default; }
 
-.landmark--tone-ingress { --node-accent: #49aff4; }
+.landmark--tone-ingress { --node-accent: #3478f6; }
 .landmark--tone-auth { --node-accent: #f1b94f; }
 .landmark--tone-application { --node-accent: #a782f4; }
 .landmark--tone-data { --node-accent: #4ed294; }

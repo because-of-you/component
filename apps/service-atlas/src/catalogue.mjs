@@ -1,6 +1,6 @@
 export const catalogue = {
   services: [
-    { id: "traefik", name: "Traefik", href: "https://traefik.acitrus.cn", landmark: "ingress", tier: "ingress", color: "#49aff4" },
+    { id: "traefik", name: "Traefik", href: "https://traefik.acitrus.cn", landmark: "ingress", tier: "ingress", color: "#3478f6" },
     { id: "authelia", name: "Authelia", href: "https://auth.acitrus.cn", landmark: "identity", tier: "identity", color: "#e7b547" },
     { id: "claude-code-hub", name: "Claude Code Hub", href: "https://inner.coding.acitrus.cn", landmark: "application", tier: "application", color: "#a782f4" },
     { id: "dbx", name: "DBX", href: "https://db.acitrus.cn", landmark: "application", tier: "application", color: "#b8d957" },

@@ -5,7 +5,7 @@ import {
 } from "./flow.mjs";
 
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
-const FALLBACK_COLOR = "#72c9ff";
+const FALLBACK_COLOR = "#3478f6";
 const ENDPOINT_DWELL = 240;
 const MIN_TRAVEL_DURATION = 2600;
 const MAX_TRAVEL_DURATION = 6400;

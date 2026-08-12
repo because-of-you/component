@@ -23,7 +23,7 @@ catalogue:
       href: https://traefik.acitrus.cn
       landmark: ingress
       tier: ingress
-      color: "#49aff4"
+      color: "#3478f6"
     - id: authelia
       name: Authelia
       href: https://auth.acitrus.cn
