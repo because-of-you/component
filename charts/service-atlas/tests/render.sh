@@ -60,4 +60,7 @@ grep -Fq '.git' "$dockerignore"
 grep -Fq 'node_modules' "$dockerignore"
 grep -Fq 'apps/service-atlas/dist' "$dockerignore"
 
+nginx_config="$repo_root/apps/service-atlas/deploy/nginx.conf"
+grep -Fq 'location ~* "^/assets/.+-[a-z0-9_-]{8,}\.(?:css|js|mjs|json|webp|png|jpe?g|gif|svg|ico|woff2?)$" {' "$nginx_config"
+
 echo 'service-atlas render and workflow checks: OK'
