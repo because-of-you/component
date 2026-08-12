@@ -178,6 +178,8 @@ jobs:
           context: .
           file: ./apps/service-atlas/Dockerfile
           push: true
+          provenance: false
+          sbom: false
           tags: |
             ghcr.io/${{ github.repository_owner }}/service-atlas:dev-${{ github.sha }}
             ${{ vars.ALIYUN_ACR_REGISTRY }}/gravitation/service-atlas:dev-${{ github.sha }}
