@@ -1,4 +1,7 @@
-replicaCount: 2
+replicaCount: 1
+
+podDisruptionBudget:
+  enabled: false
 
 image:
   repository: registry.cn-shenzhen.aliyuncs.com/gravitation/service-atlas

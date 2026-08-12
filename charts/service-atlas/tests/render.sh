@@ -20,7 +20,11 @@ if grep -Fiq 'rabbitmq' "$rendered"; then
   exit 1
 fi
 
-grep -Fq 'replicas: 2' "$rendered"
+grep -Fq 'replicas: 1' "$rendered"
+if grep -Fq 'kind: PodDisruptionBudget' "$rendered"; then
+  echo 'single-replica dev deployment must not create a PodDisruptionBudget' >&2
+  exit 1
+fi
 grep -Fq 'image: "registry.cn-shenzhen.aliyuncs.com/gravitation/service-atlas:dev-test-sha"' "$rendered"
 grep -Fq 'readOnlyRootFilesystem: true' "$rendered"
 grep -Fq 'runAsUser: 101' "$rendered"
