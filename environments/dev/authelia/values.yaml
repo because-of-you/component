@@ -12,7 +12,15 @@ authelia:
     access_control:
       default_policy: deny
       rules:
+        - domain: db.acitrus.cn
+          policy: one_factor
+          subject:
+            - group:lldap_admin
         - domain: ldap.acitrus.cn
+          policy: one_factor
+          subject:
+            - group:lldap_admin
+        - domain: traefik.acitrus.cn
           policy: one_factor
           subject:
             - group:lldap_admin

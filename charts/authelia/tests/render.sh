@@ -34,6 +34,7 @@ if grep -Eq 'opendirectory\.net|start_tls: true|memberUid|posixGroup' "$rendered
 fi
 grep -Fq "default_policy: 'deny'" "$rendered"
 grep -Fq -- "- 'ldap.acitrus.cn'" "$rendered"
+grep -Fq -- "- 'traefik.acitrus.cn'" "$rendered"
 grep -Fq 'policy: one_factor' "$rendered"
 grep -Fq -- "- ['group:lldap_admin']" "$rendered"
 grep -A1 '^    totp:' "$rendered" | grep -Fq 'disable: true'
