@@ -123,7 +123,7 @@ helm upgrade --install traefik oci://ghcr.io/because-of-you/charts/traefik \
 
 ```text
 infra: redis, postgresql, rabbitmq, lldap, authelia, rustfs
-app: claude-code-hub, dbx, test-charts
+app: claude-code-hub, dbx, service-atlas, test-charts
 traefik: traefik
 ```
 
@@ -174,6 +174,14 @@ DBX 使用仓库自有 Chart 部署官方 Web 镜像，通过 `db.acitrus.cn` �
 charts/dbx/README.md
 ```
 
+Service Atlas 是服务导航与运行时调用知识图谱，通过 `https://atlas.acitrus.cn` 提供。前端镜像、
+运行时目录和 Helm release 已接入 dev 分支自动部署；配置与运维说明见：
+
+```text
+charts/service-atlas/README.md
+apps/service-atlas/deploy/DEPLOYMENT.md
+```
+
 ## 本地开发
 
 本仓库使用 Helmfile 管理本地环境渲染和部署。
@@ -206,6 +214,12 @@ helmfile -e dev template --selector name=lldap --skip-deps
 
 ```bash
 helmfile -e dev template --selector name=dbx --skip-deps
+```
+
+渲染 dev 环境的 Service Atlas：
+
+```bash
+helmfile -e dev template --selector name=service-atlas --skip-deps
 ```
 
 部署到当前 kubeconfig 指向的集群：
@@ -279,7 +293,7 @@ PR 合并前会执行：
 
 ## dev 集群部署
 
-Push 到 `dev` 分支并修改 Redis、PostgreSQL、LLDAP、Authelia、Claude Code Hub、RustFS、DBX 或 Traefik
+Push 到 `dev` 分支并修改 Redis、PostgreSQL、LLDAP、Authelia、Claude Code Hub、DBX、Service Atlas、RustFS 或 Traefik
 的 Chart/values 后，
 [deploy-dev.yaml](./.github/workflows/deploy-dev.yaml) 会检测发生变化的组件，并为每个组件创建独立 Matrix Job。
 每个 Job 通过 Tailscale 连接 K3s，并按组件名执行 Helmfile。例如只修改 Redis 时只运行：

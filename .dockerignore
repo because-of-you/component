@@ -1,0 +1,14 @@
+.git
+.github
+.idea
+.worktrees
+node_modules
+**/node_modules
+dist
+apps/service-atlas/dist
+charts
+docs
+environments
+images
+*.log
+.DS_Store

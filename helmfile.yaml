@@ -50,6 +50,13 @@ releases:
     values:
       - ./environments/{{ .Environment.Name }}/dbx/values.yaml
 
+  - name: service-atlas
+    namespace: app
+    createNamespace: true
+    chart: ./charts/service-atlas
+    values:
+      - ./environments/{{ .Environment.Name }}/service-atlas/values.yaml
+
   - name: redis
     namespace: infra
     createNamespace: true

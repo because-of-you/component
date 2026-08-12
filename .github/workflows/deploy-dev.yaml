@@ -12,6 +12,7 @@ on:
       - 'charts/rustfs/**'
       - 'charts/claude-code-hub/**'
       - 'charts/dbx/**'
+      - 'charts/service-atlas/**'
       - 'charts/traefik/**'
       - 'environments/dev/redis/**'
       - 'environments/dev/postgresql/**'
@@ -20,7 +21,11 @@ on:
       - 'environments/dev/rustfs/**'
       - 'environments/dev/claude-code-hub/**'
       - 'environments/dev/dbx/**'
+      - 'environments/dev/service-atlas/**'
       - 'environments/dev/traefik/**'
+      - 'apps/service-atlas/**'
+      - 'package.json'
+      - 'package-lock.json'
       - 'environments/dev/values.yaml'
       - 'helmfile.yaml'
       - '.github/workflows/deploy-dev.yaml'
@@ -38,6 +43,7 @@ on:
           - rustfs
           - claude-code-hub
           - dbx
+          - service-atlas
           - traefik
 
 jobs:
@@ -97,6 +103,13 @@ jobs:
               - 'environments/dev/dbx/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
+            service-atlas:
+              - 'apps/service-atlas/**'
+              - 'charts/service-atlas/**'
+              - 'environments/dev/service-atlas/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'helmfile.yaml'
             traefik:
               - 'charts/traefik/**'
               - 'environments/dev/traefik/**'
@@ -118,10 +131,58 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      packages: write
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Set up Node.js for Service Atlas
+        if: matrix.component == 'service-atlas'
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Verify Service Atlas
+        if: matrix.component == 'service-atlas'
+        run: |
+          npm ci
+          npm run test:atlas
+          npm run build
+
+      - name: Set up Docker Buildx for Service Atlas
+        if: matrix.component == 'service-atlas'
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to GHCR for Service Atlas
+        if: matrix.component == 'service-atlas'
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to Aliyun ACR for Service Atlas
+        if: matrix.component == 'service-atlas'
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ vars.ALIYUN_ACR_REGISTRY }}
+          username: ${{ vars.ALIYUN_ACR_USERNAME }}
+          password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
+
+      - name: Build and publish Service Atlas image
+        if: matrix.component == 'service-atlas'
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./apps/service-atlas/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/service-atlas:dev-${{ github.sha }}
+            ${{ vars.ALIYUN_ACR_REGISTRY }}/gravitation/service-atlas:dev-${{ github.sha }}
+          cache-from: type=gha,scope=service-atlas
+          cache-to: type=gha,mode=max,scope=service-atlas
 
       - name: Set up Helmfile
         uses: mamezou-tech/setup-helmfile@v2.2.0
@@ -163,7 +224,7 @@ jobs:
         run: kubectl create namespace infra --dry-run=client -o yaml | bash .github/scripts/kubectl-apply-retry.sh
 
       - name: Ensure app namespace
-        if: matrix.component == 'claude-code-hub' || matrix.component == 'dbx'
+        if: matrix.component == 'claude-code-hub' || matrix.component == 'dbx' || matrix.component == 'service-atlas'
         run: kubectl create namespace app --dry-run=client -o yaml | bash .github/scripts/kubectl-apply-retry.sh
 
       - name: Ensure traefik namespace
@@ -369,7 +430,15 @@ jobs:
             | bash .github/scripts/kubectl-apply-retry.sh
 
       - name: Deploy ${{ matrix.component }}
-        run: helmfile -e dev --selector name=${{ matrix.component }} sync
+        env:
+          SERVICE_ATLAS_IMAGE_TAG: dev-${{ github.sha }}
+        shell: bash
+        run: |
+          if [[ "${{ matrix.component }}" == "service-atlas" ]]; then
+            helmfile -e dev --selector name=service-atlas sync --set image.tag="$SERVICE_ATLAS_IMAGE_TAG"
+          else
+            helmfile -e dev --selector name=${{ matrix.component }} sync
+          fi
 
       - name: Restart Authelia after deployment
         if: matrix.component == 'authelia'
@@ -391,3 +460,15 @@ jobs:
         run: |
           kubectl -n app rollout restart deployment/claude-code-hub
           kubectl -n app rollout status deployment/claude-code-hub --timeout=300s
+
+      - name: Verify Service Atlas deployment
+        if: matrix.component == 'service-atlas'
+        shell: bash
+        run: |
+          kubectl -n app rollout status deployment/service-atlas --timeout=300s
+          curl --fail --show-error --silent \
+            --retry 18 \
+            --retry-delay 10 \
+            --retry-all-errors \
+            --max-time 15 \
+            https://atlas.acitrus.cn/healthz
