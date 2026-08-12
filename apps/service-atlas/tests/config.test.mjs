@@ -50,3 +50,15 @@ test("production entry loads JSON instead of importing the test fixture", async 
   )));
   assert.equal(new Set(config.services.map((service) => service.color)).size, config.services.length);
 });
+
+test("uses a Chinese browser title and graph favicon", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  const favicon = await readFile(new URL("../public/favicon.svg", import.meta.url), "utf8");
+
+  assert.match(html, /<title>服务导览图<\/title>/);
+  assert.match(html, /<link rel="icon" href="\.\/favicon\.svg" type="image\/svg\+xml"/);
+  assert.match(html, /<meta name="theme-color" content="#071018"/);
+  assert.match(favicon, /<svg[^>]+viewBox="0 0 64 64"/);
+  assert.match(favicon, /<path/);
+  assert.ok((favicon.match(/<circle/g) ?? []).length >= 3);
+});
