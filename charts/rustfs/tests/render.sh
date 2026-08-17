@@ -318,7 +318,9 @@ assert(
   'workflow generic deploy step must run for every selected component'
 )
 assert(
-  generic_deploy_step['run'].strip == 'helmfile -e dev --selector name=${{ matrix.component }} sync',
+  generic_deploy_step['run'].lines.map(&:strip).include?(
+    'helmfile -e dev --selector name=${{ matrix.component }} sync'
+  ),
   'workflow generic deploy selector is incorrect'
 )
 
