@@ -106,6 +106,12 @@ spec:
               mountPath: /robustmq/config/server.toml
               subPath: server.toml
               readOnly: true
+            {{- if .Values.dashboard.apiBaseUrl }}
+            - name: config
+              mountPath: /robustmq/dist/config.js
+              subPath: config.js
+              readOnly: true
+            {{- end }}
       volumes:
         - name: config
           configMap:

@@ -22,3 +22,13 @@ data:
     [storage_runtime]
     tcp_port = {{ .Values.config.storagePort }}
     data_path = {{ .Values.config.storageDataPaths | toJson }}
+  {{- with .Values.dashboard.apiBaseUrl }}
+  config.js: |
+    // Runtime configuration for the packaged RobustMQ Dashboard.
+    window.__APP_CONFIG__ = {
+      api: {
+        baseUrl: {{ . | quote }},
+        port: null
+      }
+    };
+  {{- end }}

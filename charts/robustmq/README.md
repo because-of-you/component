@@ -9,6 +9,8 @@ existing deployment conventions directly.
 ## Development environment
 
 - Admin endpoint: `https://mq.acitrus.cn`
+- Dashboard API origin: `https://mq.acitrus.cn`, supplied at runtime through
+  `/robustmq/dist/config.js` so browser requests remain on the public HTTPS origin
 - Authentication: Traefik ForwardAuth through Authelia
 - Persistent data: a 10 Gi `local-path` volume mounted at `/robustmq/data`
 - Storage engine: `/robustmq/data/engine` is explicitly configured in the
@@ -21,6 +23,12 @@ gRPC, AMQP and NATS ports inside the cluster. The public MQTT TCP route is
 intentionally disabled because the upstream default configuration contains
 development credentials. Before enabling it, mount a Secret-backed custom
 `server.toml` and rotate both the admin and protocol credentials.
+
+The Dashboard API origin is controlled by `dashboard.apiBaseUrl`. This runtime
+override avoids rebuilding the upstream image and remains independent of the
+image tag. When upgrading RobustMQ, the render test verifies that the override
+is still mounted; also confirm that the upstream image continues to load
+`/robustmq/dist/config.js` during the release smoke test.
 
 ## Render
 

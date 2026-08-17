@@ -24,6 +24,9 @@ grep -q 'storage: 10Gi' "$rendered"
 grep -Fq 'data_path = "/robustmq/data/meta"' "$rendered"
 grep -Fq 'data_path = ["/robustmq/data/engine"]' "$rendered"
 grep -Fq 'mountPath: /robustmq/config/server.toml' "$rendered"
+grep -Fq 'baseUrl: "https://mq.acitrus.cn"' "$rendered"
+grep -Fq 'mountPath: /robustmq/dist/config.js' "$rendered"
+grep -Fq 'subPath: config.js' "$rendered"
 grep -Fq 'checksum/config:' "$rendered"
 
 if grep -q '^kind: IngressRouteTCP$' "$rendered"; then

@@ -34,6 +34,12 @@ config:
   storageDataPaths:
     - /robustmq/data/engine
 
+# RobustMQ's packaged Dashboard falls back to http://localhost:58080 when its
+# runtime API URL is unset. Set this to the public, browser-reachable origin
+# when the admin endpoint is published behind a reverse proxy.
+dashboard:
+  apiBaseUrl: ""
+
 service:
   type: ClusterIP
   annotations: {}
