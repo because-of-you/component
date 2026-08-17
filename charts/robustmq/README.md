@@ -9,6 +9,7 @@ existing deployment conventions directly.
 ## Development environment
 
 - Admin endpoint: `https://mq.acitrus.cn`
+- MQTT endpoint: `mqtts://mqtt.tcp.acitrus.cn:1024` (development only)
 - Dashboard API origin: `https://mq.acitrus.cn`, supplied at runtime through
   `/robustmq/dist/config.js` so browser requests remain on the public HTTPS origin
 - Authentication: Traefik ForwardAuth through Authelia
@@ -19,10 +20,13 @@ existing deployment conventions directly.
 - Mirrored image: `registry.cn-shenzhen.aliyuncs.com/gravitation/robustmq:v0.4.11`
 
 The service exposes the upstream admin, MQTT, MQTT TLS, MQTT WebSocket, Kafka,
-gRPC, AMQP and NATS ports inside the cluster. The public MQTT TCP route is
-intentionally disabled because the upstream default configuration contains
-development credentials. Before enabling it, mount a Secret-backed custom
-`server.toml` and rotate both the admin and protocol credentials.
+gRPC, AMQP and NATS ports inside the cluster. The development environment also
+publishes MQTT over TLS at `mqtts://mqtt.tcp.acitrus.cn:1024`: Traefik selects
+the route by SNI, terminates TLS, and forwards plaintext MQTT to service port
+1883. It currently uses the upstream development credentials and must not be
+copied to a production environment. Before production use, mount a
+Secret-backed custom `server.toml` and rotate both the admin and protocol
+credentials.
 
 The Dashboard API origin is controlled by `dashboard.apiBaseUrl`. This runtime
 override avoids rebuilding the upstream image and remains independent of the

@@ -22,10 +22,17 @@ ingressRoute:
 dashboard:
   apiBaseUrl: https://mq.acitrus.cn
 
-# The upstream image ships with development MQTT credentials. Keep the public
-# TCP route disabled until a Secret-backed custom server.toml is configured.
+# Development-only public MQTT endpoint. Traefik terminates TLS on the shared
+# gravitation entrypoint and forwards plaintext MQTT to service port 1883.
 mqttIngressRoute:
-  enabled: false
+  enabled: true
+  host: mqtt.tcp.acitrus.cn
+  entryPoints:
+    - gravitation
+  tls:
+    certResolver: leresolver
+    domains:
+      - main: mqtt.tcp.acitrus.cn
 
 resources:
   requests:

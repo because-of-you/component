@@ -28,9 +28,14 @@ grep -Fq 'baseUrl: "https://mq.acitrus.cn"' "$rendered"
 grep -Fq 'mountPath: /robustmq/dist/config.js' "$rendered"
 grep -Fq 'subPath: config.js' "$rendered"
 grep -Fq 'checksum/config:' "$rendered"
+grep -q '^kind: IngressRouteTCP$' "$rendered"
+grep -Fq 'HostSNI(`mqtt.tcp.acitrus.cn`)' "$rendered"
+grep -Fq -- '- gravitation' "$rendered"
+grep -Fq 'port: mqtt' "$rendered"
+grep -Fq 'certResolver: leresolver' "$rendered"
 
-if grep -q '^kind: IngressRouteTCP$' "$rendered"; then
-  echo 'public MQTT route must remain disabled in the dev values' >&2
+if grep -Fq 'HostSNI(`*`)' "$rendered"; then
+  echo 'the shared gravitation entrypoint must not use a catch-all MQTT route' >&2
   exit 1
 fi
 
