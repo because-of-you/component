@@ -3,8 +3,8 @@ name: rustfs
 description: Wrapper chart for RustFS with project-specific Traefik and OIDC defaults
 type: application
 version: 0.1.0
-appVersion: "1.0.0-rc.1"
+appVersion: "1.0.0-rc.2"
 dependencies:
   - name: rustfs
-    version: 1.0.0-rc.1
+    version: 1.0.0-rc.2
     repository: https://charts.rustfs.com

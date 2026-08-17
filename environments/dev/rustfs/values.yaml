@@ -8,7 +8,7 @@ rustfs:
   image:
     rustfs:
       repository: registry.cn-shenzhen.aliyuncs.com/gravitation/rustfs
-      tag: 1.0.0-rc.1
+      tag: 1.0.0-rc.2
       pullPolicy: IfNotPresent
 
   secret:

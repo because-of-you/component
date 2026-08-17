@@ -1,7 +1,7 @@
 # RustFS
 
-这个 Chart 封装官方 RustFS Helm Chart `1.0.0-rc.1`，并追加本仓库使用的 Traefik HTTP
-`IngressRoute`。上游 Chart 与 RustFS 镜像都固定为 `1.0.0-rc.1`，升级时必须同步更新。
+这个 Chart 封装官方 RustFS Helm Chart `1.0.0-rc.2`，并追加本仓库使用的 Traefik HTTP
+`IngressRoute`。上游 Chart 与 RustFS 镜像都固定为 `1.0.0-rc.2`，升级时必须同步更新。
 
 ## dev 拓扑
 

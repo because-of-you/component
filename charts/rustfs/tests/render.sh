@@ -13,7 +13,7 @@ test -f "$chart_dir/Chart.yaml"
 test -f "$chart_dir/values.yaml"
 test -f "$dev_values"
 grep -Fq 'name: rustfs' "$chart_dir/Chart.yaml"
-grep -Fq 'version: 1.0.0-rc.1' "$chart_dir/Chart.yaml"
+grep -Fq 'version: 1.0.0-rc.2' "$chart_dir/Chart.yaml"
 grep -Fq 'repository: https://charts.rustfs.com' "$chart_dir/Chart.yaml"
 
 helm template rustfs-default "$chart_dir" >"$default_rendered"
@@ -192,8 +192,8 @@ image_manifest="$repo_root/images/rustfs/images.yaml"
 
 test -f "$image_manifest"
 grep -Fq 'component: rustfs' "$image_manifest"
-grep -Fq 'source: docker.io/rustfs/rustfs:1.0.0-rc.1' "$image_manifest"
-grep -Fq 'destination: registry.cn-shenzhen.aliyuncs.com/gravitation/rustfs:1.0.0-rc.1' "$image_manifest"
+grep -Fq 'source: docker.io/rustfs/rustfs:1.0.0-rc.2' "$image_manifest"
+grep -Fq 'destination: registry.cn-shenzhen.aliyuncs.com/gravitation/rustfs:1.0.0-rc.2' "$image_manifest"
 
 ruby --disable-gems - "$repo_root/helmfile.yaml" "$workflow" "$chart_dir/README.md" <<'RUBY'
 require 'yaml'
