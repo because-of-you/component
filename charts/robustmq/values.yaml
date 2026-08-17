@@ -77,6 +77,13 @@ mqttIngressRoute:
     - gravitation
   tls: {}
 
+amqpIngressRoute:
+  enabled: false
+  host: ""
+  entryPoints:
+    - gravitation
+  tls: {}
+
 startupProbe:
   enabled: true
   failureThreshold: 30

@@ -34,6 +34,18 @@ mqttIngressRoute:
     domains:
       - main: mqtt.tcp.acitrus.cn
 
+# RobustMQ AMQP support is experimental; expose it only in dev for protocol
+# compatibility testing. Traefik terminates TLS and forwards to port 5672.
+amqpIngressRoute:
+  enabled: true
+  host: amqp.tcp.acitrus.cn
+  entryPoints:
+    - gravitation
+  tls:
+    certResolver: leresolver
+    domains:
+      - main: amqp.tcp.acitrus.cn
+
 resources:
   requests:
     cpu: 20m

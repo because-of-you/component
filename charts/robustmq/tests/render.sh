@@ -28,10 +28,12 @@ grep -Fq 'baseUrl: "https://mq.acitrus.cn"' "$rendered"
 grep -Fq 'mountPath: /robustmq/dist/config.js' "$rendered"
 grep -Fq 'subPath: config.js' "$rendered"
 grep -Fq 'checksum/config:' "$rendered"
-grep -q '^kind: IngressRouteTCP$' "$rendered"
+test "$(grep -c '^kind: IngressRouteTCP$' "$rendered")" -eq 2
 grep -Fq 'HostSNI(`mqtt.tcp.acitrus.cn`)' "$rendered"
+grep -Fq 'HostSNI(`amqp.tcp.acitrus.cn`)' "$rendered"
 grep -Fq -- '- gravitation' "$rendered"
 grep -Fq 'port: mqtt' "$rendered"
+grep -Fq 'port: amqp' "$rendered"
 grep -Fq 'certResolver: leresolver' "$rendered"
 
 if grep -Fq 'HostSNI(`*`)' "$rendered"; then

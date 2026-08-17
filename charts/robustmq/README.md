@@ -10,6 +10,8 @@ existing deployment conventions directly.
 
 - Admin endpoint: `https://mq.acitrus.cn`
 - MQTT endpoint: `mqtts://mqtt.tcp.acitrus.cn:1024` (development only)
+- AMQP endpoint: `amqps://amqp.tcp.acitrus.cn:1024/default` (experimental,
+  development only)
 - Dashboard API origin: `https://mq.acitrus.cn`, supplied at runtime through
   `/robustmq/dist/config.js` so browser requests remain on the public HTTPS origin
 - Authentication: Traefik ForwardAuth through Authelia
@@ -27,6 +29,11 @@ the route by SNI, terminates TLS, and forwards plaintext MQTT to service port
 copied to a production environment. Before production use, mount a
 Secret-backed custom `server.toml` and rotate both the admin and protocol
 credentials.
+
+The development environment also exposes the upstream experimental AMQP 0.9.1
+implementation at `amqps://amqp.tcp.acitrus.cn:1024/default`. It uses the same
+development user database as MQTT. Client compatibility and advanced AMQP
+features are not considered production-ready in RobustMQ `v0.4.11`.
 
 The Dashboard API origin is controlled by `dashboard.apiBaseUrl`. This runtime
 override avoids rebuilding the upstream image and remains independent of the
