@@ -6,6 +6,8 @@ on:
       - dev
     paths:
       - 'images/*/images.yaml'
+      - '.github/actions/mirror-container-image/**'
+      - '.github/workflows/sync-images.yaml'
   workflow_dispatch:
     inputs:
       component:
@@ -48,11 +50,18 @@ jobs:
           trap 'rm -f "$manifests_file"' EXIT
 
           if [[ "$EVENT_NAME" == "push" ]]; then
-            git diff --name-only "$BEFORE_SHA" "$CURRENT_SHA" -- 'images/*/images.yaml' \
-              | while IFS= read -r manifest; do
-                  [[ -f "$manifest" ]] && printf '%s\n' "$manifest"
-                done \
-              | sort -u > "$manifests_file"
+            if git diff --quiet "$BEFORE_SHA" "$CURRENT_SHA" -- \
+              '.github/actions/mirror-container-image/**' \
+              '.github/workflows/sync-images.yaml'; then
+              git diff --name-only "$BEFORE_SHA" "$CURRENT_SHA" -- 'images/*/images.yaml' \
+                | while IFS= read -r manifest; do
+                    [[ -f "$manifest" ]] && printf '%s\n' "$manifest"
+                  done \
+                | sort -u > "$manifests_file"
+            else
+              find images -mindepth 2 -maxdepth 2 -type f -name images.yaml \
+                | sort > "$manifests_file"
+            fi
           elif [[ "$SELECTED_COMPONENT" == "all" ]]; then
             find images -mindepth 2 -maxdepth 2 -type f -name images.yaml \
               | sort > "$manifests_file"
