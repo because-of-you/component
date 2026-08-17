@@ -16,6 +16,7 @@ authelia:
           policy: one_factor
           subject:
             - group:lldap_admin
+            - group:dbx_mcp
         - domain: ldap.acitrus.cn
           policy: one_factor
           subject:

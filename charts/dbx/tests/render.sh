@@ -74,4 +74,5 @@ grep -Fq "'charts/dbx/**'" "$repo_root/.github/workflows/deploy-dev.yaml"
 grep -Fq "'environments/dev/dbx/**'" "$repo_root/.github/workflows/deploy-dev.yaml"
 grep -Fq -- '- dbx' "$repo_root/.github/workflows/deploy-dev.yaml"
 grep -Fq 'domain: db.acitrus.cn' "$repo_root/environments/dev/authelia/values.yaml"
-grep -A3 -F 'domain: db.acitrus.cn' "$repo_root/environments/dev/authelia/values.yaml" | grep -Fq 'group:lldap_admin'
+grep -A4 -F 'domain: db.acitrus.cn' "$repo_root/environments/dev/authelia/values.yaml" | grep -Fq 'group:lldap_admin'
+grep -A4 -F 'domain: db.acitrus.cn' "$repo_root/environments/dev/authelia/values.yaml" | grep -Fq 'group:dbx_mcp'

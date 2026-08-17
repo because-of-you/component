@@ -37,6 +37,7 @@ grep -Fq -- "- 'ldap.acitrus.cn'" "$rendered"
 grep -Fq -- "- 'traefik.acitrus.cn'" "$rendered"
 grep -Fq 'policy: one_factor' "$rendered"
 grep -Fq -- "- ['group:lldap_admin']" "$rendered"
+grep -Fq -- "'group:dbx_mcp'" "$rendered"
 grep -A1 '^    totp:' "$rendered" | grep -Fq 'disable: true'
 grep -A1 '^    webauthn:' "$rendered" | grep -Fq 'disable: true'
 grep -Fq 'kind: Deployment' "$rendered"
