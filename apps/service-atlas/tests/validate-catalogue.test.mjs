@@ -50,6 +50,37 @@ test("validates optional service colors as safe six-digit hex values", () => {
   ]);
 });
 
+test("accepts descriptions, multi-protocol endpoints, and credential sources", () => {
+  const detailed = structuredClone(valid);
+  detailed.services[0].description = "Routes web and TCP traffic.";
+  detailed.services[0].endpoints = [
+    { name: "Web", protocol: "HTTPS", address: "https://gateway.example.com", default: true },
+    { name: "MQTT", protocol: "MQTTS", address: "mqtts://mqtt.example.com:1024" },
+    { name: "Database", protocol: "PostgreSQL", address: "postgresql://db.example.com:5432/app" },
+  ];
+  detailed.services[0].credentials = [
+    { name: "Development", username: "admin", password: "admin" },
+    { name: "Database", username: "postgres", source: "Kubernetes Secret" },
+  ];
+
+  assert.deepEqual(validateCatalogue(detailed), []);
+});
+
+test("rejects unsafe endpoint protocols and incomplete credentials", () => {
+  const detailed = structuredClone(valid);
+  detailed.services[0].endpoints = [
+    { name: "Unsafe", address: "javascript:alert(1)", default: true },
+    { name: "Duplicate", address: "https://gateway.example.com", default: true },
+  ];
+  detailed.services[0].credentials = [{ name: "Missing", username: "admin" }];
+
+  assert.deepEqual(validateCatalogue(detailed), [
+    "services[0].endpoints[0].address uses an unsupported protocol",
+    "services[0].endpoints may only contain one default endpoint",
+    "services[0].credentials[0] must define password or source",
+  ]);
+});
+
 test("validates flow identity, path nodes, and adjacent relations", () => {
   const flowed = structuredClone(valid);
   flowed.flows = [

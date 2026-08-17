@@ -17,6 +17,12 @@ grep -Fq '"id": "traefik"' "$rendered"
 grep -Fq '"id": "redis"' "$rendered"
 grep -Fq '"id": "dbx"' "$rendered"
 grep -Fq '"href": "https://db.acitrus.cn"' "$rendered"
+grep -Fq '"id": "robustmq"' "$rendered"
+grep -Fq '"color": "#27c2ff"' "$rendered"
+grep -Fq '"address": "mqtts://mqtt.tcp.acitrus.cn:1024"' "$rendered"
+grep -Fq '"address": "amqps://amqp.tcp.acitrus.cn:1024/default"' "$rendered"
+grep -Fq '"address": "https://s3.acitrus.cn:1024"' "$rendered"
+grep -Fq '"address": "rediss://redis.tcp.acitrus.cn:1024"' "$rendered"
 if grep -Fiq 'rabbitmq' "$rendered"; then
   echo 'RabbitMQ must not appear in the Service Atlas catalogue' >&2
   exit 1

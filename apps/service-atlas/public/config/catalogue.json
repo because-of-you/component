@@ -1,23 +1,97 @@
 {
   "services": [
-    { "id": "traefik", "name": "Traefik", "href": "https://traefik.acitrus.cn", "landmark": "ingress", "tier": "ingress", "color": "#3478f6" },
-    { "id": "authelia", "name": "Authelia", "href": "https://auth.acitrus.cn", "landmark": "identity", "tier": "identity", "color": "#e7b547" },
-    { "id": "claude-code-hub", "name": "Claude Code Hub", "href": "https://inner.coding.acitrus.cn", "landmark": "application", "tier": "application", "color": "#a782f4" },
-    { "id": "dbx", "name": "DBX", "href": "https://db.acitrus.cn", "landmark": "application", "tier": "application", "color": "#b8d957" },
-    { "id": "rustfs", "name": "RustFS", "href": "https://s3.acitrus.cn", "landmark": "storage", "tier": "data", "color": "#48c98e" },
-    { "id": "lldap", "name": "LLDAP", "href": "https://ldap.acitrus.cn", "landmark": "directory", "tier": "identity", "color": "#ee884d" },
-    { "id": "postgresql", "name": "PostgreSQL", "landmark": "database", "tier": "data", "color": "#42bec7" },
-    { "id": "redis", "name": "Redis", "landmark": "cache", "tier": "middleware", "color": "#ee779e" }
+    {
+      "id": "traefik", "name": "Traefik", "href": "https://traefik.acitrus.cn", "landmark": "ingress", "tier": "ingress", "color": "#3478f6",
+      "description": "集群统一入口网关，负责 HTTPS、TCP 路由、TLS 证书和前置鉴权。",
+      "endpoints": [{ "name": "Dashboard", "protocol": "HTTPS", "address": "https://traefik.acitrus.cn", "default": true, "description": "路由、服务和中间件的只读管理视图。" }],
+      "credentials": [{ "name": "Authelia SSO", "username": "LLDAP 用户", "source": "需属于 lldap_admin 组。" }]
+    },
+    {
+      "id": "authelia", "name": "Authelia", "href": "https://auth.acitrus.cn", "landmark": "identity", "tier": "identity", "color": "#e7b547",
+      "description": "统一登录、ForwardAuth 与 OIDC 身份提供方，用户和组来自 LLDAP。",
+      "endpoints": [
+        { "name": "登录门户", "protocol": "HTTPS", "address": "https://auth.acitrus.cn", "default": true, "description": "登录会话、二次验证和授权确认页面。" },
+        { "name": "ForwardAuth（集群内）", "protocol": "HTTP", "address": "http://authelia.infra.svc.cluster.local/api/authz/forward-auth", "description": "Traefik 在转发受保护请求前调用的内部鉴权接口。" }
+      ],
+      "credentials": [{ "name": "LLDAP 登录", "username": "LLDAP 用户名或邮箱", "source": "密码和组成员关系由 LLDAP 管理。" }]
+    },
+    {
+      "id": "claude-code-hub", "name": "Claude Code Hub", "href": "https://inner.coding.acitrus.cn", "landmark": "application", "tier": "application", "color": "#a782f4",
+      "description": "内部 Claude Code 服务入口，通过 Authelia OIDC 登录并使用 PostgreSQL、Redis。",
+      "endpoints": [{ "name": "Web 控制台", "protocol": "HTTPS", "address": "https://inner.coding.acitrus.cn", "default": true, "description": "应用主页和 API 的统一入口。" }],
+      "credentials": [{ "name": "Authelia OIDC", "username": "LLDAP 用户", "source": "需属于 lldap_admin 组。" }]
+    },
+    {
+      "id": "dbx", "name": "DBX", "href": "https://db.acitrus.cn", "landmark": "application", "tier": "application", "color": "#b8d957",
+      "description": "内部数据库管理工具，入口由 Authelia 保护；dev 已关闭 DBX 自身的二次密码页。",
+      "endpoints": [{ "name": "Web / MCP 入口", "protocol": "HTTPS", "address": "https://db.acitrus.cn", "default": true, "description": "Web 页面和 DBX 对外接口共用该受保护域名。" }],
+      "credentials": [{ "name": "Authelia ForwardAuth", "username": "LLDAP 用户", "source": "需属于 lldap_admin 或 dbx_mcp 组；DBX 自身密码已禁用。" }]
+    },
+    {
+      "id": "rustfs", "name": "RustFS", "href": "https://s3.acitrus.cn", "landmark": "storage", "tier": "data", "color": "#48c98e",
+      "description": "S3 兼容对象存储。控制台使用 Authelia OIDC，客户端通过独立 S3 API 端点访问。",
+      "endpoints": [
+        { "name": "管理控制台", "protocol": "HTTPS", "address": "https://s3.acitrus.cn", "default": true, "description": "Web 管理界面，使用 Authelia OIDC 统一登录。" },
+        { "name": "S3 API", "protocol": "HTTPS", "address": "https://s3.acitrus.cn:1024", "description": "S3 客户端端点，仅支持路径风格访问。" }
+      ],
+      "credentials": [
+        { "name": "管理控制台", "username": "LLDAP 用户", "source": "通过 Authelia OIDC 登录，dev 环境授予 consoleAdmin。" },
+        { "name": "S3 API", "username": "RUSTFS_ACCESS_KEY", "source": "由 infra/rustfs-secrets 的 RUSTFS_ACCESS_KEY 与 RUSTFS_SECRET_KEY 管理。" }
+      ]
+    },
+    {
+      "id": "robustmq", "name": "RobustMQ", "href": "https://mq.acitrus.cn", "landmark": "queue", "tier": "middleware", "color": "#27c2ff",
+      "description": "多协议消息基础设施。Dashboard 用于管理；业务客户端请使用对应的 TLS 端点。",
+      "endpoints": [
+        { "name": "Dashboard", "protocol": "HTTPS", "address": "https://mq.acitrus.cn", "default": true, "description": "Web 管理界面，经过 Authelia 统一登录。" },
+        { "name": "MQTT", "protocol": "MQTTS", "address": "mqtts://mqtt.tcp.acitrus.cn:1024", "description": "开发环境 MQTT 3.1.1/5.0 TLS 接入地址。" },
+        { "name": "AMQP", "protocol": "AMQPS", "address": "amqps://amqp.tcp.acitrus.cn:1024/default", "description": "实验性的 AMQP 0.9.1 TLS 接入地址。" },
+        { "name": "NATS（集群内）", "protocol": "NATS", "address": "nats://robustmq.infra.svc.cluster.local:4222", "description": "仅供 Kubernetes 集群内部访问，当前未启用账号认证。" }
+      ],
+      "credentials": [
+        { "name": "Dashboard", "username": "admin", "password": "admin" },
+        { "name": "MQTT / AMQP", "username": "admin", "password": "robustmq" }
+      ]
+    },
+    {
+      "id": "lldap", "name": "LLDAP", "href": "https://ldap.acitrus.cn", "landmark": "directory", "tier": "identity", "color": "#ee884d",
+      "description": "轻量目录服务，保存统一登录用户、密码和组；LDAP 端口只在集群内开放。",
+      "endpoints": [
+        { "name": "管理界面", "protocol": "HTTPS", "address": "https://ldap.acitrus.cn", "default": true, "description": "用户与组管理页面，外层由 Authelia 保护。" },
+        { "name": "LDAP（集群内）", "protocol": "LDAP", "address": "ldap://lldap.infra.svc.cluster.local:3890", "description": "Base DN 为 dc=acitrus,dc=cn，不提供公网 TCP 路由。" }
+      ],
+      "credentials": [{ "name": "LLDAP 管理员", "username": "admin", "source": "密码位于 infra/lldap-secrets 的 lldap-ldap-user-pass。" }]
+    },
+    {
+      "id": "postgresql", "name": "PostgreSQL", "landmark": "database", "tier": "data", "color": "#42bec7",
+      "description": "共享关系型数据库，供 Authelia、LLDAP、Claude Code Hub 等服务持久化数据。",
+      "endpoints": [
+        { "name": "外部 TLS", "protocol": "PostgreSQL/TLS", "address": "postgresql://postgresql.tcp.acitrus.cn:1024/postgres?sslmode=require", "default": true, "description": "通过 Traefik gravitation 入口按 SNI 路由。" },
+        { "name": "集群内", "protocol": "PostgreSQL", "address": "postgresql://postgresql.infra.svc.cluster.local:5432/postgres", "description": "Kubernetes 集群内部直连地址。" }
+      ],
+      "credentials": [{ "name": "管理员", "username": "postgres", "source": "密码位于 infra/postgresql-auth 的 postgres-password。" }]
+    },
+    {
+      "id": "redis", "name": "Redis", "landmark": "cache", "tier": "middleware", "color": "#ee779e",
+      "description": "单节点缓存与会话存储，供 Authelia 和 Claude Code Hub 使用。",
+      "endpoints": [
+        { "name": "外部 TLS", "protocol": "REDIS/TLS", "address": "rediss://redis.tcp.acitrus.cn:1024", "default": true, "description": "通过 Traefik gravitation 入口按 SNI 路由。" },
+        { "name": "集群内", "protocol": "REDIS", "address": "redis://redis-master.infra.svc.cluster.local:6379", "description": "Kubernetes 集群内部直连地址。" }
+      ],
+      "credentials": [{ "name": "默认用户", "username": "default", "source": "密码位于 infra/redis-auth 的 redis-password。" }]
+    }
   ],
   "relations": [
     { "source": "traefik", "target": "authelia", "type": "route" },
     { "source": "traefik", "target": "claude-code-hub", "type": "route" },
     { "source": "traefik", "target": "dbx", "type": "route" },
     { "source": "traefik", "target": "rustfs", "type": "route" },
+    { "source": "traefik", "target": "robustmq", "type": "route" },
     { "source": "traefik", "target": "lldap", "type": "route" },
     { "source": "claude-code-hub", "target": "authelia", "type": "authentication" },
     { "source": "dbx", "target": "authelia", "type": "authentication" },
     { "source": "rustfs", "target": "authelia", "type": "authentication" },
+    { "source": "robustmq", "target": "authelia", "type": "authentication" },
     { "source": "authelia", "target": "lldap", "type": "authentication" },
     { "source": "claude-code-hub", "target": "postgresql", "type": "data" },
     { "source": "authelia", "target": "postgresql", "type": "data" },

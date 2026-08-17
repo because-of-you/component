@@ -20,6 +20,22 @@ test("supports mobile panning and reduced motion", async () => {
   assert.match(styles, /\.flow-overlay\s*{\s*display: none;/s);
 });
 
+test("provides an interactive floating service detail card", async () => {
+  const [styles, source, page] = await Promise.all([
+    readFile(stylesUrl, "utf8"),
+    readFile(appUrl, "utf8"),
+    readFile(pageUrl, "utf8"),
+  ]);
+
+  assert.match(page, /id="service-details"/);
+  assert.match(styles, /\.service-details\s*\{[^}]*position:\s*absolute/s);
+  assert.match(styles, /\.service-details__endpoint/);
+  assert.match(styles, /\.service-details__credential/);
+  assert.match(source, /renderServiceDetails/);
+  assert.match(source, /navigator\.clipboard\.writeText/);
+  assert.match(source, /positionDetails\(landmark\)/);
+});
+
 test("styles every road class emitted by the atlas renderer", async () => {
   const styles = await readFile(stylesUrl, "utf8");
 

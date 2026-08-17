@@ -48,6 +48,16 @@ test("production entry loads JSON instead of importing the test fixture", async 
     && relation.target === "authelia"
     && relation.type === "authentication"
   )));
+  assert.ok(config.services.every((service) => (
+    typeof service.description === "string"
+    && service.endpoints.length > 0
+    && service.credentials.length > 0
+  )));
+  assert.ok(config.services.some((service) => (
+    service.id === "robustmq"
+    && service.color === "#27c2ff"
+    && service.endpoints.some(({ address }) => address === "mqtts://mqtt.tcp.acitrus.cn:1024")
+  )));
   assert.equal(new Set(config.services.map((service) => service.color)).size, config.services.length);
 });
 

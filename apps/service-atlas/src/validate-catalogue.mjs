@@ -12,6 +12,20 @@ const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
 const ALIGNMENTS = new Set(["start", "middle", "end"]);
 const TIERS = new Set(["ingress", "application", "identity", "middleware", "data"]);
+const ENDPOINT_PROTOCOLS = new Set([
+  "http:",
+  "https:",
+  "mqtt:",
+  "mqtts:",
+  "amqp:",
+  "amqps:",
+  "ldap:",
+  "nats:",
+  "postgresql:",
+  "redis:",
+  "rediss:",
+  "tcp:",
+]);
 
 export class CatalogueValidationError extends Error {
   constructor(errors) {
@@ -38,6 +52,28 @@ function validateHref(errors, href, path) {
     const url = new URL(href);
     if (url.protocol !== "http:" && url.protocol !== "https:") {
       errors.push(`${path} must use http or https`);
+    }
+  } catch {
+    errors.push(`${path} must be an absolute URL`);
+  }
+}
+
+function validateNonEmptyString(errors, value, path) {
+  if (typeof value !== "string" || value.trim() === "") {
+    errors.push(`${path} must be a non-empty string`);
+  }
+}
+
+function validateEndpointAddress(errors, address, path) {
+  if (typeof address !== "string") {
+    errors.push(`${path} must be an absolute URL`);
+    return;
+  }
+
+  try {
+    const url = new URL(address);
+    if (!ENDPOINT_PROTOCOLS.has(url.protocol)) {
+      errors.push(`${path} uses an unsupported protocol`);
     }
   } catch {
     errors.push(`${path} must be an absolute URL`);
@@ -91,6 +127,52 @@ export function validateCatalogue(catalogue) {
       }
     }
     validateHref(errors, service?.href, `${path}.href`);
+    if (service?.description !== undefined) {
+      validateNonEmptyString(errors, service.description, `${path}.description`);
+    }
+    if (service?.endpoints !== undefined) {
+      if (!Array.isArray(service.endpoints)) {
+        errors.push(`${path}.endpoints must be an array`);
+      } else {
+        let defaultCount = 0;
+        service.endpoints.forEach((endpoint, endpointIndex) => {
+          const endpointPath = `${path}.endpoints[${endpointIndex}]`;
+          validateNonEmptyString(errors, endpoint?.name, `${endpointPath}.name`);
+          validateEndpointAddress(errors, endpoint?.address, `${endpointPath}.address`);
+          if (endpoint?.protocol !== undefined) {
+            validateNonEmptyString(errors, endpoint.protocol, `${endpointPath}.protocol`);
+          }
+          if (endpoint?.description !== undefined) {
+            validateNonEmptyString(errors, endpoint.description, `${endpointPath}.description`);
+          }
+          if (endpoint?.default !== undefined && typeof endpoint.default !== "boolean") {
+            errors.push(`${endpointPath}.default must be a boolean`);
+          }
+          if (endpoint?.default === true) defaultCount += 1;
+        });
+        if (defaultCount > 1) errors.push(`${path}.endpoints may only contain one default endpoint`);
+      }
+    }
+    if (service?.credentials !== undefined) {
+      if (!Array.isArray(service.credentials)) {
+        errors.push(`${path}.credentials must be an array`);
+      } else {
+        service.credentials.forEach((credential, credentialIndex) => {
+          const credentialPath = `${path}.credentials[${credentialIndex}]`;
+          validateNonEmptyString(errors, credential?.name, `${credentialPath}.name`);
+          validateNonEmptyString(errors, credential?.username, `${credentialPath}.username`);
+          if (credential?.password !== undefined) {
+            validateNonEmptyString(errors, credential.password, `${credentialPath}.password`);
+          }
+          if (credential?.source !== undefined) {
+            validateNonEmptyString(errors, credential.source, `${credentialPath}.source`);
+          }
+          if (credential?.password === undefined && credential?.source === undefined) {
+            errors.push(`${credentialPath} must define password or source`);
+          }
+        });
+      }
+    }
   });
 
   relations.forEach((relation, index) => {
