@@ -1,0 +1,18 @@
+{{- if .Values.mqttIngressRoute.enabled }}
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: {{ include "robustmq.fullname" . }}-mqtt
+  labels:
+    {{- include "robustmq.labels" . | nindent 4 }}
+spec:
+  entryPoints:
+    {{- toYaml .Values.mqttIngressRoute.entryPoints | nindent 4 }}
+  routes:
+    - match: HostSNI(`{{ required "mqttIngressRoute.host is required when mqttIngressRoute is enabled" .Values.mqttIngressRoute.host }}`)
+      services:
+        - name: {{ include "robustmq.fullname" . }}
+          port: mqtt
+  tls:
+    {{- toYaml .Values.mqttIngressRoute.tls | nindent 4 }}
+{{- end }}

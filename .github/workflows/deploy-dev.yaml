@@ -10,6 +10,7 @@ on:
       - 'charts/lldap/**'
       - 'charts/authelia/**'
       - 'charts/rustfs/**'
+      - 'charts/robustmq/**'
       - 'charts/claude-code-hub/**'
       - 'charts/dbx/**'
       - 'charts/service-atlas/**'
@@ -19,6 +20,7 @@ on:
       - 'environments/dev/lldap/**'
       - 'environments/dev/authelia/**'
       - 'environments/dev/rustfs/**'
+      - 'environments/dev/robustmq/**'
       - 'environments/dev/claude-code-hub/**'
       - 'environments/dev/dbx/**'
       - 'environments/dev/service-atlas/**'
@@ -41,6 +43,7 @@ on:
           - lldap
           - authelia
           - rustfs
+          - robustmq
           - claude-code-hub
           - dbx
           - service-atlas
@@ -88,6 +91,11 @@ jobs:
             rustfs:
               - 'charts/rustfs/**'
               - 'environments/dev/rustfs/**'
+              - 'environments/dev/values.yaml'
+              - 'helmfile.yaml'
+            robustmq:
+              - 'charts/robustmq/**'
+              - 'environments/dev/robustmq/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
             claude-code-hub:
@@ -222,7 +230,7 @@ jobs:
           done
 
       - name: Ensure infra namespace
-        if: matrix.component == 'redis' || matrix.component == 'postgresql' || matrix.component == 'lldap' || matrix.component == 'authelia' || matrix.component == 'rustfs'
+        if: matrix.component == 'redis' || matrix.component == 'postgresql' || matrix.component == 'lldap' || matrix.component == 'authelia' || matrix.component == 'rustfs' || matrix.component == 'robustmq'
         run: kubectl create namespace infra --dry-run=client -o yaml | bash .github/scripts/kubectl-apply-retry.sh
 
       - name: Ensure app namespace

@@ -48,6 +48,12 @@ catalogue:
       landmark: storage
       tier: data
       color: "#48c98e"
+    - id: robustmq
+      name: RobustMQ
+      href: https://robustmq.acitrus.cn
+      landmark: queue
+      tier: middleware
+      color: "#f1a33c"
     - id: lldap
       name: LLDAP
       href: https://ldap.acitrus.cn
@@ -69,10 +75,12 @@ catalogue:
     - { source: traefik, target: claude-code-hub, type: route }
     - { source: traefik, target: dbx, type: route }
     - { source: traefik, target: rustfs, type: route }
+    - { source: traefik, target: robustmq, type: route }
     - { source: traefik, target: lldap, type: route }
     - { source: claude-code-hub, target: authelia, type: authentication }
     - { source: dbx, target: authelia, type: authentication }
     - { source: rustfs, target: authelia, type: authentication }
+    - { source: robustmq, target: authelia, type: authentication }
     - { source: authelia, target: lldap, type: authentication }
     - { source: claude-code-hub, target: postgresql, type: data }
     - { source: authelia, target: postgresql, type: data }

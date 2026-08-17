@@ -1,0 +1,6 @@
+component: robustmq
+
+images:
+  - name: application
+    source: ghcr.io/robustmq/robustmq:v0.4.11
+    destination: registry.cn-shenzhen.aliyuncs.com/gravitation/robustmq:v0.4.11

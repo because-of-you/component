@@ -107,6 +107,12 @@ helm upgrade --install rustfs oci://ghcr.io/because-of-you/charts/rustfs \
   --create-namespace \
   -f values.yaml
 
+helm upgrade --install robustmq oci://ghcr.io/because-of-you/charts/robustmq \
+  --version 0.0.0-dev \
+  --namespace infra \
+  --create-namespace \
+  -f values.yaml
+
 helm upgrade --install dbx oci://ghcr.io/because-of-you/charts/dbx \
   --version 0.0.0-dev \
   --namespace app \
@@ -122,7 +128,7 @@ helm upgrade --install traefik oci://ghcr.io/because-of-you/charts/traefik \
 命名空间约定：
 
 ```text
-infra: redis, postgresql, rabbitmq, lldap, authelia, rustfs
+infra: redis, postgresql, rabbitmq, lldap, authelia, rustfs, robustmq
 app: claude-code-hub, dbx, service-atlas, test-charts
 traefik: traefik
 ```
@@ -167,6 +173,14 @@ OIDC、Secrets、验证、PVC 保留和清理说明见：
 charts/rustfs/README.md
 ```
 
+RobustMQ 使用仓库自有 Chart 部署官方 `v0.4.11` 镜像，单节点数据保存在 `10Gi` PVC；管理端通过
+`https://robustmq.acitrus.cn` 提供并由 Authelia ForwardAuth 保护。公网 MQTT 入口默认关闭，启用前
+必须先替换官方开发凭据。配置与安全说明见：
+
+```text
+charts/robustmq/README.md
+```
+
 DBX 使用仓库自有 Chart 部署官方 Web 镜像，通过 `db.acitrus.cn` 暴露，并由现有 Authelia ForwardAuth
 保护。应用数据保存在 PVC；dev 环境关闭 DBX 自身密码，仅允许 `lldap_admin` 组访问。配置见：
 
@@ -202,6 +216,12 @@ helmfile -e dev template --selector name=authelia --skip-deps
 
 ```bash
 helmfile -e dev template --selector name=rustfs --skip-deps
+```
+
+渲染 dev 环境的 RobustMQ：
+
+```bash
+helmfile -e dev template --selector name=robustmq --skip-deps
 ```
 
 渲染 dev 环境的 LLDAP：
@@ -293,7 +313,7 @@ PR 合并前会执行：
 
 ## dev 集群部署
 
-Push 到 `dev` 分支并修改 Redis、PostgreSQL、LLDAP、Authelia、Claude Code Hub、DBX、Service Atlas、RustFS 或 Traefik
+Push 到 `dev` 分支并修改 Redis、PostgreSQL、LLDAP、Authelia、Claude Code Hub、DBX、Service Atlas、RustFS、RobustMQ 或 Traefik
 的 Chart/values 后，
 [deploy-dev.yaml](./.github/workflows/deploy-dev.yaml) 会检测发生变化的组件，并为每个组件创建独立 Matrix Job。
 每个 Job 通过 Tailscale 连接 K3s，并按组件名执行 Helmfile。例如只修改 Redis 时只运行：
@@ -380,6 +400,7 @@ RustFS 的 Access Key/Secret Key 与 OIDC Client Secret 是两套独立凭据，
 - `charts/authelia/README.md`
 - `charts/claude-code-hub/README.md`
 - `charts/rustfs/README.md`
+- `charts/robustmq/README.md`
 - `charts/traefik/README.md`
 
 以后工作流新增 `secrets.*` 或 `vars.*` 引用时，必须同步更新本清单和对应组件 README。

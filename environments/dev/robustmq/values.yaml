@@ -1,0 +1,33 @@
+image:
+  repository: registry.cn-shenzhen.aliyuncs.com/gravitation/robustmq
+  tag: v0.4.11
+  pullPolicy: IfNotPresent
+
+persistence:
+  enabled: true
+  storageClass: local-path
+  size: 10Gi
+
+ingressRoute:
+  enabled: true
+  host: robustmq.acitrus.cn
+  entryPoints:
+    - websecure
+  middlewares:
+    - name: authelia-forwardauth
+      namespace: infra
+  tls:
+    certResolver: leresolver
+
+# The upstream image ships with development MQTT credentials. Keep the public
+# TCP route disabled until a Secret-backed custom server.toml is configured.
+mqttIngressRoute:
+  enabled: false
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: "1"
+    memory: 2Gi

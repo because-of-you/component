@@ -1,0 +1,25 @@
+{{- if .Values.ingressRoute.enabled }}
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "robustmq.fullname" . }}-admin
+  labels:
+    {{- include "robustmq.labels" . | nindent 4 }}
+spec:
+  entryPoints:
+    {{- toYaml .Values.ingressRoute.entryPoints | nindent 4 }}
+  routes:
+    - kind: Rule
+      match: Host(`{{ required "ingressRoute.host is required when ingressRoute is enabled" .Values.ingressRoute.host }}`)
+      {{- with .Values.ingressRoute.middlewares }}
+      middlewares:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      services:
+        - name: {{ include "robustmq.fullname" . }}
+          port: admin
+  {{- with .Values.ingressRoute.tls }}
+  tls:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}

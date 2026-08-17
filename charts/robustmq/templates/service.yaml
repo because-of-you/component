@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "robustmq.fullname" . }}
+  labels:
+    {{- include "robustmq.labels" . | nindent 4 }}
+  {{- with .Values.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    {{- include "robustmq.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: admin
+      port: {{ .Values.service.ports.admin }}
+      targetPort: admin
+      protocol: TCP
+    - name: mqtt
+      port: {{ .Values.service.ports.mqtt }}
+      targetPort: mqtt
+      protocol: TCP
+    - name: mqtt-tls
+      port: {{ .Values.service.ports.mqttTls }}
+      targetPort: mqtt-tls
+      protocol: TCP
+    - name: mqtt-ws
+      port: {{ .Values.service.ports.mqttWebSocket }}
+      targetPort: mqtt-ws
+      protocol: TCP
+    - name: mqtt-wss
+      port: {{ .Values.service.ports.mqttWebSocketTls }}
+      targetPort: mqtt-wss
+      protocol: TCP
+    - name: kafka
+      port: {{ .Values.service.ports.kafka }}
+      targetPort: kafka
+      protocol: TCP
+    - name: grpc
+      port: {{ .Values.service.ports.grpc }}
+      targetPort: grpc
+      protocol: TCP
+    - name: amqp
+      port: {{ .Values.service.ports.amqp }}
+      targetPort: amqp
+      protocol: TCP
+    - name: nats
+      port: {{ .Values.service.ports.nats }}
+      targetPort: nats
+      protocol: TCP

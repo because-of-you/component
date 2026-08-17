@@ -105,6 +105,15 @@ releases:
     values:
       - ./environments/{{ .Environment.Name }}/rustfs/values.yaml
 
+  - name: robustmq
+    namespace: infra
+    createNamespace: true
+    chart: ./charts/robustmq
+    needs:
+      - infra/authelia
+    values:
+      - ./environments/{{ .Environment.Name }}/robustmq/values.yaml
+
   - name: traefik
     namespace: traefik
     createNamespace: true

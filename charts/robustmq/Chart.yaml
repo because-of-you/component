@@ -1,0 +1,11 @@
+apiVersion: v2
+name: robustmq
+description: A project-native Helm chart for a single-node RobustMQ deployment
+type: application
+version: 0.1.0
+appVersion: "v0.4.11"
+home: https://robustmq.com
+sources:
+  - https://github.com/robustmq/robustmq
+maintainers:
+  - name: Gravitation
