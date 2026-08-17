@@ -439,6 +439,20 @@ jobs:
             --dry-run=client -o yaml \
             | bash .github/scripts/kubectl-apply-retry.sh
 
+      - name: Recover interrupted RobustMQ release
+        if: matrix.component == 'robustmq'
+        shell: bash
+        run: |
+          status="$(
+            helm status robustmq -n infra -o json 2>/dev/null \
+              | jq -r '.info.status // empty' \
+              || true
+          )"
+          if [[ "$status" == pending-* ]]; then
+            echo "Recovering interrupted RobustMQ release in state: $status"
+            helm uninstall robustmq -n infra --wait --timeout 300s
+          fi
+
       - name: Deploy ${{ matrix.component }}
         env:
           SERVICE_ATLAS_IMAGE_TAG: dev-${{ github.sha }}
