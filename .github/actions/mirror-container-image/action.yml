@@ -1,5 +1,5 @@
 name: Mirror container image
-description: Copy a container image between registries only when its digest changes
+description: Copy amd64 and arm64 runtime images between registries only when their digests change
 
 inputs:
   source-image:
@@ -25,13 +25,10 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Install skopeo
-      shell: bash
-      run: |
-        if ! command -v skopeo >/dev/null 2>&1; then
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends skopeo
-        fi
+    - name: Install regctl
+      uses: regclient/actions/regctl-installer@78eb729dbdb4ef6480e85ff697b4410e22112583
+      with:
+        release: v0.11.5
 
     - name: Copy image
       shell: bash
@@ -55,30 +52,64 @@ runs:
           exit 1
         fi
 
-        trap 'skopeo logout "$DESTINATION_REGISTRY" >/dev/null 2>&1 || true' EXIT
+        # BuildKit adds attestation manifests as unknown/unknown platforms. Some
+        # registries reject their application/vnd.oci.empty.v1+json configs, so
+        # mirror only the runtime platforms used by this repository.
+        platforms=(linux/amd64 linux/arm64)
+
+        trap 'regctl registry logout "$DESTINATION_REGISTRY" >/dev/null 2>&1 || true' EXIT
         printf '%s' "$DESTINATION_PASSWORD" \
-          | skopeo login \
-              --username "$DESTINATION_USERNAME" \
-              --password-stdin \
+          | regctl registry login \
+              --user "$DESTINATION_USERNAME" \
+              --pass-stdin \
               "$DESTINATION_REGISTRY"
 
-        source_digest="$(skopeo inspect --format '{{.Digest}}' "docker://${SOURCE_IMAGE}")"
-        destination_digest=""
-        if destination_digest="$(skopeo inspect --format '{{.Digest}}' "docker://${DESTINATION_IMAGE}" 2>/dev/null)" \
-          && [[ "$source_digest" == "$destination_digest" ]]; then
-          echo "Image already mirrored with digest ${source_digest}; skipping copy"
+        source_digests=()
+        destination_digests=()
+        destination_complete=true
+        for platform in "${platforms[@]}"; do
+          source_digests+=("$(regctl image digest --platform "$platform" "$SOURCE_IMAGE")")
+          if destination_digest="$(regctl image digest --platform "$platform" "$DESTINATION_IMAGE" 2>/dev/null)"; then
+            destination_digests+=("$destination_digest")
+          else
+            destination_complete=false
+            destination_digests+=(missing)
+          fi
+        done
+
+        if [[ "$destination_complete" == true ]] \
+          && [[ "${source_digests[*]}" == "${destination_digests[*]}" ]]; then
+          echo "Runtime images already mirrored; skipping copy"
           exit 0
         fi
 
-        if [[ -n "$destination_digest" ]]; then
-          echo "Image digest changed (${destination_digest} -> ${source_digest}); updating mirror"
+        if [[ "$destination_complete" == true ]]; then
+          echo "Runtime image digest changed; updating mirror"
         else
-          echo "Destination image does not exist; creating mirror for digest ${source_digest}"
+          echo "Destination runtime image is incomplete or missing; creating mirror"
         fi
 
         for ((attempt = 1; attempt <= COPY_ATTEMPTS; attempt++)); do
-          if skopeo copy --all "docker://${SOURCE_IMAGE}" "docker://${DESTINATION_IMAGE}"; then
-            exit 0
+          if regctl index create "$DESTINATION_IMAGE" \
+            --ref "$SOURCE_IMAGE" \
+            --platform linux/amd64 \
+            --platform linux/arm64; then
+            mirror_valid=true
+            for i in "${!platforms[@]}"; do
+              destination_digest="$(
+                regctl image digest \
+                  --platform "${platforms[$i]}" \
+                  "$DESTINATION_IMAGE" 2>/dev/null || true
+              )"
+              if [[ "${source_digests[$i]}" != "$destination_digest" ]]; then
+                echo "Digest verification failed for ${platforms[$i]}" >&2
+                mirror_valid=false
+              fi
+            done
+            if [[ "$mirror_valid" == true ]]; then
+              echo "Mirrored runtime platforms: ${platforms[*]}"
+              exit 0
+            fi
           fi
           if [[ "$attempt" == "$COPY_ATTEMPTS" ]]; then
             echo "Failed to mirror $SOURCE_IMAGE after $COPY_ATTEMPTS attempts" >&2
