@@ -11,6 +11,8 @@ existing deployment conventions directly.
 - Admin endpoint: `https://robustmq.acitrus.cn`
 - Authentication: Traefik ForwardAuth through Authelia
 - Persistent data: a 10 Gi `local-path` volume mounted at `/robustmq/data`
+- Storage engine: `/robustmq/data/engine` is explicitly configured in the
+  generated `server.toml`; the upstream minimal image config leaves this list empty
 - Internal service: `robustmq.infra.svc.cluster.local`
 - Mirrored image: `registry.cn-shenzhen.aliyuncs.com/gravitation/robustmq:v0.4.11`
 

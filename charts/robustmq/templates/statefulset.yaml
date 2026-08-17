@@ -15,10 +15,11 @@ spec:
       {{- include "robustmq.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       labels:
         {{- include "robustmq.selectorLabels" . | nindent 8 }}
         {{- with .Values.podLabels }}
@@ -101,8 +102,15 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /robustmq/data
-      {{- if not .Values.persistence.enabled }}
+            - name: config
+              mountPath: /robustmq/config/server.toml
+              subPath: server.toml
+              readOnly: true
       volumes:
+        - name: config
+          configMap:
+            name: {{ include "robustmq.fullname" . }}-config
+      {{- if not .Values.persistence.enabled }}
         - name: data
           emptyDir: {}
       {{- end }}

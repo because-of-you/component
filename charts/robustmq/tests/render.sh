@@ -11,6 +11,7 @@ helm template robustmq "$repo_root/charts/robustmq" \
 
 grep -q '^kind: StatefulSet$' "$rendered"
 grep -q '^kind: Service$' "$rendered"
+grep -q '^kind: ConfigMap$' "$rendered"
 grep -q '^kind: IngressRoute$' "$rendered"
 grep -q 'registry.cn-shenzhen.aliyuncs.com/gravitation/robustmq:v0.4.11' "$rendered"
 grep -q 'Host(`robustmq.acitrus.cn`)' "$rendered"
@@ -18,6 +19,10 @@ grep -q 'name: authelia-forwardauth' "$rendered"
 grep -q 'namespace: infra' "$rendered"
 grep -q 'storageClassName: "local-path"' "$rendered"
 grep -q 'storage: 10Gi' "$rendered"
+grep -Fq 'data_path = "/robustmq/data/meta"' "$rendered"
+grep -Fq 'data_path = ["/robustmq/data/engine"]' "$rendered"
+grep -Fq 'mountPath: /robustmq/config/server.toml' "$rendered"
+grep -Fq 'checksum/config:' "$rendered"
 
 if grep -q '^kind: IngressRouteTCP$' "$rendered"; then
   echo 'public MQTT route must remain disabled in the dev values' >&2

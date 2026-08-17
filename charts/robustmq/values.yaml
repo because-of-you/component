@@ -24,6 +24,16 @@ securityContext:
     drop:
       - ALL
 
+config:
+  clusterName: broker-server
+  brokerId: 1
+  brokerIp: 127.0.0.1
+  dataPath: /robustmq/data/meta
+  logPath: /robustmq/data/logs
+  storagePort: 1778
+  storageDataPaths:
+    - /robustmq/data/engine
+
 service:
   type: ClusterIP
   annotations: {}

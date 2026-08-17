@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "robustmq.fullname" . }}-config
+  labels:
+    {{- include "robustmq.labels" . | nindent 4 }}
+data:
+  server.toml: |
+    cluster_name = {{ .Values.config.clusterName | quote }}
+    broker_id = {{ .Values.config.brokerId }}
+    broker_ip = {{ .Values.config.brokerIp | quote }}
+    roles = ["meta", "broker", "engine"]
+    grpc_port = {{ .Values.service.ports.grpc }}
+    http_port = {{ .Values.service.ports.admin }}
+    meta_addrs = { {{ .Values.config.brokerId }} = {{ printf "%s:%v" .Values.config.brokerIp .Values.service.ports.grpc | quote }} }
+    data_path = {{ .Values.config.dataPath | quote }}
+
+    [log]
+    log_config = "./config/logger.toml"
+    log_path = {{ .Values.config.logPath | quote }}
+
+    [storage_runtime]
+    tcp_port = {{ .Values.config.storagePort }}
+    data_path = {{ .Values.config.storageDataPaths | toJson }}
