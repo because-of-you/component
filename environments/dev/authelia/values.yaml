@@ -21,7 +21,7 @@ authelia:
           policy: one_factor
           subject:
             - group:lldap_admin
-        - domain: robustmq.acitrus.cn
+        - domain: mq.acitrus.cn
           policy: one_factor
           subject:
             - group:lldap_admin

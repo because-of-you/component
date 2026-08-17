@@ -174,7 +174,7 @@ charts/rustfs/README.md
 ```
 
 RobustMQ 使用仓库自有 Chart 部署官方 `v0.4.11` 镜像，单节点数据保存在 `10Gi` PVC；管理端通过
-`https://robustmq.acitrus.cn` 提供并由 Authelia ForwardAuth 保护，仅允许 `lldap_admin` 组访问。
+`https://mq.acitrus.cn` 提供并由 Authelia ForwardAuth 保护，仅允许 `lldap_admin` 组访问。
 公网 MQTT 入口默认关闭，启用前必须先替换官方开发凭据。配置与安全说明见：
 
 ```text

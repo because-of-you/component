@@ -10,7 +10,7 @@ persistence:
 
 ingressRoute:
   enabled: true
-  host: robustmq.acitrus.cn
+  host: mq.acitrus.cn
   entryPoints:
     - websecure
   middlewares:
@@ -26,8 +26,8 @@ mqttIngressRoute:
 
 resources:
   requests:
-    cpu: 500m
-    memory: 1Gi
+    cpu: 20m
+    memory: 256Mi
   limits:
     cpu: "1"
     memory: 2Gi

@@ -8,7 +8,7 @@ existing deployment conventions directly.
 
 ## Development environment
 
-- Admin endpoint: `https://robustmq.acitrus.cn`
+- Admin endpoint: `https://mq.acitrus.cn`
 - Authentication: Traefik ForwardAuth through Authelia
 - Persistent data: a 10 Gi `local-path` volume mounted at `/robustmq/data`
 - Storage engine: `/robustmq/data/engine` is explicitly configured in the

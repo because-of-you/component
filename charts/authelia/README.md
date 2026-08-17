@@ -166,7 +166,7 @@ middlewares:
 
 ForwardAuth 成功后会传递 `Remote-User`、`Remote-Name`、`Remote-Email` 和 `Remote-Groups`。
 
-dev 环境将 `default_policy` 设置为 `deny`。`ldap.acitrus.cn`、`robustmq.acitrus.cn` 通过
+dev 环境将 `default_policy` 设置为 `deny`。`ldap.acitrus.cn`、`mq.acitrus.cn` 通过
 Traefik ForwardAuth 接入 Authelia，仅允许 LLDAP `lldap_admin` 组成员以 one-factor 访问；
 其他用户默认拒绝。
 

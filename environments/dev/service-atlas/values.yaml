@@ -50,7 +50,7 @@ catalogue:
       color: "#48c98e"
     - id: robustmq
       name: RobustMQ
-      href: https://robustmq.acitrus.cn
+      href: https://mq.acitrus.cn
       landmark: queue
       tier: middleware
       color: "#f1a33c"
