@@ -45,8 +45,7 @@
       "endpoints": [
         { "name": "Dashboard", "protocol": "HTTPS", "address": "https://mq.acitrus.cn", "default": true, "description": "Web 管理界面，通过 acitrus.cn SSO 统一登录。" },
         { "name": "MQTT", "protocol": "MQTTS", "address": "mqtts://mqtt.tcp.acitrus.cn:1024", "description": "开发环境 MQTT 3.1.1/5.0 TLS 接入地址。" },
-        { "name": "AMQP", "protocol": "AMQPS", "address": "amqps://amqp.tcp.acitrus.cn:1024/default", "description": "实验性的 AMQP 0.9.1 TLS 接入地址。" },
-        { "name": "NATS（集群内）", "protocol": "NATS", "address": "nats://robustmq.infra.svc.cluster.local:4222", "description": "仅供 Kubernetes 集群内部访问，当前未启用账号认证。" }
+        { "name": "AMQP", "protocol": "AMQPS", "address": "amqps://amqp.tcp.acitrus.cn:1024/default", "description": "实验性的 AMQP 0.9.1 TLS 接入地址。" }
       ],
       "credentials": [
         { "name": "Dashboard", "login": "通过 acitrus.cn SSO 统一登录。", "groups": ["lldap_admin"] },

@@ -155,10 +155,6 @@ catalogue:
           protocol: AMQPS
           address: amqps://amqp.tcp.acitrus.cn:1024/default
           description: 实验性的 AMQP 0.9.1 TLS 接入地址。
-        - name: NATS（集群内）
-          protocol: NATS
-          address: nats://robustmq.infra.svc.cluster.local:4222
-          description: 仅供 Kubernetes 集群内部访问，当前未启用账号认证。
       credentials:
         - name: Dashboard
           login: 通过 acitrus.cn SSO 统一登录。

@@ -107,6 +107,7 @@ test("production entry loads JSON instead of importing the test fixture", async 
       && credential.username === "admin"
       && credential.password === "amdin"
     ))
+    && service.endpoints.every(({ protocol }) => protocol !== "NATS")
   )));
   assert.ok(config.services.some((service) => (
     service.id === "redis"
