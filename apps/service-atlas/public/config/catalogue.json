@@ -50,6 +50,7 @@
       ],
       "credentials": [
         { "name": "Dashboard", "login": "通过 acitrus.cn SSO 统一登录。", "groups": ["lldap_admin"] },
+        { "name": "Web 管理账号", "username": "admin", "password": "amdin" },
         { "name": "MQTT / AMQP", "username": "admin", "password": "robustmq" }
       ]
     },
@@ -81,7 +82,7 @@
         { "name": "外部 TLS", "protocol": "REDIS/TLS", "address": "rediss://redis.tcp.acitrus.cn:1024", "default": true, "description": "通过 Traefik gravitation 入口按 SNI 路由。" },
         { "name": "集群内", "protocol": "REDIS", "address": "redis://redis-master.infra.svc.cluster.local:6379", "description": "Kubernetes 集群内部直连地址。" }
       ],
-      "credentials": [{ "name": "默认用户", "username": "default", "source": "密码位于 infra/redis-auth 的 redis-password。" }]
+      "credentials": [{ "name": "默认用户", "source": "密码位于 infra/redis-auth 的 redis-password。" }]
     }
   ],
   "relations": [

@@ -65,3 +65,14 @@ test("renders SSO guidance and required groups only when configured", () => {
   assert.match(markup, /dbx_mcp/);
   assert.equal((markup.match(/service-details__groups/g) ?? []).length, 1);
 });
+
+test("renders a password-only credential without an empty account row", () => {
+  const markup = renderServiceDetails({
+    name: "Redis",
+    credentials: [{ name: "默认用户", password: "redis-secret" }],
+  });
+
+  assert.doesNotMatch(markup, /<span>账号<\/span>/);
+  assert.match(markup, /<span>密码<\/span>/);
+  assert.match(markup, /redis-secret/);
+});

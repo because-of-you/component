@@ -89,7 +89,8 @@ body {
   z-index: 4;
   width: min(370px, calc(100vw - 32px));
   max-height: calc(100vh - 32px);
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   padding: 1.05rem 1.1rem 1rem;
   color: var(--text);
   background: rgba(12, 20, 28, 0.97);
@@ -146,12 +147,14 @@ body {
   color: #c1ced8;
   font-size: 0.79rem;
   line-height: 1.55;
+  overflow-wrap: anywhere;
 }
 
 .service-details__description--muted,
 .service-details__no-entry { color: #7f929f; }
 
 .service-details__section {
+  min-width: 0;
   padding: 0.8rem 0;
   border-top: 1px solid rgba(164, 193, 216, 0.13);
 }
@@ -162,6 +165,12 @@ body {
   margin: 0;
   padding: 0;
   list-style: none;
+  min-width: 0;
+}
+
+.service-details__endpoint,
+.service-details__credential {
+  min-width: 0;
 }
 
 .service-details__row,
@@ -172,19 +181,39 @@ body {
   display: flex;
   align-items: center;
   gap: 0.48rem;
+  min-width: 0;
 }
 
-.service-details__row { justify-content: space-between; }
+.service-details__row {
+  justify-content: space-between;
+  overflow: hidden;
+}
 
 .service-details__row strong,
 .service-details__credential > strong {
+  min-width: 0;
   font-size: 0.8rem;
   font-weight: 670;
 }
 
-.service-details__badges { display: flex; gap: 0.28rem; }
+.service-details__row strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.service-details__badges {
+  display: flex;
+  flex: 0 1 auto;
+  gap: 0.28rem;
+  min-width: 0;
+  overflow: hidden;
+}
 
 .service-details__badge {
+  min-width: 0;
+  max-width: 8rem;
+  overflow: hidden;
   padding: 0.12rem 0.36rem;
   color: #b6d2e5;
   background: rgba(80, 137, 176, 0.16);
@@ -192,6 +221,8 @@ body {
   border-radius: 999px;
   font-size: 0.61rem;
   font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .service-details__badge--default {
@@ -200,12 +231,18 @@ body {
   border-color: rgba(92, 203, 142, 0.24);
 }
 
-.service-details__address { margin-top: 0.34rem; }
+.service-details__address {
+  width: 100%;
+  margin-top: 0.34rem;
+  overflow: hidden;
+}
 
 .service-details__address code,
 .service-details__address a,
 .service-details__secret code {
+  flex: 1 1 auto;
   min-width: 0;
+  max-width: 100%;
   overflow: hidden;
   color: #d7e7f2;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
@@ -221,6 +258,7 @@ body {
   color: #8499a8;
   font-size: 0.69rem;
   line-height: 1.42;
+  overflow-wrap: anywhere;
 }
 
 .service-details__copy {
@@ -289,10 +327,12 @@ body {
 }
 
 .service-details__source p {
+  min-width: 0;
   margin: 0;
   color: #a5b7c3;
   font-size: 0.68rem;
   line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .service-details__footer {

@@ -31,6 +31,10 @@ test("provides an interactive floating service detail card", async () => {
   assert.match(styles, /\.service-details\s*\{[^}]*position:\s*absolute/s);
   assert.match(styles, /\.service-details__endpoint/);
   assert.match(styles, /\.service-details__credential/);
+  assert.match(styles, /\.service-details\s*\{[^}]*overflow-x:\s*hidden/s);
+  assert.match(styles, /\.service-details__address\s*\{[^}]*overflow:\s*hidden/s);
+  assert.match(styles, /\.service-details__endpoint,[\s\S]*?min-width:\s*0/);
+  assert.match(styles, /text-overflow:\s*ellipsis/);
   assert.match(source, /renderServiceDetails/);
   assert.match(source, /navigator\.clipboard\.writeText/);
   assert.match(source, /positionDetails\(landmark\)/);

@@ -164,6 +164,9 @@ catalogue:
           login: 通过 acitrus.cn SSO 统一登录。
           groups:
             - lldap_admin
+        - name: Web 管理账号
+          username: admin
+          password: amdin
         - name: MQTT / AMQP
           username: admin
           password: robustmq
@@ -230,7 +233,6 @@ catalogue:
           description: Kubernetes 集群内部直连地址。
       credentials:
         - name: 默认用户
-          username: default
           passwordFile: ./config/secrets/redis-password
   relations:
     - { source: traefik, target: authelia, type: route }

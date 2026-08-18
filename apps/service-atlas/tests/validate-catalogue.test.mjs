@@ -67,6 +67,7 @@ test("accepts descriptions, multi-protocol endpoints, and credential sources", (
       usernameFile: "./config/secrets/rustfs-access-key",
       passwordFile: "./config/secrets/rustfs-secret-key",
     },
+    { name: "Redis", password: "password-only" },
   ];
 
   assert.deepEqual(validateCatalogue(detailed), []);

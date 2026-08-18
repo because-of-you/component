@@ -194,12 +194,10 @@ export function validateCatalogue(catalogue) {
               });
             }
           }
-          const hasAccount = credential?.username !== undefined
-            || credential?.usernameFile !== undefined;
           const hasSecret = credential?.password !== undefined
             || credential?.passwordFile !== undefined
             || credential?.source !== undefined;
-          if (credential?.login === undefined && !(hasAccount && hasSecret)) {
+          if (credential?.login === undefined && !hasSecret) {
             errors.push(`${credentialPath} must define login or account credentials`);
           }
         });

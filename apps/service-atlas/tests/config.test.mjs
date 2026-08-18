@@ -102,6 +102,18 @@ test("production entry loads JSON instead of importing the test fixture", async 
     service.id === "robustmq"
     && service.color === "#27c2ff"
     && service.endpoints.some(({ address }) => address === "mqtts://mqtt.tcp.acitrus.cn:1024")
+    && service.credentials.some((credential) => (
+      credential.name === "Web 管理账号"
+      && credential.username === "admin"
+      && credential.password === "amdin"
+    ))
+  )));
+  assert.ok(config.services.some((service) => (
+    service.id === "redis"
+    && service.credentials.some((credential) => (
+      credential.name === "默认用户"
+      && credential.username === undefined
+    ))
   )));
   assert.equal(new Set(config.services.map((service) => service.color)).size, config.services.length);
 });
