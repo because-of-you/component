@@ -31,8 +31,9 @@ npm run dev -- --port 4173
     { name: "TCP", protocol: "TCP", address: "tcp://example.com:1024" },
   ],
   credentials: [
+    { name: "统一登录", login: "通过 acitrus.cn SSO 统一登录", groups: ["admin", "operator"] },
     { name: "开发账号", username: "admin", password: "admin" },
-    { name: "数据库", username: "postgres", source: "由 Kubernetes Secret 管理" },
+    { name: "数据库", username: "postgres", passwordFile: "./config/secrets/postgres-password" },
   ],
 }
 ```
@@ -45,7 +46,7 @@ npm run dev -- --port 4173
 - `color`：可选的六位十六进制节点色；未设置时使用 `landmark` 对应的默认色。
 - `description`：可选的服务用途说明，悬停或键盘聚焦节点时显示。
 - `endpoints`：可选的访问地址列表，支持 HTTP(S)、TCP、MQTT(S)、AMQP(S)、NATS、LDAP、PostgreSQL 和 Redis(S)；最多一个地址标记为 `default`。
-- `credentials`：可选的登录信息。固定的开发凭据可写 `password`；Secret 管理的密码只写 `source`，不要把真实 Secret 提交到仓库。
+- `credentials`：可选的登录信息。SSO 使用 `login`，可用 `groups` 列出一个或多个所需组；没有组时省略该字段。固定开发凭据可写 `username` / `password`，Secret 投影使用 `usernameFile` / `passwordFile`，路径只允许位于 `./config/secrets/`。不要把真实 Secret 提交到仓库。
 
 不需要维护坐标：页面会按照 `tier` 生成五个固定领域列，并把同层节点自动分配到纵向等距槽位。Graphviz `neato` 基于这些最终节点位置生成原生样条曲线，因此节点增加后仍能保持稳定分层和自动布线。布局结果按目录内容缓存，不会持续占用主线程计算；界面仍会根据连接数量自动区分枢纽、重要和标准节点。
 

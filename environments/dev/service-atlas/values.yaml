@@ -13,8 +13,26 @@ ingressRoute:
   host: atlas.acitrus.cn
   entryPoints:
     - websecure
+  middlewares:
+    - name: authelia-forwardauth
+      namespace: infra
   tls:
     certResolver: leresolver
+
+secretFiles:
+  enabled: true
+  existingSecret: service-atlas-secrets
+  items:
+    - key: redis-password
+      path: redis-password
+    - key: postgres-password
+      path: postgres-password
+    - key: lldap-admin-password
+      path: lldap-admin-password
+    - key: rustfs-access-key
+      path: rustfs-access-key
+    - key: rustfs-secret-key
+      path: rustfs-secret-key
 
 catalogue:
   services:
@@ -32,9 +50,10 @@ catalogue:
           default: true
           description: 路由、服务和中间件的只读管理视图。
       credentials:
-        - name: Authelia SSO
-          username: LLDAP 用户
-          source: 需属于 lldap_admin 组。
+        - name: 统一登录
+          login: 通过 acitrus.cn SSO 统一登录。
+          groups:
+            - lldap_admin
     - id: authelia
       name: Authelia
       href: https://auth.acitrus.cn
@@ -53,16 +72,15 @@ catalogue:
           address: http://authelia.infra.svc.cluster.local/api/authz/forward-auth
           description: Traefik 在转发受保护请求前调用的内部鉴权接口。
       credentials:
-        - name: LLDAP 登录
-          username: LLDAP 用户名或邮箱
-          source: 密码和组成员关系由 LLDAP 管理。
+        - name: 统一登录
+          login: 通过 acitrus.cn SSO 统一登录。
     - id: claude-code-hub
       name: Claude Code Hub
       href: https://inner.coding.acitrus.cn
       landmark: application
       tier: application
       color: "#a782f4"
-      description: 内部 Claude Code 服务入口，通过 Authelia OIDC 登录并使用 PostgreSQL、Redis。
+      description: 内部 Claude Code 服务入口，通过 acitrus.cn SSO 统一登录并使用 PostgreSQL、Redis。
       endpoints:
         - name: Web 控制台
           protocol: HTTPS
@@ -70,9 +88,10 @@ catalogue:
           default: true
           description: 应用主页和 API 的统一入口。
       credentials:
-        - name: Authelia OIDC
-          username: LLDAP 用户
-          source: 需属于 lldap_admin 组。
+        - name: 统一登录
+          login: 通过 acitrus.cn SSO 统一登录。
+          groups:
+            - lldap_admin
     - id: dbx
       name: DBX
       href: https://db.acitrus.cn
@@ -87,33 +106,34 @@ catalogue:
           default: true
           description: Web 页面和 DBX 对外接口共用该受保护域名。
       credentials:
-        - name: Authelia ForwardAuth
-          username: LLDAP 用户
-          source: 需属于 lldap_admin 或 dbx_mcp 组；DBX 自身密码已禁用。
+        - name: 统一登录
+          login: 通过 acitrus.cn SSO 统一登录；DBX 自身无需二次输入密码。
+          groups:
+            - lldap_admin
+            - dbx_mcp
     - id: rustfs
       name: RustFS
       href: https://s3.acitrus.cn
       landmark: storage
       tier: data
       color: "#48c98e"
-      description: S3 兼容对象存储。控制台使用 Authelia OIDC，客户端通过独立 S3 API 端点访问。
+      description: S3 兼容对象存储。控制台通过 acitrus.cn SSO 统一登录，客户端通过独立 S3 API 端点访问。
       endpoints:
         - name: 管理控制台
           protocol: HTTPS
           address: https://s3.acitrus.cn
           default: true
-          description: Web 管理界面，使用 Authelia OIDC 统一登录。
+          description: Web 管理界面，通过 acitrus.cn SSO 统一登录。
         - name: S3 API
           protocol: HTTPS
           address: https://s3.acitrus.cn:1024
           description: S3 客户端端点，仅支持路径风格访问。
       credentials:
         - name: 管理控制台
-          username: LLDAP 用户
-          source: 通过 Authelia OIDC 登录，dev 环境授予 consoleAdmin。
+          login: 通过 acitrus.cn SSO 统一登录；dev 环境授予 consoleAdmin。
         - name: S3 API
-          username: RUSTFS_ACCESS_KEY
-          source: "由 infra/rustfs-secrets 的 RUSTFS_ACCESS_KEY 与 RUSTFS_SECRET_KEY 管理。"
+          usernameFile: ./config/secrets/rustfs-access-key
+          passwordFile: ./config/secrets/rustfs-secret-key
     - id: robustmq
       name: RobustMQ
       href: https://mq.acitrus.cn
@@ -126,7 +146,7 @@ catalogue:
           protocol: HTTPS
           address: https://mq.acitrus.cn
           default: true
-          description: Web 管理界面，经过 Authelia 统一登录。
+          description: Web 管理界面，通过 acitrus.cn SSO 统一登录。
         - name: MQTT
           protocol: MQTTS
           address: mqtts://mqtt.tcp.acitrus.cn:1024
@@ -141,8 +161,9 @@ catalogue:
           description: 仅供 Kubernetes 集群内部访问，当前未启用账号认证。
       credentials:
         - name: Dashboard
-          username: admin
-          password: admin
+          login: 通过 acitrus.cn SSO 统一登录。
+          groups:
+            - lldap_admin
         - name: MQTT / AMQP
           username: admin
           password: robustmq
@@ -158,15 +179,19 @@ catalogue:
           protocol: HTTPS
           address: https://ldap.acitrus.cn
           default: true
-          description: 用户与组管理页面，外层由 Authelia 保护。
+          description: 用户与组管理页面，通过 acitrus.cn SSO 统一登录。
         - name: LDAP（集群内）
           protocol: LDAP
           address: ldap://lldap.infra.svc.cluster.local:3890
           description: Base DN 为 dc=acitrus,dc=cn，不提供公网 TCP 路由。
       credentials:
+        - name: 管理界面
+          login: 通过 acitrus.cn SSO 统一登录。
+          groups:
+            - lldap_admin
         - name: LLDAP 管理员
           username: admin
-          source: "密码位于 infra/lldap-secrets 的 lldap-ldap-user-pass。"
+          passwordFile: ./config/secrets/lldap-admin-password
     - id: postgresql
       name: PostgreSQL
       landmark: database
@@ -186,7 +211,7 @@ catalogue:
       credentials:
         - name: 管理员
           username: postgres
-          source: "密码位于 infra/postgresql-auth 的 postgres-password。"
+          passwordFile: ./config/secrets/postgres-password
     - id: redis
       name: Redis
       landmark: cache
@@ -206,7 +231,7 @@ catalogue:
       credentials:
         - name: 默认用户
           username: default
-          source: "密码位于 infra/redis-auth 的 redis-password。"
+          passwordFile: ./config/secrets/redis-password
   relations:
     - { source: traefik, target: authelia, type: route }
     - { source: traefik, target: claude-code-hub, type: route }

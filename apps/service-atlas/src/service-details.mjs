@@ -58,8 +58,10 @@ function renderCredentials(credentials = []) {
 
   const items = credentials.map((credential) => `<li class="service-details__credential">
     <strong>${escapeMarkup(credential.name)}</strong>
-    <div class="service-details__secret"><span>账号</span><code>${escapeMarkup(credential.username)}</code>${renderCopyButton(credential.username, `${credential.name}账号`)}</div>
+    ${credential.login ? `<p class="service-details__login">${escapeMarkup(credential.login)}</p>` : ""}
+    ${credential.username ? `<div class="service-details__secret"><span>账号</span><code>${escapeMarkup(credential.username)}</code>${renderCopyButton(credential.username, `${credential.name}账号`)}</div>` : ""}
     ${credential.password ? `<div class="service-details__secret"><span>密码</span><code>${escapeMarkup(credential.password)}</code>${renderCopyButton(credential.password, `${credential.name}密码`)}</div>` : ""}
+    ${credential.groups?.length ? `<div class="service-details__groups"><span>所需组</span><ul>${credential.groups.map((group) => `<li>${escapeMarkup(group)}</li>`).join("")}</ul></div>` : ""}
     ${credential.source ? `<div class="service-details__source"><span>来源</span><p>${escapeMarkup(credential.source)}</p></div>` : ""}
   </li>`).join("");
 

@@ -83,6 +83,11 @@ spec:
             - name: runtime-config
               mountPath: /usr/share/nginx/html/config
               readOnly: true
+            {{- if .Values.secretFiles.enabled }}
+            - name: credential-files
+              mountPath: /usr/share/nginx/html/config/secrets
+              readOnly: true
+            {{- end }}
             - name: nginx-tmp
               mountPath: /tmp
       volumes:
@@ -95,3 +100,10 @@ spec:
         - name: nginx-tmp
           emptyDir:
             sizeLimit: {{ .Values.tmpVolume.sizeLimit }}
+        {{- if .Values.secretFiles.enabled }}
+        - name: credential-files
+          secret:
+            secretName: {{ required "secretFiles.existingSecret is required when secretFiles.enabled=true" .Values.secretFiles.existingSecret | quote }}
+            items:
+              {{- toYaml .Values.secretFiles.items | nindent 14 }}
+        {{- end }}

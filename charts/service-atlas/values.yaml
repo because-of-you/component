@@ -46,7 +46,13 @@ ingressRoute:
   enabled: false
   host: ""
   entryPoints: []
+  middlewares: []
   tls: {}
+
+secretFiles:
+  enabled: false
+  existingSecret: ""
+  items: []
 
 podDisruptionBudget:
   enabled: true

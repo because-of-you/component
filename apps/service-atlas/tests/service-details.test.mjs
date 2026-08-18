@@ -41,3 +41,27 @@ test("escapes catalogue text before inserting the detail card", () => {
   assert.match(markup, /&lt;script&gt;alert\(&quot;x&quot;\)&lt;\/script&gt;/);
   assert.match(markup, /&lt;b&gt;unsafe&lt;\/b&gt;/);
 });
+
+test("renders SSO guidance and required groups only when configured", () => {
+  const markup = renderServiceDetails({
+    name: "Protected service",
+    credentials: [
+      {
+        name: "统一登录",
+        login: "通过 acitrus.cn SSO 统一登录",
+        groups: ["lldap_admin", "dbx_mcp"],
+      },
+      {
+        name: "Open SSO",
+        login: "通过 acitrus.cn SSO 统一登录",
+      },
+    ],
+  });
+
+  assert.doesNotMatch(markup, /Authelia OIDC/);
+  assert.match(markup, /通过 acitrus\.cn SSO 统一登录/);
+  assert.match(markup, /所需组/);
+  assert.match(markup, /lldap_admin/);
+  assert.match(markup, /dbx_mcp/);
+  assert.equal((markup.match(/service-details__groups/g) ?? []).length, 1);
+});

@@ -10,6 +10,7 @@ export const RELATION_TYPES = new Set(RELATION_TYPE_VALUES);
 
 const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
+const CREDENTIAL_FILE_PATTERN = /^\.\/config\/secrets\/[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const ALIGNMENTS = new Set(["start", "middle", "end"]);
 const TIERS = new Set(["ingress", "application", "identity", "middleware", "data"]);
 const ENDPOINT_PROTOCOLS = new Set([
@@ -160,15 +161,46 @@ export function validateCatalogue(catalogue) {
         service.credentials.forEach((credential, credentialIndex) => {
           const credentialPath = `${path}.credentials[${credentialIndex}]`;
           validateNonEmptyString(errors, credential?.name, `${credentialPath}.name`);
-          validateNonEmptyString(errors, credential?.username, `${credentialPath}.username`);
+          if (credential?.login !== undefined) {
+            validateNonEmptyString(errors, credential.login, `${credentialPath}.login`);
+          }
+          if (credential?.username !== undefined) {
+            validateNonEmptyString(errors, credential.username, `${credentialPath}.username`);
+          }
+          if (credential?.usernameFile !== undefined && (
+            typeof credential.usernameFile !== "string"
+            || !CREDENTIAL_FILE_PATTERN.test(credential.usernameFile)
+          )) {
+            errors.push(`${credentialPath}.usernameFile must reference ./config/secrets`);
+          }
           if (credential?.password !== undefined) {
             validateNonEmptyString(errors, credential.password, `${credentialPath}.password`);
+          }
+          if (credential?.passwordFile !== undefined && (
+            typeof credential.passwordFile !== "string"
+            || !CREDENTIAL_FILE_PATTERN.test(credential.passwordFile)
+          )) {
+            errors.push(`${credentialPath}.passwordFile must reference ./config/secrets`);
           }
           if (credential?.source !== undefined) {
             validateNonEmptyString(errors, credential.source, `${credentialPath}.source`);
           }
-          if (credential?.password === undefined && credential?.source === undefined) {
-            errors.push(`${credentialPath} must define password or source`);
+          if (credential?.groups !== undefined) {
+            if (!Array.isArray(credential.groups)) {
+              errors.push(`${credentialPath}.groups must be an array`);
+            } else {
+              credential.groups.forEach((group, groupIndex) => {
+                validateNonEmptyString(errors, group, `${credentialPath}.groups[${groupIndex}]`);
+              });
+            }
+          }
+          const hasAccount = credential?.username !== undefined
+            || credential?.usernameFile !== undefined;
+          const hasSecret = credential?.password !== undefined
+            || credential?.passwordFile !== undefined
+            || credential?.source !== undefined;
+          if (credential?.login === undefined && !(hasAccount && hasSecret)) {
+            errors.push(`${credentialPath} must define login or account credentials`);
           }
         });
       }

@@ -241,6 +241,38 @@ jobs:
         if: matrix.component == 'traefik'
         run: kubectl create namespace traefik --dry-run=client -o yaml | bash .github/scripts/kubectl-apply-retry.sh
 
+      - name: Sync Service Atlas credentials
+        if: matrix.component == 'service-atlas'
+        shell: bash
+        env:
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          LLDAP_ADMIN_PASSWORD: ${{ secrets.LLDAP_ADMIN_PASSWORD }}
+          RUSTFS_ACCESS_KEY: ${{ secrets.RUSTFS_ACCESS_KEY }}
+          RUSTFS_SECRET_KEY: ${{ secrets.RUSTFS_SECRET_KEY }}
+        run: |
+          test -n "$REDIS_PASSWORD"
+          test -n "$POSTGRES_PASSWORD"
+          test -n "$LLDAP_ADMIN_PASSWORD"
+          test -n "$RUSTFS_ACCESS_KEY"
+          test -n "$RUSTFS_SECRET_KEY"
+          umask 077
+          credentials_dir="$(mktemp -d)"
+          trap 'rm -rf "$credentials_dir"' EXIT
+          printf '%s' "$REDIS_PASSWORD" > "$credentials_dir/redis-password"
+          printf '%s' "$POSTGRES_PASSWORD" > "$credentials_dir/postgres-password"
+          printf '%s' "$LLDAP_ADMIN_PASSWORD" > "$credentials_dir/lldap-admin-password"
+          printf '%s' "$RUSTFS_ACCESS_KEY" > "$credentials_dir/rustfs-access-key"
+          printf '%s' "$RUSTFS_SECRET_KEY" > "$credentials_dir/rustfs-secret-key"
+          kubectl -n app create secret generic service-atlas-secrets \
+            --from-file=redis-password="$credentials_dir/redis-password" \
+            --from-file=postgres-password="$credentials_dir/postgres-password" \
+            --from-file=lldap-admin-password="$credentials_dir/lldap-admin-password" \
+            --from-file=rustfs-access-key="$credentials_dir/rustfs-access-key" \
+            --from-file=rustfs-secret-key="$credentials_dir/rustfs-secret-key" \
+            --dry-run=client -o yaml \
+            | bash .github/scripts/kubectl-apply-retry.sh
+
       - name: Sync Redis credentials
         if: matrix.component == 'redis'
         shell: bash

@@ -12,6 +12,10 @@ authelia:
     access_control:
       default_policy: deny
       rules:
+        - domain: atlas.acitrus.cn
+          policy: one_factor
+          subject:
+            - group:lldap_admin
         - domain: db.acitrus.cn
           policy: one_factor
           subject:

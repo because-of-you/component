@@ -37,6 +37,10 @@ grep -Fq 'image: "registry.cn-shenzhen.aliyuncs.com/gravitation/service-atlas:de
 grep -Fq 'readOnlyRootFilesystem: true' "$rendered"
 grep -Fq 'runAsUser: 101' "$rendered"
 grep -Fq 'mountPath: /usr/share/nginx/html/config' "$rendered"
+grep -Fq 'mountPath: /usr/share/nginx/html/config/secrets' "$rendered"
+grep -Fq 'secretName: "service-atlas-secrets"' "$rendered"
+grep -Fq 'key: redis-password' "$rendered"
+grep -Fq 'path: rustfs-secret-key' "$rendered"
 if grep -Fq 'subPath:' "$rendered"; then
   echo 'ConfigMap must be mounted as a directory so projected updates remain live' >&2
   exit 1
@@ -46,6 +50,8 @@ grep -Fq 'path: /healthz' "$rendered"
 grep -Fq 'kind: Service' "$rendered"
 grep -Fq 'kind: IngressRoute' "$rendered"
 grep -Fq 'Host(`atlas.acitrus.cn`)' "$rendered"
+grep -A4 -F 'Host(`atlas.acitrus.cn`)' "$rendered" | grep -Fq 'name: "authelia-forwardauth"'
+grep -A5 -F 'Host(`atlas.acitrus.cn`)' "$rendered" | grep -Fq 'namespace: "infra"'
 grep -Fq -- '- websecure' "$rendered"
 grep -Fq 'certResolver: leresolver' "$rendered"
 
@@ -62,6 +68,10 @@ grep -Fq 'docker/build-push-action@v7' "$workflow"
 grep -Fq 'provenance: false' "$workflow"
 grep -Fq 'sbom: false' "$workflow"
 grep -Fq 'npm run test:atlas' "$workflow"
+grep -Fq 'name: Sync Service Atlas credentials' "$workflow"
+grep -Fq 'kubectl -n app create secret generic service-atlas-secrets' "$workflow"
+grep -Fq -- '--from-file=lldap-admin-password=' "$workflow"
+grep -Fq -- '--from-file=rustfs-secret-key=' "$workflow"
 grep -Fq 'sync --set image.tag="$SERVICE_ATLAS_IMAGE_TAG"' "$workflow"
 grep -Fq 'kubectl -n app rollout status deployment/service-atlas --timeout=300s' "$workflow"
 grep -Fq 'https://atlas.acitrus.cn/healthz' "$workflow"

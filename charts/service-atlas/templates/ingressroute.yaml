@@ -11,6 +11,15 @@ spec:
   routes:
     - kind: Rule
       match: 'Host(`{{ required "ingressRoute.host is required when ingressRoute is enabled" .Values.ingressRoute.host }}`)'
+      {{- with .Values.ingressRoute.middlewares }}
+      middlewares:
+        {{- range . }}
+        - name: {{ .name | quote }}
+          {{- with .namespace }}
+          namespace: {{ . | quote }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
       services:
         - name: {{ include "service-atlas.fullname" . }}
           port: {{ .Values.service.port }}

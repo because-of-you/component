@@ -16,6 +16,51 @@ test("loads the browser catalogue with a no-store request", async () => {
   assert.deepEqual(calls, [["./config/catalogue.json", { cache: "no-store" }]]);
 });
 
+test("resolves usernames and passwords from mounted Secret files", async () => {
+  const catalogue = {
+    services: [{
+      credentials: [{
+        name: "S3 API",
+        usernameFile: "./config/secrets/rustfs-access-key",
+        passwordFile: "./config/secrets/rustfs-secret-key",
+      }],
+    }],
+    relations: [],
+  };
+  const responses = new Map([
+    ["./config/catalogue.json", { ok: true, json: async () => structuredClone(catalogue) }],
+    ["./config/secrets/rustfs-access-key", { ok: true, text: async () => "access-key" }],
+    ["./config/secrets/rustfs-secret-key", { ok: true, text: async () => "secret-key" }],
+  ]);
+  const calls = [];
+
+  const loaded = await loadCatalogue(async (url, options) => {
+    calls.push([url, options]);
+    return responses.get(url);
+  });
+
+  assert.equal(loaded.services[0].credentials[0].username, "access-key");
+  assert.equal(loaded.services[0].credentials[0].password, "secret-key");
+  assert.deepEqual(calls, [
+    ["./config/catalogue.json", { cache: "no-store" }],
+    ["./config/secrets/rustfs-access-key", { cache: "no-store" }],
+    ["./config/secrets/rustfs-secret-key", { cache: "no-store" }],
+  ]);
+});
+
+test("rejects credential file paths outside the mounted Secret directory", async () => {
+  await assert.rejects(
+    () => loadCatalogue(async () => ({
+      ok: true,
+      json: async () => ({
+        services: [{ credentials: [{ passwordFile: "https://example.com/password" }] }],
+        relations: [],
+      }),
+    })),
+    /Invalid credential file path/,
+  );
+});
+
 test("throws when the external catalogue cannot be loaded", async () => {
   await assert.rejects(
     () => loadCatalogue(async () => ({ ok: false, status: 503 })),

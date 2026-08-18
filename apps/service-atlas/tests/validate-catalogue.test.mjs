@@ -61,6 +61,12 @@ test("accepts descriptions, multi-protocol endpoints, and credential sources", (
   detailed.services[0].credentials = [
     { name: "Development", username: "admin", password: "admin" },
     { name: "Database", username: "postgres", source: "Kubernetes Secret" },
+    { name: "SSO", login: "通过 acitrus.cn SSO 统一登录", groups: ["admin", "operator"] },
+    {
+      name: "S3",
+      usernameFile: "./config/secrets/rustfs-access-key",
+      passwordFile: "./config/secrets/rustfs-secret-key",
+    },
   ];
 
   assert.deepEqual(validateCatalogue(detailed), []);
@@ -77,7 +83,24 @@ test("rejects unsafe endpoint protocols and incomplete credentials", () => {
   assert.deepEqual(validateCatalogue(detailed), [
     "services[0].endpoints[0].address uses an unsupported protocol",
     "services[0].endpoints may only contain one default endpoint",
-    "services[0].credentials[0] must define password or source",
+    "services[0].credentials[0] must define login or account credentials",
+  ]);
+});
+
+test("rejects unsafe credential files and malformed group lists", () => {
+  const detailed = structuredClone(valid);
+  detailed.services[0].credentials = [{
+    name: "Broken",
+    login: "SSO",
+    usernameFile: "https://example.com/username",
+    passwordFile: "../password",
+    groups: ["admin", ""],
+  }];
+
+  assert.deepEqual(validateCatalogue(detailed), [
+    "services[0].credentials[0].usernameFile must reference ./config/secrets",
+    "services[0].credentials[0].passwordFile must reference ./config/secrets",
+    "services[0].credentials[0].groups[1] must be a non-empty string",
   ]);
 });
 

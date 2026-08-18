@@ -167,7 +167,8 @@ body {
 .service-details__row,
 .service-details__address,
 .service-details__secret,
-.service-details__source {
+.service-details__source,
+.service-details__groups {
   display: flex;
   align-items: center;
   gap: 0.48rem;
@@ -252,13 +253,40 @@ body {
 }
 
 .service-details__secret > span,
-.service-details__source > span {
+.service-details__source > span,
+.service-details__groups > span {
   flex: 0 0 2.2rem;
   color: #7f95a4;
   font-size: 0.66rem;
 }
 
 .service-details__source { align-items: flex-start; }
+
+.service-details__login {
+  margin: 0;
+  color: #d7e7f2;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.service-details__groups ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.service-details__groups li {
+  padding: 0.12rem 0.36rem;
+  color: #f4d99a;
+  background: rgba(226, 170, 67, 0.12);
+  border: 1px solid rgba(232, 184, 92, 0.24);
+  border-radius: 999px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.64rem;
+}
 
 .service-details__source p {
   margin: 0;
