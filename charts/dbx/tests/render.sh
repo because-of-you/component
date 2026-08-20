@@ -12,14 +12,14 @@ trap 'rm -f "$rendered" "$default_rendered"' EXIT
 helm template dbx "$chart_dir" --namespace app -f "$dev_values" >"$rendered"
 helm template dbx "$chart_dir" --namespace app >"$default_rendered"
 
-grep -Fq 'appVersion: "0.5.88"' "$chart_dir/Chart.yaml"
+grep -Fq 'appVersion: "0.5.89"' "$chart_dir/Chart.yaml"
 grep -Fq 'repository: t8y2/dbx' "$chart_dir/values.yaml"
-grep -Fq 'tag: "0.5.88"' "$chart_dir/values.yaml"
+grep -Fq 'tag: "0.5.89"' "$chart_dir/values.yaml"
 
 grep -Fq 'kind: Deployment' "$rendered"
 grep -Fq 'replicas: 1' "$rendered"
 grep -Fq 'type: Recreate' "$rendered"
-grep -Fq 'image: "t8y2/dbx:0.5.88"' "$rendered"
+grep -Fq 'image: "t8y2/dbx:0.5.89"' "$rendered"
 grep -Fq 'containerPort: 4224' "$rendered"
 grep -A1 -F 'name: DBX_DISABLE_PASSWORD' "$rendered" | grep -Fq 'value: "1"'
 grep -A1 -F 'name: DBX_DATA_DIR' "$rendered" | grep -Fq 'value: "/app/data"'
