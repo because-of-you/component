@@ -6,7 +6,7 @@ Deployment、ClusterIP Service、PVC 和可选的 Traefik IngressRoute；如果�
 
 ## 默认行为
 
-- 官方镜像：`t8y2/dbx:0.5.89`
+- 官方镜像：`t8y2/dbx:0.5.92`
 - 单副本 `Deployment`，更新策略为 `Recreate`
 - `ClusterIP` Service，容器端口 `4224`
 - `/app/data` 使用 `ReadWriteOnce` PVC 持久化
