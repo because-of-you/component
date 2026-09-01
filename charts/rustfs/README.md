@@ -1,7 +1,7 @@
 # RustFS
 
-这个 Chart 封装官方 RustFS Helm Chart `1.0.0-rc.2`，并追加本仓库使用的 Traefik HTTP
-`IngressRoute`。上游 Chart 与 RustFS 镜像都固定为 `1.0.0-rc.2`，升级时必须同步更新。
+这个 Chart 封装官方 RustFS Helm Chart `1.0.0-rc.4`，并追加本仓库使用的 Traefik HTTP
+`IngressRoute`。上游 Chart 与 RustFS 镜像都固定为 `1.0.0-rc.4`，升级时必须同步更新。
 
 ## dev 拓扑
 
@@ -11,6 +11,10 @@
 - log PVC：`local-path` / `1Gi`
 - 控制台：`https://s3.acitrus.cn`
 - S3 API Endpoint：`https://s3.acitrus.cn:1024`
+
+上游 Chart 保持只读根文件系统。dev 额外挂载一个大小上限为 `2Gi` 的临时 `emptyDir` 到
+`/tmp`，并设置 `TMPDIR=/tmp`，供 RustFS 创建 ZIP 等请求级临时文件。临时卷不保存对象数据，
+Pod 重建时会自动清空；对象数据仍只保存在 data PVC 中。
 
 控制台通过 Traefik `websecure` 入口转发到服务端口 `9001`；S3 API 通过共享的
 `gravitation` 入口转发到服务端口 `9000`。两条路由都是由 Traefik 终止 TLS 的 HTTP

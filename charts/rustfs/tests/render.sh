@@ -13,7 +13,7 @@ test -f "$chart_dir/Chart.yaml"
 test -f "$chart_dir/values.yaml"
 test -f "$dev_values"
 grep -Fq 'name: rustfs' "$chart_dir/Chart.yaml"
-grep -Fq 'version: 1.0.0-rc.2' "$chart_dir/Chart.yaml"
+grep -Fq 'version: 1.0.0-rc.4' "$chart_dir/Chart.yaml"
 grep -Fq 'repository: https://charts.rustfs.com' "$chart_dir/Chart.yaml"
 
 helm template rustfs-default "$chart_dir" >"$default_rendered"
@@ -86,6 +86,7 @@ env_by_name = env.each_with_object({}) do |entry, indexed|
   indexed[name] = entry['value']
 end
 expected_env = {
+  'TMPDIR' => '/tmp',
   'RUSTFS_BROWSER_REDIRECT_URL' => 'https://s3.acitrus.cn',
   'RUSTFS_OUTBOUND_ALLOW_ORIGINS' => 'https://auth.acitrus.cn',
   'RUSTFS_IDENTITY_OPENID_ENABLE' => 'on',
@@ -121,6 +122,28 @@ secret_refs = env_from.map { |entry| entry.dig('secretRef', 'name') }.compact
 assert(
   secret_refs == ['rustfs-secrets'],
   'RustFS OIDC client secret must come from the rustfs-secrets envFrom reference'
+)
+
+security_context = container['securityContext']
+assert(
+  security_context.is_a?(Hash) && security_context['readOnlyRootFilesystem'] == true,
+  'RustFS container root filesystem must remain read-only'
+)
+
+volume_mounts = container['volumeMounts']
+assert(volume_mounts.is_a?(Array), 'RustFS container volume mounts are missing')
+tmp_mounts = volume_mounts.select { |mount| mount['name'] == 'tmp' }
+assert(
+  tmp_mounts == [{ 'name' => 'tmp', 'mountPath' => '/tmp' }],
+  'RustFS must mount exactly one writable temporary volume at /tmp'
+)
+
+volumes = deployments.first.dig('spec', 'template', 'spec', 'volumes')
+assert(volumes.is_a?(Array), 'RustFS Deployment volumes are missing')
+tmp_volumes = volumes.select { |volume| volume['name'] == 'tmp' }
+assert(
+  tmp_volumes == [{ 'name' => 'tmp', 'emptyDir' => { 'sizeLimit' => '2Gi' } }],
+  'RustFS /tmp must use a bounded 2Gi emptyDir volume'
 )
 
 assert(http_routes.length == 2, 'RustFS must render exactly two HTTP IngressRoute resources')
@@ -192,8 +215,8 @@ image_manifest="$repo_root/images/rustfs/images.yaml"
 
 test -f "$image_manifest"
 grep -Fq 'component: rustfs' "$image_manifest"
-grep -Fq 'source: docker.io/rustfs/rustfs:1.0.0-rc.2' "$image_manifest"
-grep -Fq 'destination: registry.cn-shenzhen.aliyuncs.com/gravitation/rustfs:1.0.0-rc.2' "$image_manifest"
+grep -Fq 'source: docker.io/rustfs/rustfs:1.0.0-rc.4' "$image_manifest"
+grep -Fq 'destination: registry.cn-shenzhen.aliyuncs.com/gravitation/rustfs:1.0.0-rc.4' "$image_manifest"
 
 ruby --disable-gems - "$repo_root/helmfile.yaml" "$workflow" "$chart_dir/README.md" <<'RUBY'
 require 'yaml'

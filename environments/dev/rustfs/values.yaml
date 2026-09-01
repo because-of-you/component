@@ -8,7 +8,7 @@ rustfs:
   image:
     rustfs:
       repository: registry.cn-shenzhen.aliyuncs.com/gravitation/rustfs
-      tag: 1.0.0-rc.2
+      tag: 1.0.0-rc.4
       pullPolicy: IfNotPresent
 
   secret:
@@ -38,7 +38,18 @@ rustfs:
       cpu: 1000m
       memory: 512Mi
 
+  extraVolumes:
+    - name: tmp
+      emptyDir:
+        sizeLimit: 2Gi
+
+  extraVolumeMounts:
+    - name: tmp
+      mountPath: /tmp
+
   extraEnv:
+    - name: TMPDIR
+      value: /tmp
     - name: RUSTFS_BROWSER_REDIRECT_URL
       value: https://s3.acitrus.cn
     - name: RUSTFS_OUTBOUND_ALLOW_ORIGINS
