@@ -42,7 +42,7 @@ if grep -Fq 'kind: IngressRouteTCP' "$rendered"; then
 fi
 grep -Fq 'name: "rustfs-console"' "$rendered"
 grep -Fq 'name: "rustfs-s3-api"' "$rendered"
-grep -Fq 'match: '\''Host(`s3.acitrus.cn`)'\''' "$rendered"
+grep -Fq 'match: '\''Host(`s3.acitrus.cn`) || Host(`863.s3.acitrus.cn`)'\''' "$rendered"
 grep -Fq -- '- websecure' "$rendered"
 grep -Fq -- '- gravitation' "$rendered"
 grep -Fq 'port: 9001' "$rendered"
@@ -154,7 +154,7 @@ expected_routes = {
     'entryPoints' => ['websecure'],
     'routes' => [
       {
-        'match' => 'Host(`s3.acitrus.cn`)',
+        'match' => 'Host(`s3.acitrus.cn`) || Host(`863.s3.acitrus.cn`)',
         'services' => [{ 'name' => 'rustfs-svc', 'port' => 9001 }]
       }
     ],
@@ -164,7 +164,7 @@ expected_routes = {
     'entryPoints' => ['gravitation'],
     'routes' => [
       {
-        'match' => 'Host(`s3.acitrus.cn`)',
+        'match' => 'Host(`s3.acitrus.cn`) || Host(`863.s3.acitrus.cn`)',
         'services' => [{ 'name' => 'rustfs-svc', 'port' => 9000 }]
       }
     ],

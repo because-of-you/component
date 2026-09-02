@@ -80,6 +80,9 @@ rustfs:
 rustfsIngress:
   enabled: true
   host: s3.acitrus.cn
+  hosts:
+    - s3.acitrus.cn
+    - 863.s3.acitrus.cn
   console:
     entryPoints:
       - websecure

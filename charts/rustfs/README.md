@@ -11,6 +11,7 @@
 - log PVC：`local-path` / `1Gi`
 - 控制台：`https://s3.acitrus.cn`
 - S3 API Endpoint：`https://s3.acitrus.cn:1024`
+- 兼容入口：`https://863.s3.acitrus.cn`（API 端口为 `1024`）
 
 上游 Chart 保持只读根文件系统。dev 额外挂载一个大小上限为 `2Gi` 的临时 `emptyDir` 到
 `/tmp`，并设置 `TMPDIR=/tmp`，供 RustFS 创建 ZIP 等请求级临时文件。临时卷不保存对象数据，
@@ -19,7 +20,8 @@ Pod 重建时会自动清空；对象数据仍只保存在 data PVC 中。
 控制台通过 Traefik `websecure` 入口转发到服务端口 `9001`；S3 API 通过共享的
 `gravitation` 入口转发到服务端口 `9000`。两条路由都是由 Traefik 终止 TLS 的 HTTP
 `IngressRoute`，RustFS 不使用 `IngressRouteTCP`，也不会改变 Redis、PostgreSQL 或 RabbitMQ
-已有的 TCP 路由。
+已有的 TCP 路由。dev 环境的两条路由同时匹配 `s3.acitrus.cn` 与
+`863.s3.acitrus.cn`；控制台 OIDC 回调仍使用规范域名 `s3.acitrus.cn`。
 
 ## 凭证
 
@@ -108,10 +110,11 @@ helmfile -e dev apply --selector name=rustfs
 
 ## S3 验证
 
-S3 客户端 Endpoint 必须包含端口：`https://s3.acitrus.cn:1024`。当前配置只支持路径风格访问，
+S3 客户端 Endpoint 必须包含端口：`https://s3.acitrus.cn:1024`，也可以使用兼容入口
+`https://863.s3.acitrus.cn:1024`。当前配置只支持路径风格访问，
 例如 `https://s3.acitrus.cn:1024/my-bucket/my-object`；不要配置虚拟主机风格，也不要使用
-`bucket.s3.acitrus.cn`。Chart 没有设置 `RUSTFS_SERVER_DOMAINS`，证书也不包含
-`*.s3.acitrus.cn`。
+`bucket.s3.acitrus.cn`。Chart 没有设置 `RUSTFS_SERVER_DOMAINS`；Traefik dev 证书配置包含
+`*.s3.acitrus.cn` 以覆盖兼容入口。
 
 可以使用任意支持自定义 Endpoint 和路径风格的 S3 客户端，以
 `RUSTFS_ACCESS_KEY` / `RUSTFS_SECRET_KEY` 对应的凭证完成建桶、上传、下载和删除对象验证。

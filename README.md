@@ -166,7 +166,8 @@ charts/claude-code-hub/README.md
 ```
 
 RustFS 使用官方 Chart 的 standalone 模式，数据和日志分别保存在 `10Gi` 与 `1Gi` PVC；控制台通过
-`https://s3.acitrus.cn` 提供，路径风格 S3 API Endpoint 为 `https://s3.acitrus.cn:1024`。
+`https://s3.acitrus.cn` 提供，路径风格 S3 API Endpoint 为 `https://s3.acitrus.cn:1024`；同时提供
+兼容入口 `https://863.s3.acitrus.cn`（API 端口 `1024`）。
 OIDC、Secrets、验证、PVC 保留和清理说明见：
 
 ```text

@@ -7,7 +7,7 @@ spec:
   entryPoints:
     {{- toYaml .Values.rustfsIngress.console.entryPoints | nindent 4 }}
   routes:
-    - match: 'Host(`{{ required "rustfsIngress.host is required" .Values.rustfsIngress.host }}`)'
+    - match: '{{ include "rustfs-wrapper.hostRule" . }}'
       services:
         - name: {{ include "rustfs-wrapper.serviceName" . | quote }}
           port: {{ .Values.rustfsIngress.service.consolePort }}
@@ -24,7 +24,7 @@ spec:
   entryPoints:
     {{- toYaml .Values.rustfsIngress.api.entryPoints | nindent 4 }}
   routes:
-    - match: 'Host(`{{ required "rustfsIngress.host is required" .Values.rustfsIngress.host }}`)'
+    - match: '{{ include "rustfs-wrapper.hostRule" . }}'
       services:
         - name: {{ include "rustfs-wrapper.serviceName" . | quote }}
           port: {{ .Values.rustfsIngress.service.apiPort }}

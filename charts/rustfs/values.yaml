@@ -1,6 +1,9 @@
 rustfsIngress:
   enabled: false
   host: ""
+  # Optional additional hostnames for the same console and S3 API routes.
+  # When set, this list replaces `host` in the generated Host rule.
+  hosts: []
   service:
     name: ""
     apiPort: 9000
