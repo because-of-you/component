@@ -136,6 +136,13 @@ helm upgrade --install traefik oci://ghcr.io/because-of-you/charts/traefik \
 helm dependency update charts/traefik
 ```
 
+Traefik 的 CRD 不会由 Helm upgrade 自动更新。依赖升级后、部署控制器前，先将当前 Chart 内的 CRD 应用到集群：
+
+```bash
+helm show crds charts/traefik \
+  | kubectl apply --server-side --force-conflicts -f -
+```
+
 只使用 Chart 默认 values 渲染：
 
 ```bash

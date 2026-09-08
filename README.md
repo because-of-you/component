@@ -280,7 +280,7 @@ Chart 默认 values + dev 环境 values
 ```yaml
 dependencies:
   - name: redis
-    version: 27.0.18
+    version: 28.0.15
     repository: oci://registry-1.docker.io/bitnamicharts
 ```
 

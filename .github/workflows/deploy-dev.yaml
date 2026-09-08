@@ -471,6 +471,14 @@ jobs:
             --dry-run=client -o yaml \
             | bash .github/scripts/kubectl-apply-retry.sh
 
+      - name: Upgrade Traefik CRDs
+        if: matrix.component == 'traefik'
+        shell: bash
+        run: |
+          helm dependency build charts/traefik
+          helm show crds charts/traefik \
+            | kubectl apply --server-side --force-conflicts -f -
+
       - name: Recover interrupted RobustMQ release
         if: matrix.component == 'robustmq'
         shell: bash
