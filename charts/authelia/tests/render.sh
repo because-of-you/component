@@ -13,7 +13,7 @@ failure_output="$(mktemp)"
 trap 'rm -f "$rendered" "$managed_secret_rendered" "$custom_secret_rendered" "$failure_output"' EXIT
 
 grep -Fq 'name: authelia' "$chart_dir/Chart.yaml"
-grep -Fq 'version: 0.11.6' "$chart_dir/Chart.yaml"
+grep -Fq 'version: 0.11.20' "$chart_dir/Chart.yaml"
 grep -Fq 'repository: https://charts.authelia.com' "$chart_dir/Chart.yaml"
 
 helm template authelia "$chart_dir" --namespace infra --skip-schema-validation \

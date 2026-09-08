@@ -1,6 +1,6 @@
 # Authelia
 
-这个 Chart 封装 Authelia 官方 Helm Chart。当前依赖固定为 Chart `0.11.6`、Authelia
+这个 Chart 封装 Authelia 官方 Helm Chart。当前依赖固定为 Chart `0.11.20`、Authelia
 `4.39.20`。
 
 ## Values 结构
