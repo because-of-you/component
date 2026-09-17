@@ -1,7 +1,11 @@
 # RustFS
 
-这个 Chart 封装官方 RustFS Helm Chart `1.0.0-rc.4`，并追加本仓库使用的 Traefik HTTP
-`IngressRoute`。上游 Chart 与 RustFS 镜像都固定为 `1.0.0-rc.4`，升级时必须同步更新。
+这个 Chart 封装官方 RustFS Helm Chart `1.0.0`（GA 版本），并追加本仓库使用的 Traefik HTTP
+`IngressRoute`。上游 Chart 与 RustFS 镜像都固定为 `1.0.0`，升级时必须同步更新。
+
+`1.0.0` 相对 `1.0.0-rc.4` 的上游 Chart 只改了 `Chart.yaml` 版本号与一处 KMS 文档措辞，
+`values.yaml` 与全部模板逐字节相同，因此本次升级不涉及 values 键名或渲染结果的变化，
+dev 环境已有的 data/log PVC 可以原地复用。
 
 ## dev 拓扑
 
@@ -107,6 +111,10 @@ helmfile -e dev apply --selector name=rustfs
 
 `--skip-deps` 要求依赖已下载；修改 `Chart.yaml` 或上游版本后，应先重新执行
 `helm dependency update charts/rustfs`。
+
+dev 环境使用阿里云 ACR 中的镜像，`images/rustfs/images.yaml` 变更后由 Sync Images 工作流
+镜像 `docker.io/rustfs/rustfs:<version>`。切换到新版本时先运行 Sync Images（`component=rustfs`）
+再触发部署，否则首次 Pod 启动可能因为 ACR 中还没有对应 tag 而拉取失败。
 
 ## S3 验证
 
