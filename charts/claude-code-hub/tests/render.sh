@@ -10,14 +10,14 @@ pdb_rendered="$(mktemp)"
 trap 'rm -f "$rendered" "$pdb_rendered"' EXIT
 
 grep -Fq 'name: claude-code-hub' "$chart_dir/Chart.yaml"
-grep -Fq 'appVersion: "codex-authelia-oidc-65de3fe"' "$chart_dir/Chart.yaml"
-grep -Fq 'tag: codex-authelia-oidc-65de3fe' "$chart_dir/values.yaml"
+grep -Fq 'appVersion: "codex-authelia-oidc-424ac9b"' "$chart_dir/Chart.yaml"
+grep -Fq 'tag: codex-authelia-oidc-424ac9b' "$chart_dir/values.yaml"
 grep -Fq '"enum": ["legacy", "dual", "opaque"]' "$chart_dir/values.schema.json"
 
 helm template claude-code-hub "$chart_dir" --namespace app -f "$dev_values" >"$rendered"
 
 grep -Fq 'kind: Deployment' "$rendered"
-grep -Fq 'image: "registry.cn-shenzhen.aliyuncs.com/gravitation/claude-code-hub:codex-authelia-oidc-65de3fe"' "$rendered"
+grep -Fq 'image: "registry.cn-shenzhen.aliyuncs.com/gravitation/claude-code-hub:codex-authelia-oidc-424ac9b"' "$rendered"
 grep -Fq 'imagePullPolicy: Always' "$rendered"
 grep -Fq 'containerPort: 3000' "$rendered"
 grep -Fq 'name: DSN' "$rendered"
@@ -93,13 +93,15 @@ if grep -Fq 'uses: ./.github/actions/mirror-container-image' "$repo_root/.github
 fi
 mirror_action="$repo_root/.github/actions/mirror-container-image/action.yml"
 test -f "$mirror_action"
-grep -Fq 'source_digest="$(skopeo inspect' "$mirror_action"
-grep -Fq '[[ "$source_digest" == "$destination_digest" ]]' "$mirror_action"
-grep -Fq 'skopeo copy --all "docker://${SOURCE_IMAGE}" "docker://${DESTINATION_IMAGE}"' "$mirror_action"
+grep -Fq 'source_digests+=("$(regctl image digest --platform "$platform" "$SOURCE_IMAGE")")' "$mirror_action"
+grep -Fq '[[ "${source_digests[*]}" == "${destination_digests[*]}" ]]' "$mirror_action"
+grep -Fq 'regctl index create "$DESTINATION_IMAGE"' "$mirror_action"
+grep -Fq -- '--platform linux/amd64' "$mirror_action"
+grep -Fq -- '--platform linux/arm64' "$mirror_action"
 image_manifest="$repo_root/images/claude-code-hub/images.yaml"
 test -f "$image_manifest"
-grep -Fq 'source: ghcr.io/because-of-you/claude-code-hub:codex-authelia-oidc-65de3fe' "$image_manifest"
-grep -Fq 'destination: registry.cn-shenzhen.aliyuncs.com/gravitation/claude-code-hub:codex-authelia-oidc-65de3fe' "$image_manifest"
+grep -Fq 'source: ghcr.io/because-of-you/claude-code-hub:codex-authelia-oidc-424ac9b' "$image_manifest"
+grep -Fq 'destination: registry.cn-shenzhen.aliyuncs.com/gravitation/claude-code-hub:codex-authelia-oidc-424ac9b' "$image_manifest"
 test ! -e "$repo_root/images/claude-code-hub/images.json"
 if grep -Eq 'images\.json|images\.yml' "$sync_workflow"; then
   echo "Sync Images must support only images.yaml manifests" >&2

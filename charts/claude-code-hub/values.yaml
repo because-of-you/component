@@ -10,7 +10,7 @@ strategy:
 
 image:
   repository: ghcr.io/because-of-you/claude-code-hub
-  tag: codex-authelia-oidc-65de3fe
+  tag: codex-authelia-oidc-424ac9b
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
