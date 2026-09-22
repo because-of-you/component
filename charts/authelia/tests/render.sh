@@ -72,7 +72,7 @@ grep -Fq 'address: "http://authelia.infra.svc.cluster.local/api/authz/forward-au
 grep -Fq -- '- Remote-Groups' "$rendered"
 grep -Fq "client_id: 'claude-code-hub'" "$rendered"
 grep -Fq "claims_policy: 'claude_code_hub'" "$rendered"
-grep -Fq -- "- 'https://inner.coding.acitrus.cn/api/auth/oidc/callback'" "$rendered"
+grep -Fq -- "- 'https://coding.acitrus.cn/api/auth/oidc/callback'" "$rendered"
 grep -Fq 'require_pkce: true' "$rendered"
 grep -Fq "pkce_challenge_method: 'S256'" "$rendered"
 grep -Fq "token_endpoint_auth_method: 'client_secret_basic'" "$rendered"

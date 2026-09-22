@@ -78,7 +78,7 @@ openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out oidc-private.p
 行）保存为 `AUTHELIA_OIDC_JWK`。私钥文件只用于录入 Secret，不能提交到仓库。
 
 dev 中注册的 Client ID 为 `claude-code-hub`，回调地址严格匹配
-`https://inner.coding.acitrus.cn/api/auth/oidc/callback`。claims policy 会把 `groups` 写入 ID Token，
+`https://coding.acitrus.cn/api/auth/oidc/callback`。claims policy 会把 `groups` 写入 ID Token，
 CCH 再校验用户必须属于 `lldap_admin`。
 
 ## 外部 PostgreSQL 与 Redis

@@ -99,7 +99,7 @@ authelia:
             require_pkce: true
             pkce_challenge_method: S256
             redirect_uris:
-              - https://inner.coding.acitrus.cn/api/auth/oidc/callback
+              - https://coding.acitrus.cn/api/auth/oidc/callback
             scopes:
               - openid
               - profile

@@ -88,6 +88,14 @@
         "host": {
           "type": "string"
         },
+        "additionalHosts": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
         "entryPoints": {
           "type": "array",
           "items": {

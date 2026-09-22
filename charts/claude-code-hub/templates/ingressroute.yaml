@@ -14,6 +14,13 @@ spec:
       services:
         - name: {{ include "claude-code-hub.fullname" . }}
           port: {{ .Values.service.port }}
+    {{- range .Values.ingressRoute.additionalHosts }}
+    - kind: Rule
+      match: 'Host(`{{ . }}`)'
+      services:
+        - name: {{ include "claude-code-hub.fullname" $ }}
+          port: {{ $.Values.service.port }}
+    {{- end }}
   tls:
     {{- toYaml .Values.ingressRoute.tls | nindent 4 }}
 {{- end }}

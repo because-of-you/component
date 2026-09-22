@@ -24,7 +24,7 @@ grep -Fq 'name: DSN' "$rendered"
 grep -Fq 'name: REDIS_URL' "$rendered"
 grep -Fq 'name: ADMIN_TOKEN' "$rendered"
 grep -A1 -F 'name: OIDC_ENABLED' "$rendered" | grep -Fq 'value: "true"'
-grep -A1 -F 'name: OIDC_REDIRECT_URI' "$rendered" | grep -Fq 'value: "https://inner.coding.acitrus.cn/api/auth/oidc/callback"'
+grep -A1 -F 'name: OIDC_REDIRECT_URI' "$rendered" | grep -Fq 'value: "https://coding.acitrus.cn/api/auth/oidc/callback"'
 grep -A1 -F 'name: AUTO_MIGRATE' "$rendered" | grep -Fq 'value: "true"'
 grep -Fq 'name: SESSION_TOKEN_MODE' "$rendered"
 grep -A1 -F 'name: SESSION_TOKEN_MODE' "$rendered" | grep -Fq 'value: "opaque"'
@@ -44,6 +44,7 @@ grep -Fq 'targetPort: http' "$rendered"
 
 grep -Fq 'kind: IngressRoute' "$rendered"
 grep -Fq 'match: '\''Host(`inner.coding.acitrus.cn`)'\''' "$rendered"
+grep -Fq 'match: '\''Host(`coding.acitrus.cn`)'\''' "$rendered"
 grep -Fq 'name: claude-code-hub' "$rendered"
 grep -Fq 'certResolver: leresolver' "$rendered"
 if grep -Fq 'middlewares:' "$rendered"; then
