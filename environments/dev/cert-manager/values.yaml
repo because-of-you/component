@@ -1,3 +1,22 @@
 "cert-manager":
+  image:
+    repository: registry.cn-shenzhen.aliyuncs.com/gravitation/cert-manager
+    tag: controller-v1.21.2
+  webhook:
+    image:
+      repository: registry.cn-shenzhen.aliyuncs.com/gravitation/cert-manager
+      tag: webhook-v1.21.2
+  cainjector:
+    image:
+      repository: registry.cn-shenzhen.aliyuncs.com/gravitation/cert-manager
+      tag: cainjector-v1.21.2
+  acmesolver:
+    image:
+      repository: registry.cn-shenzhen.aliyuncs.com/gravitation/cert-manager
+      tag: acmesolver-v1.21.2
+  startupapicheck:
+    image:
+      repository: registry.cn-shenzhen.aliyuncs.com/gravitation/cert-manager
+      tag: startupapicheck-v1.21.2
   crds:
     enabled: true

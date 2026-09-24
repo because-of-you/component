@@ -1,0 +1,18 @@
+component: cert-manager
+
+images:
+  - name: controller
+    source: quay.io/jetstack/cert-manager-controller:v1.21.2
+    destination: registry.cn-shenzhen.aliyuncs.com/gravitation/cert-manager:controller-v1.21.2
+  - name: webhook
+    source: quay.io/jetstack/cert-manager-webhook:v1.21.2
+    destination: registry.cn-shenzhen.aliyuncs.com/gravitation/cert-manager:webhook-v1.21.2
+  - name: cainjector
+    source: quay.io/jetstack/cert-manager-cainjector:v1.21.2
+    destination: registry.cn-shenzhen.aliyuncs.com/gravitation/cert-manager:cainjector-v1.21.2
+  - name: acmesolver
+    source: quay.io/jetstack/cert-manager-acmesolver:v1.21.2
+    destination: registry.cn-shenzhen.aliyuncs.com/gravitation/cert-manager:acmesolver-v1.21.2
+  - name: startupapicheck
+    source: quay.io/jetstack/cert-manager-startupapicheck:v1.21.2
+    destination: registry.cn-shenzhen.aliyuncs.com/gravitation/cert-manager:startupapicheck-v1.21.2
