@@ -153,5 +153,7 @@ releases:
     namespace: traefik
     createNamespace: true
     chart: ./charts/traefik
+    needs:
+      - infra/authelia
     values:
       - ./environments/{{ .Environment.Name }}/traefik/values.yaml

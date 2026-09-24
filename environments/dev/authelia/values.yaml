@@ -163,3 +163,4 @@ autheliaIngress:
 autheliaForwardAuth:
   enabled: true
   address: http://authelia.infra.svc.cluster.local/api/authz/forward-auth
+  maxResponseBodySize: 1048576
