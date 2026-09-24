@@ -7,6 +7,14 @@ traefik:
   deployment:
     kind: DaemonSet
 
+  # hostPort cannot use a surge pod on the same node because the old pod still
+  # owns 80/443/1024. Replace one pod at a time by deleting the old pod first.
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 0
+
   service:
     spec:
       # All public ports are bound directly by the Traefik DaemonSet below.
