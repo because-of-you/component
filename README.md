@@ -130,7 +130,7 @@ cert-manager 和 AliDNS DNS01 webhook 由 Helmfile 统一部署，并为 Traefik
 `ALIYUN_DNS_SECRET`：
 
 ```bash
-helmfile -e dev sync --selector name=cert-manager
+helmfile -e dev sync --selector component=cert-manager
 kubectl -n traefik get certificate acitrus-tls
 ```
 
@@ -252,7 +252,7 @@ helmfile -e dev template --selector name=dbx --skip-deps
 渲染 dev 环境的 cert-manager：
 
 ```bash
-helmfile -e dev template --selector name=cert-manager --skip-deps
+helmfile -e dev template --selector component=cert-manager --skip-deps
 ```
 
 渲染 dev 环境的 Service Atlas：

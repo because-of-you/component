@@ -1,4 +1,3 @@
-{{- if .Values.certificate.enabled }}
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
@@ -12,5 +11,4 @@ spec:
   dnsNames:
 {{- range .Values.certificate.dnsNames }}
     - {{ . | quote }}
-{{- end }}
 {{- end }}

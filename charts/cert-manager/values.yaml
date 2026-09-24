@@ -1,31 +1,3 @@
 certManager:
   crds:
     enabled: true
-
-alidnsWebhook:
-  groupName: acme.example.com
-  certManager:
-    namespace: cert-manager
-    # The official chart is aliased as certManager, so this is its rendered
-    # controller ServiceAccount name for the cert-manager release.
-    serviceAccountName: cert-manager-certManager
-
-issuer:
-  enabled: false
-  name: letsencrypt
-  email: ""
-  server: https://acme-v02.api.letsencrypt.org/directory
-  privateKeySecretName: letsencrypt
-  regionId: cn-hangzhou
-  groupName: acme.example.com
-  solverName: alidns-solver
-  credentialSecretName: alidns-secrets
-  credentialAccessTokenKey: access-token
-  credentialSecretKey: secret-key
-
-certificate:
-  enabled: false
-  namespace: traefik
-  name: wildcard-tls
-  secretName: wildcard-tls
-  dnsNames: []

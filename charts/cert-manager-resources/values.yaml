@@ -1,0 +1,17 @@
+issuer:
+  name: letsencrypt
+  email: ""
+  server: https://acme-v02.api.letsencrypt.org/directory
+  privateKeySecretName: letsencrypt
+  regionId: cn-hangzhou
+  groupName: acme.example.com
+  solverName: alidns-solver
+  credentialSecretName: alidns-secrets
+  credentialAccessTokenKey: access-token
+  credentialSecretKey: secret-key
+
+certificate:
+  namespace: traefik
+  name: wildcard-tls
+  secretName: wildcard-tls
+  dnsNames: []

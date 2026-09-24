@@ -34,8 +34,32 @@ releases:
     namespace: cert-manager
     createNamespace: true
     chart: ./charts/cert-manager
+    labels:
+      component: cert-manager
     values:
       - ./environments/{{ .Environment.Name }}/cert-manager/values.yaml
+
+  - name: cert-manager-alidns-webhook
+    namespace: cert-manager
+    chart: cert-manager-alidns-webhook/alidns-webhook
+    version: 0.8.3
+    labels:
+      component: cert-manager
+    needs:
+      - cert-manager/cert-manager
+    values:
+      - ./environments/{{ .Environment.Name }}/cert-manager-webhook/values.yaml
+
+  - name: cert-manager-resources
+    namespace: cert-manager
+    createNamespace: true
+    chart: ./charts/cert-manager-resources
+    labels:
+      component: cert-manager
+    needs:
+      - cert-manager/cert-manager-alidns-webhook
+    values:
+      - ./environments/{{ .Environment.Name }}/cert-manager-resources/values.yaml
 
   - name: test-charts
     namespace: app

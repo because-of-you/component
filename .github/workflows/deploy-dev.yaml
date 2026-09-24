@@ -16,6 +16,7 @@ on:
       - 'charts/service-atlas/**'
       - 'charts/traefik/**'
       - 'charts/cert-manager/**'
+      - 'charts/cert-manager-resources/**'
       - 'environments/dev/redis/**'
       - 'environments/dev/postgresql/**'
       - 'environments/dev/lldap/**'
@@ -27,6 +28,8 @@ on:
       - 'environments/dev/service-atlas/**'
       - 'environments/dev/traefik/**'
       - 'environments/dev/cert-manager/**'
+      - 'environments/dev/cert-manager-webhook/**'
+      - 'environments/dev/cert-manager-resources/**'
       - 'apps/service-atlas/**'
       - 'package.json'
       - 'package-lock.json'
@@ -128,7 +131,10 @@ jobs:
               - 'helmfile.yaml'
             cert-manager:
               - 'charts/cert-manager/**'
+              - 'charts/cert-manager-resources/**'
               - 'environments/dev/cert-manager/**'
+              - 'environments/dev/cert-manager-webhook/**'
+              - 'environments/dev/cert-manager-resources/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
 
@@ -545,6 +551,8 @@ jobs:
         run: |
           if [[ "${{ matrix.component }}" == "service-atlas" ]]; then
             helmfile -e dev --selector name=service-atlas sync --set image.tag="$SERVICE_ATLAS_IMAGE_TAG"
+          elif [[ "${{ matrix.component }}" == "cert-manager" ]]; then
+            helmfile -e dev --selector component=cert-manager sync
           else
             helmfile -e dev --selector name=${{ matrix.component }} sync
           fi

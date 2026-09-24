@@ -1,0 +1,5 @@
+apiVersion: v2
+name: cert-manager-resources
+description: ACME resources for the dev cluster cert-manager installation
+type: application
+version: 0.1.0

@@ -1,6 +1,6 @@
 apiVersion: v2
 name: cert-manager
-description: cert-manager and the AliDNS DNS01 webhook used by the dev cluster
+description: cert-manager for the dev cluster
 type: application
 version: 0.1.0
 appVersion: "v1.21.2"
@@ -9,7 +9,3 @@ dependencies:
     alias: certManager
     version: v1.21.2
     repository: https://charts.jetstack.io
-  - name: alidns-webhook
-    alias: alidnsWebhook
-    version: 0.8.3
-    repository: https://devmachine-fr.github.io/cert-manager-alidns-webhook

@@ -1,0 +1,22 @@
+issuer:
+  name: letsencrypt
+  email: mail@acitrus.cn
+  server: https://acme-v02.api.letsencrypt.org/directory
+  privateKeySecretName: letsencrypt
+  regionId: cn-hangzhou
+  groupName: acme.acitrus.cn
+  solverName: alidns-solver
+  credentialSecretName: alidns-secrets
+  credentialAccessTokenKey: access-token
+  credentialSecretKey: secret-key
+
+certificate:
+  namespace: traefik
+  name: acitrus-tls
+  secretName: acitrus-tls
+  dnsNames:
+    - acitrus.cn
+    - "*.acitrus.cn"
+    - "*.s3.acitrus.cn"
+    - "*.ui.acitrus.cn"
+    - "*.tcp.acitrus.cn"

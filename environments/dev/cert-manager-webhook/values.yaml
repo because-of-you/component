@@ -1,0 +1,5 @@
+groupName: acme.acitrus.cn
+
+certManager:
+  namespace: cert-manager
+  serviceAccountName: cert-manager-certManager
