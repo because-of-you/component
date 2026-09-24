@@ -8,7 +8,7 @@ spec:
   forwardAuth:
     address: {{ required "autheliaForwardAuth.address is required" .Values.autheliaForwardAuth.address | quote }}
     trustForwardHeader: {{ .Values.autheliaForwardAuth.trustForwardHeader }}
-    maxResponseBodySize: {{ .Values.autheliaForwardAuth.maxResponseBodySize }}
+    maxResponseBodySize: {{ .Values.autheliaForwardAuth.maxResponseBodySize | int }}
     authResponseHeaders:
       {{- toYaml .Values.autheliaForwardAuth.authResponseHeaders | nindent 6 }}
 {{- end }}
