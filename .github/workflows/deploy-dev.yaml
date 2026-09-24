@@ -15,6 +15,7 @@ on:
       - 'charts/dbx/**'
       - 'charts/service-atlas/**'
       - 'charts/traefik/**'
+      - 'charts/cert-manager/**'
       - 'environments/dev/redis/**'
       - 'environments/dev/postgresql/**'
       - 'environments/dev/lldap/**'
@@ -25,6 +26,7 @@ on:
       - 'environments/dev/dbx/**'
       - 'environments/dev/service-atlas/**'
       - 'environments/dev/traefik/**'
+      - 'environments/dev/cert-manager/**'
       - 'apps/service-atlas/**'
       - 'package.json'
       - 'package-lock.json'
@@ -48,6 +50,7 @@ on:
           - dbx
           - service-atlas
           - traefik
+          - cert-manager
 
 jobs:
   changes:
@@ -121,6 +124,11 @@ jobs:
             traefik:
               - 'charts/traefik/**'
               - 'environments/dev/traefik/**'
+              - 'environments/dev/values.yaml'
+              - 'helmfile.yaml'
+            cert-manager:
+              - 'charts/cert-manager/**'
+              - 'environments/dev/cert-manager/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
 
@@ -240,6 +248,12 @@ jobs:
       - name: Ensure traefik namespace
         if: matrix.component == 'traefik'
         run: kubectl create namespace traefik --dry-run=client -o yaml | bash .github/scripts/kubectl-apply-retry.sh
+
+      - name: Ensure cert-manager and traefik namespaces
+        if: matrix.component == 'cert-manager'
+        run: |
+          kubectl create namespace cert-manager --dry-run=client -o yaml | bash .github/scripts/kubectl-apply-retry.sh
+          kubectl create namespace traefik --dry-run=client -o yaml | bash .github/scripts/kubectl-apply-retry.sh
 
       - name: Sync Service Atlas credentials
         if: matrix.component == 'service-atlas'
@@ -451,7 +465,7 @@ jobs:
             --dry-run=client -o yaml \
             | bash .github/scripts/kubectl-apply-retry.sh
 
-      - name: Sync Aliyun DNS credentials
+      - name: Sync Traefik Aliyun DNS credentials
         if: matrix.component == 'traefik'
         shell: bash
         env:
@@ -470,6 +484,30 @@ jobs:
             --from-file=ALICLOUD_SECRET_KEY="$credentials_dir/ALICLOUD_SECRET_KEY" \
             --dry-run=client -o yaml \
             | bash .github/scripts/kubectl-apply-retry.sh
+
+      - name: Sync cert-manager Aliyun DNS credentials
+        if: matrix.component == 'cert-manager'
+        shell: bash
+        env:
+          ALIYUN_DNS_KEY: ${{ secrets.ALIYUN_DNS_KEY }}
+          ALIYUN_DNS_SECRET: ${{ secrets.ALIYUN_DNS_SECRET }}
+        run: |
+          test -n "$ALIYUN_DNS_KEY"
+          test -n "$ALIYUN_DNS_SECRET"
+          umask 077
+          credentials_dir="$(mktemp -d)"
+          trap 'rm -rf "$credentials_dir"' EXIT
+          printf '%s' "$ALIYUN_DNS_KEY" > "$credentials_dir/access-token"
+          printf '%s' "$ALIYUN_DNS_SECRET" > "$credentials_dir/secret-key"
+          kubectl -n cert-manager create secret generic alidns-secrets \
+            --from-file=access-token="$credentials_dir/access-token" \
+            --from-file=secret-key="$credentials_dir/secret-key" \
+            --dry-run=client -o yaml \
+            | bash .github/scripts/kubectl-apply-retry.sh
+
+      - name: Build cert-manager dependencies
+        if: matrix.component == 'cert-manager'
+        run: helm dependency build charts/cert-manager
 
       - name: Upgrade Traefik CRDs
         if: matrix.component == 'traefik'

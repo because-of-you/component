@@ -1,0 +1,21 @@
+alidnsWebhook:
+  groupName: acme.acitrus.cn
+
+issuer:
+  enabled: true
+  email: mail@acitrus.cn
+  # AliDNS API region used by the webhook.
+  regionId: cn-hangzhou
+  groupName: acme.acitrus.cn
+
+certificate:
+  enabled: true
+  namespace: traefik
+  name: acitrus-tls
+  secretName: acitrus-tls
+  dnsNames:
+    - acitrus.cn
+    - "*.acitrus.cn"
+    - "*.s3.acitrus.cn"
+    - "*.ui.acitrus.cn"
+    - "*.tcp.acitrus.cn"

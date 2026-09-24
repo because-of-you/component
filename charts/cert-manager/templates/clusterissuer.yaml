@@ -1,0 +1,30 @@
+{{- if .Values.issuer.enabled }}
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: {{ .Values.issuer.name }}
+spec:
+  acme:
+    email: {{ .Values.issuer.email | quote }}
+    server: {{ .Values.issuer.server | quote }}
+    privateKeySecretRef:
+      name: {{ .Values.issuer.privateKeySecretName }}
+    solvers:
+      - selector:
+          dnsNames:
+{{- range .Values.certificate.dnsNames }}
+            - {{ . | quote }}
+{{- end }}
+        dns01:
+          webhook:
+            groupName: {{ .Values.issuer.groupName }}
+            solverName: {{ .Values.issuer.solverName }}
+            config:
+              regionId: {{ .Values.issuer.regionId }}
+              accessTokenSecretRef:
+                name: {{ .Values.issuer.credentialSecretName }}
+                key: {{ .Values.issuer.credentialAccessTokenKey }}
+              secretKeySecretRef:
+                name: {{ .Values.issuer.credentialSecretName }}
+                key: {{ .Values.issuer.credentialSecretKey }}
+{{- end }}

@@ -1,0 +1,9 @@
+dependencies:
+- name: cert-manager
+  repository: https://charts.jetstack.io
+  version: v1.21.2
+- name: alidns-webhook
+  repository: https://devmachine-fr.github.io/cert-manager-alidns-webhook
+  version: 0.8.3
+digest: sha256:f61419716a51a3d48a203727b84fe429b3e87f8029680dcfb97e8b36543f9e5f
+generated: "2026-09-23T18:14:49.4504944+08:00"

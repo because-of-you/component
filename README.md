@@ -125,12 +125,22 @@ helm upgrade --install traefik oci://ghcr.io/because-of-you/charts/traefik \
   --create-namespace
 ```
 
+cert-manager 和 AliDNS DNS01 webhook 由 Helmfile 统一部署，并为 Traefik
+准备 `traefik/acitrus-tls` 通配符证书。部署前必须配置 `ALIYUN_DNS_KEY` 和
+`ALIYUN_DNS_SECRET`：
+
+```bash
+helmfile -e dev sync --selector name=cert-manager
+kubectl -n traefik get certificate acitrus-tls
+```
+
 命名空间约定：
 
 ```text
 infra: redis, postgresql, rabbitmq, lldap, authelia, rustfs, robustmq
 app: claude-code-hub, dbx, service-atlas, test-charts
 traefik: traefik
+cert-manager: cert-manager
 ```
 
 获取默认密码：
@@ -239,6 +249,12 @@ helmfile -e dev template --selector name=lldap --skip-deps
 helmfile -e dev template --selector name=dbx --skip-deps
 ```
 
+渲染 dev 环境的 cert-manager：
+
+```bash
+helmfile -e dev template --selector name=cert-manager --skip-deps
+```
+
 渲染 dev 环境的 Service Atlas：
 
 ```bash
@@ -316,7 +332,7 @@ PR 合并前会执行：
 
 ## dev 集群部署
 
-Push 到 `dev` 分支并修改 Redis、PostgreSQL、LLDAP、Authelia、Claude Code Hub、DBX、Service Atlas、RustFS、RobustMQ 或 Traefik
+Push 到 `dev` 分支并修改 Redis、PostgreSQL、LLDAP、Authelia、Claude Code Hub、DBX、Service Atlas、RustFS、RobustMQ、cert-manager 或 Traefik
 的 Chart/values 后，
 [deploy-dev.yaml](./.github/workflows/deploy-dev.yaml) 会检测发生变化的组件，并为每个组件创建独立 Matrix Job。
 每个 Job 通过 Tailscale 连接 K3s，并按组件名执行 Helmfile。例如只修改 Redis 时只运行：
@@ -355,8 +371,8 @@ helmfile -e dev --selector name=redis sync
 | `LLDAP_KEY_SEED` | Secret | LLDAP | `openssl rand -base64 32`。 |
 | `LLDAP_ADMIN_PASSWORD` | Secret | LLDAP 管理员 | `openssl rand -base64 32`。 |
 | `LLDAP_AUTHELIA_PASSWORD` | Secret | LLDAP/Authelia bind 账号 | `openssl rand -base64 32`，两端必须使用同一值。 |
-| `ALIYUN_DNS_KEY` | Secret | Traefik ACME DNS Challenge | 阿里云访问凭据 AccessKey ID。 |
-| `ALIYUN_DNS_SECRET` | Secret | Traefik ACME DNS Challenge | 与上一项配对的 AccessKey Secret。 |
+| `ALIYUN_DNS_KEY` | Secret | Traefik 与 cert-manager AliDNS DNS Challenge | 阿里云访问凭据 AccessKey ID。 |
+| `ALIYUN_DNS_SECRET` | Secret | Traefik 与 cert-manager AliDNS DNS Challenge | 与上一项配对的 AccessKey Secret。 |
 | `ALIYUN_ACR_PASSWORD` | Secret | Sync Images | 阿里云 ACR 独立访问凭据密码。 |
 | `ALIYUN_ACR_REGISTRY` | Variable | Sync Images | `registry.cn-shenzhen.aliyuncs.com`。 |
 | `ALIYUN_ACR_USERNAME` | Variable | Sync Images | ACR 独立访问凭据用户名。 |

@@ -9,6 +9,10 @@ repositories:
     url: https://evantage-ws.github.io/lldap-kubernetes/
   - name: rustfs
     url: https://charts.rustfs.com
+  - name: jetstack
+    url: https://charts.jetstack.io
+  - name: cert-manager-alidns-webhook
+    url: https://devmachine-fr.github.io/cert-manager-alidns-webhook
 
 helmDefaults:
   atomic: true
@@ -26,6 +30,13 @@ environments:
 ---
 
 releases:
+  - name: cert-manager
+    namespace: cert-manager
+    createNamespace: true
+    chart: ./charts/cert-manager
+    values:
+      - ./environments/{{ .Environment.Name }}/cert-manager/values.yaml
+
   - name: test-charts
     namespace: app
     createNamespace: true
