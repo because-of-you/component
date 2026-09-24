@@ -1,7 +1,5 @@
-certManager:
-  # The dependency is aliased for Helm values, but the alias contains an
-  # uppercase letter. Override generated Kubernetes names to remain RFC 1123
-  # compliant.
+"cert-manager":
+  nameOverride: cert-manager
   fullnameOverride: cert-manager
   crds:
     enabled: true
