@@ -25,10 +25,13 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Install regctl
-      uses: regclient/actions/regctl-installer@78eb729dbdb4ef6480e85ff697b4410e22112583
-      with:
-        release: v0.11.5
+    - name: Install skopeo
+      shell: bash
+      run: |
+        if ! command -v skopeo >/dev/null 2>&1; then
+          sudo apt-get update
+          sudo apt-get install --yes skopeo
+        fi
 
     - name: Copy image
       shell: bash
@@ -52,59 +55,15 @@ runs:
           exit 1
         fi
 
-        # BuildKit adds attestation manifests as unknown/unknown platforms. Some
-        # registries reject their application/vnd.oci.empty.v1+json configs, so
-        # mirror only the runtime platforms used by this repository.
-        platforms=(linux/amd64 linux/arm64)
-
-        trap 'regctl registry logout "$DESTINATION_REGISTRY" >/dev/null 2>&1 || true' EXIT
-        printf '%s' "$DESTINATION_PASSWORD" \
-          | regctl registry login \
-              --user "$DESTINATION_USERNAME" \
-              --pass-stdin \
-              "$DESTINATION_REGISTRY"
-
-        source_digests=()
-        for platform in "${platforms[@]}"; do
-          source_digests+=("$(regctl image digest --platform "$platform" "$SOURCE_IMAGE")")
-        done
-
         for ((attempt = 1; attempt <= COPY_ATTEMPTS; attempt++)); do
-          mirror_valid=true
-          platform_refs=()
-          for platform in "${platforms[@]}"; do
-            platform_tag="${DESTINATION_IMAGE}-sync-${platform//\//-}"
-            # Copy each platform as a complete single-platform image first.
-            # This guarantees that the child manifest and every referenced Blob
-            # exist in the destination repository before assembling the index.
-            if ! regctl image copy "$SOURCE_IMAGE" "$platform_tag" \
-              --force-recursive \
-              --platform "$platform"; then
-              mirror_valid=false
-              break
-            fi
-            platform_refs+=("$platform_tag")
-          done
-
-          if [[ "$mirror_valid" == true ]] \
-            && regctl index create "$DESTINATION_IMAGE" \
-              --ref "${platform_refs[0]}" \
-              --ref "${platform_refs[1]}"; then
-            for i in "${!platforms[@]}"; do
-              destination_digest="$(
-                regctl image digest \
-                  --platform "${platforms[$i]}" \
-                  "$DESTINATION_IMAGE" 2>/dev/null || true
-              )"
-              if [[ "${source_digests[$i]}" != "$destination_digest" ]]; then
-                echo "Digest verification failed for ${platforms[$i]}" >&2
-                mirror_valid=false
-              fi
-            done
-            if [[ "$mirror_valid" == true ]]; then
-              echo "Mirrored and verified runtime platforms: ${platforms[*]}"
-              exit 0
-            fi
+          if skopeo copy \
+            --all \
+            --retry-times 3 \
+            --dest-creds "$DESTINATION_USERNAME:$DESTINATION_PASSWORD" \
+            "docker://$SOURCE_IMAGE" \
+            "docker://$DESTINATION_IMAGE"; then
+            echo "Mirrored and verified all image manifests and layers"
+            exit 0
           fi
           if [[ "$attempt" == "$COPY_ATTEMPTS" ]]; then
             echo "Failed to mirror $SOURCE_IMAGE after $COPY_ATTEMPTS attempts" >&2

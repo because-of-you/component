@@ -17,8 +17,6 @@ on:
       - 'charts/traefik/**'
       - 'charts/cert-manager/**'
       - 'charts/cert-manager-resources/**'
-      - 'images/cert-manager/**'
-      - '.github/actions/mirror-container-image/**'
       - 'environments/dev/redis/**'
       - 'environments/dev/postgresql/**'
       - 'environments/dev/lldap/**'
@@ -134,8 +132,6 @@ jobs:
             cert-manager:
               - 'charts/cert-manager/**'
               - 'charts/cert-manager-resources/**'
-              - 'images/cert-manager/**'
-              - '.github/actions/mirror-container-image/**'
               - 'environments/dev/cert-manager/**'
               - 'environments/dev/cert-manager-webhook/**'
               - 'environments/dev/cert-manager-resources/**'
@@ -523,56 +519,6 @@ jobs:
           helm repo add --force-update cert-manager-alidns-webhook https://devmachine-fr.github.io/cert-manager-alidns-webhook
           helm repo update
           helm dependency build charts/cert-manager
-
-      - name: Mirror cert-manager controller image
-        if: matrix.component == 'cert-manager'
-        uses: ./.github/actions/mirror-container-image
-        with:
-          source-image: quay.io/jetstack/cert-manager-controller:v1.21.2
-          destination-image: ${{ vars.ALIYUN_ACR_REGISTRY }}/gravitation/cert-manager:controller-v1.21.2
-          destination-registry: ${{ vars.ALIYUN_ACR_REGISTRY }}
-          destination-username: ${{ vars.ALIYUN_ACR_USERNAME }}
-          destination-password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
-
-      - name: Mirror cert-manager webhook image
-        if: matrix.component == 'cert-manager'
-        uses: ./.github/actions/mirror-container-image
-        with:
-          source-image: quay.io/jetstack/cert-manager-webhook:v1.21.2
-          destination-image: ${{ vars.ALIYUN_ACR_REGISTRY }}/gravitation/cert-manager:webhook-v1.21.2
-          destination-registry: ${{ vars.ALIYUN_ACR_REGISTRY }}
-          destination-username: ${{ vars.ALIYUN_ACR_USERNAME }}
-          destination-password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
-
-      - name: Mirror cert-manager cainjector image
-        if: matrix.component == 'cert-manager'
-        uses: ./.github/actions/mirror-container-image
-        with:
-          source-image: quay.io/jetstack/cert-manager-cainjector:v1.21.2
-          destination-image: ${{ vars.ALIYUN_ACR_REGISTRY }}/gravitation/cert-manager:cainjector-v1.21.2
-          destination-registry: ${{ vars.ALIYUN_ACR_REGISTRY }}
-          destination-username: ${{ vars.ALIYUN_ACR_USERNAME }}
-          destination-password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
-
-      - name: Mirror cert-manager ACME solver image
-        if: matrix.component == 'cert-manager'
-        uses: ./.github/actions/mirror-container-image
-        with:
-          source-image: quay.io/jetstack/cert-manager-acmesolver:v1.21.2
-          destination-image: ${{ vars.ALIYUN_ACR_REGISTRY }}/gravitation/cert-manager:acmesolver-v1.21.2
-          destination-registry: ${{ vars.ALIYUN_ACR_REGISTRY }}
-          destination-username: ${{ vars.ALIYUN_ACR_USERNAME }}
-          destination-password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
-
-      - name: Mirror cert-manager startup API check image
-        if: matrix.component == 'cert-manager'
-        uses: ./.github/actions/mirror-container-image
-        with:
-          source-image: quay.io/jetstack/cert-manager-startupapicheck:v1.21.2
-          destination-image: ${{ vars.ALIYUN_ACR_REGISTRY }}/gravitation/cert-manager:startupapicheck-v1.21.2
-          destination-registry: ${{ vars.ALIYUN_ACR_REGISTRY }}
-          destination-username: ${{ vars.ALIYUN_ACR_USERNAME }}
-          destination-password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
 
       - name: Upgrade Traefik CRDs
         if: matrix.component == 'traefik'
