@@ -25,10 +25,10 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Prepare skopeo
-      shell: bash
-      run: |
-        docker pull quay.io/skopeo/stable:latest
+    - name: Install regctl
+      uses: regclient/actions/regctl-installer@78eb729dbdb4ef6480e85ff697b4410e22112583
+      with:
+        release: v0.11.5
 
     - name: Copy image
       shell: bash
@@ -52,14 +52,19 @@ runs:
           exit 1
         fi
 
+        trap 'regctl registry logout "$DESTINATION_REGISTRY" >/dev/null 2>&1 || true' EXIT
+        printf '%s' "$DESTINATION_PASSWORD" \
+          | regctl registry login \
+              --user "$DESTINATION_USERNAME" \
+              --pass-stdin \
+              "$DESTINATION_REGISTRY"
+
         for ((attempt = 1; attempt <= COPY_ATTEMPTS; attempt++)); do
-          if docker run --rm quay.io/skopeo/stable:latest copy \
-            --multi-arch all \
-            --retry-times 3 \
-            --dest-creds "$DESTINATION_USERNAME:$DESTINATION_PASSWORD" \
-            "docker://$SOURCE_IMAGE" \
-            "docker://$DESTINATION_IMAGE"; then
-            echo "Mirrored and verified all image manifests and layers"
+          if regctl image copy \
+            --platform linux/amd64,linux/arm64 \
+            "$SOURCE_IMAGE" \
+            "$DESTINATION_IMAGE"; then
+            echo "Mirrored amd64 and arm64 image manifests and layers"
             exit 0
           fi
           if [[ "$attempt" == "$COPY_ATTEMPTS" ]]; then
