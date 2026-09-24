@@ -53,7 +53,8 @@ grep -Fq 'Host(`atlas.acitrus.cn`)' "$rendered"
 grep -A4 -F 'Host(`atlas.acitrus.cn`)' "$rendered" | grep -Fq 'name: "authelia-forwardauth"'
 grep -A5 -F 'Host(`atlas.acitrus.cn`)' "$rendered" | grep -Fq 'namespace: "infra"'
 grep -Fq -- '- websecure' "$rendered"
-grep -Fq 'certResolver: leresolver' "$rendered"
+grep -Fq 'name: default' "$rendered"
+grep -Fq 'namespace: traefik' "$rendered"
 
 workflow="$repo_root/.github/workflows/deploy-dev.yaml"
 grep -Fq "'apps/service-atlas/**'" "$workflow"

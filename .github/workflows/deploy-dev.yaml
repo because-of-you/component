@@ -471,26 +471,6 @@ jobs:
             --dry-run=client -o yaml \
             | bash .github/scripts/kubectl-apply-retry.sh
 
-      - name: Sync Traefik Aliyun DNS credentials
-        if: matrix.component == 'traefik'
-        shell: bash
-        env:
-          ALIYUN_DNS_KEY: ${{ secrets.ALIYUN_DNS_KEY }}
-          ALIYUN_DNS_SECRET: ${{ secrets.ALIYUN_DNS_SECRET }}
-        run: |
-          test -n "$ALIYUN_DNS_KEY"
-          test -n "$ALIYUN_DNS_SECRET"
-          umask 077
-          credentials_dir="$(mktemp -d)"
-          trap 'rm -rf "$credentials_dir"' EXIT
-          printf '%s' "$ALIYUN_DNS_KEY" > "$credentials_dir/ALICLOUD_ACCESS_KEY"
-          printf '%s' "$ALIYUN_DNS_SECRET" > "$credentials_dir/ALICLOUD_SECRET_KEY"
-          kubectl -n traefik create secret generic alidns \
-            --from-file=ALICLOUD_ACCESS_KEY="$credentials_dir/ALICLOUD_ACCESS_KEY" \
-            --from-file=ALICLOUD_SECRET_KEY="$credentials_dir/ALICLOUD_SECRET_KEY" \
-            --dry-run=client -o yaml \
-            | bash .github/scripts/kubectl-apply-retry.sh
-
       - name: Sync cert-manager Aliyun DNS credentials
         if: matrix.component == 'cert-manager'
         shell: bash

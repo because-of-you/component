@@ -17,6 +17,7 @@ certificate:
   dnsNames:
     - acitrus.cn
     - "*.acitrus.cn"
+    - "*.coding.acitrus.cn"
     - "*.s3.acitrus.cn"
     - "*.ui.acitrus.cn"
     - "*.tcp.acitrus.cn"

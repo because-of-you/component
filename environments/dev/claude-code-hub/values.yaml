@@ -12,7 +12,9 @@ ingressRoute:
   entryPoints:
     - websecure
   tls:
-    certResolver: leresolver
+    store:
+      name: default
+      namespace: traefik
 
 config:
   dbPoolMax: 8

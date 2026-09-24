@@ -156,7 +156,9 @@ autheliaIngress:
   entryPoints:
     - websecure
   tls:
-    certResolver: leresolver
+    store:
+      name: default
+      namespace: traefik
 
 autheliaForwardAuth:
   enabled: true

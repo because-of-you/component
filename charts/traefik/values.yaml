@@ -1,5 +1,0 @@
-aliyunSecret:
-  enabled: false
-  name: alidns
-  accessKey: ""
-  secretKey: ""

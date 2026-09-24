@@ -4,10 +4,9 @@ postgresqlIngress:
   entryPoints:
     - gravitation
   tls:
-    domains:
-      - main: acitrus.cn
-        sans:
-          - postgresql.tcp.acitrus.cn
+    store:
+      name: default
+      namespace: traefik
 
 postgresql:
   auth:

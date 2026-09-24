@@ -48,7 +48,8 @@ grep -Fq -- '- websecure' "$rendered"
 grep -Fq -- '- gravitation' "$rendered"
 grep -Fq 'port: 9001' "$rendered"
 grep -Fq 'port: 9000' "$rendered"
-grep -Fq 'certResolver: leresolver' "$rendered"
+grep -Fq 'name: default' "$rendered"
+grep -Fq 'namespace: traefik' "$rendered"
 for component in redis postgresql rabbitmq; do
   helm template "$component" "$repo_root/charts/$component" \
     --namespace infra \
@@ -159,7 +160,7 @@ expected_routes = {
         'services' => [{ 'name' => 'rustfs-svc', 'port' => 9001 }]
       }
     ],
-    'tls' => { 'certResolver' => 'leresolver' }
+    'tls' => { 'store' => { 'name' => 'default', 'namespace' => 'traefik' } }
   },
   'rustfs-s3-api' => {
     'entryPoints' => ['gravitation'],
@@ -169,7 +170,7 @@ expected_routes = {
         'services' => [{ 'name' => 'rustfs-svc', 'port' => 9000 }]
       }
     ],
-    'tls' => { 'certResolver' => 'leresolver' }
+    'tls' => { 'store' => { 'name' => 'default', 'namespace' => 'traefik' } }
   }
 }
 

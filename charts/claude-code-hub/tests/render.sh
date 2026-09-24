@@ -46,7 +46,8 @@ grep -Fq 'kind: IngressRoute' "$rendered"
 grep -Fq 'match: '\''Host(`inner.coding.acitrus.cn`)'\''' "$rendered"
 grep -Fq 'match: '\''Host(`coding.acitrus.cn`)'\''' "$rendered"
 grep -Fq 'name: claude-code-hub' "$rendered"
-grep -Fq 'certResolver: leresolver' "$rendered"
+grep -Fq 'name: default' "$rendered"
+grep -Fq 'namespace: traefik' "$rendered"
 if grep -Fq 'middlewares:' "$rendered"; then
   echo "CCH must use native OIDC instead of Traefik ForwardAuth" >&2
   exit 1

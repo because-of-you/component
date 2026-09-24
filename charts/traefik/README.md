@@ -32,9 +32,11 @@ helm upgrade --install traefik oci://ghcr.io/because-of-you/charts/traefik \
 ```yaml
 traefik:
   deployment:
-    replicas: 2
+    kind: DaemonSet
   service:
-    type: LoadBalancer
+    spec:
+      type: LoadBalancer
+      externalTrafficPolicy: Local
 ```
 
 Chart 默认配置在：
@@ -49,84 +51,20 @@ charts/traefik/values.yaml
 environments/dev/traefik/values.yaml
 ```
 
-`charts/traefik/values.yaml` 只维护插件、可选 Secret 模板和授权参数等通用能力；域名、
-ACME DNS Challenge、入口端口、Dashboard、持久化和跨命名空间策略维护在 dev values。
+`charts/traefik/values.yaml` 只维护通用默认值；部署模式、入口端口、Dashboard、TLSStore、
+证书和跨命名空间策略维护在 dev values。
 环境配置不会被打包进 OCI Chart，只会在本仓库通过 Helmfile 渲染或部署时使用。
 
 Traefik 保持部署在独立的 `traefik` 命名空间，不与 `infra` 中的数据服务混放。这样可以隔离
 入口控制器的 RBAC、凭据、证书状态和故障边界。
 
-## Aliyun DNS Secret
+## TLS 证书
 
-当前 Chart 提供了一个可选的 Aliyun DNS Secret 模板，用于 Traefik ACME DNS Challenge。
+dev 环境的证书由 cert-manager 和 AliDNS webhook 申请，生成到
+`traefik/acitrus-tls` Secret。Traefik 通过默认 `TLSStore` 使用该 Secret，业务路由只引用
+`default` TLSStore，不再配置 Traefik ACME resolver，也不再需要 `acme.json` 或本地 PVC。
 
-默认不会创建 Secret：
-
-```yaml
-aliyunSecret:
-  enabled: false
-  name: alidns
-  accessKey: ""
-  secretKey: ""
-```
-
-本仓库的 dev 自动部署保持 `aliyunSecret.enabled=false`。请在 GitHub `dev` Environment Secrets
-中配置 `ALIYUN_DNS_KEY` 和 `ALIYUN_DNS_SECRET`；工作流会在部署 Traefik 前把它们同步为
-`traefik/alidns` Kubernetes Secret，并分别映射为 `ALICLOUD_ACCESS_KEY` 和
-`ALICLOUD_SECRET_KEY`。真实凭据不会写入 values 或提交到仓库。
-
-如果需要让 Chart 创建 Secret，可以在自己的 values 中启用：
-
-```yaml
-aliyunSecret:
-  enabled: true
-  name: alidns
-  accessKey: "<ALICLOUD_ACCESS_KEY>"
-  secretKey: "<ALICLOUD_SECRET_KEY>"
-```
-
-Traefik 会通过 `envFrom` 引用这个 Secret：
-
-```yaml
-traefik:
-  envFrom:
-    - secretRef:
-        name: alidns
-```
-
-然后在 ACME DNS Challenge 中使用 `alidns` provider：
-
-```yaml
-traefik:
-  certificatesResolvers:
-    leresolver:
-      acme:
-        storage: /data/acme.json
-        email: "mail@example.com"
-        dnsChallenge:
-          provider: alidns
-          delayBeforeCheck: 0
-```
-
-使用 OCI 安装时，可以直接通过环境变量和 `--set-string` 传入：
-
-```bash
-export ALICLOUD_ACCESS_KEY="xxx"
-export ALICLOUD_SECRET_KEY="xxx"
-```
-
-```bash
-helm upgrade --install traefik oci://ghcr.io/because-of-you/charts/traefik \
-  --version 0.0.0-dev \
-  --namespace traefik \
-  --create-namespace \
-  --set aliyunSecret.enabled=true \
-  --set aliyunSecret.name=alidns \
-  --set-string aliyunSecret.accessKey="$ALICLOUD_ACCESS_KEY" \
-  --set-string aliyunSecret.secretKey="$ALICLOUD_SECRET_KEY"
-```
-
-不要把真实的 `accessKey` 和 `secretKey` 提交到 Git 仓库。生产环境也可以使用 External Secrets、Sealed Secrets、SOPS，或者在集群中提前创建同名 Secret，并保持 `aliyunSecret.enabled=false`。
+AliDNS 凭据只由 cert-manager 使用，保存在 `cert-manager/alidns-secrets` Secret 中。
 
 ## 本地调试
 

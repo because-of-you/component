@@ -46,7 +46,8 @@ grep -Fq 'kind: IngressRoute' "$rendered"
 grep -Fq 'match: '\''Host(`db.acitrus.cn`)'\''' "$rendered"
 grep -Fq 'name: "authelia-forwardauth"' "$rendered"
 grep -Fq 'namespace: "infra"' "$rendered"
-grep -Fq 'certResolver: leresolver' "$rendered"
+grep -Fq 'name: default' "$rendered"
+grep -Fq 'namespace: traefik' "$rendered"
 
 if grep -Fq 'name: DBX_DISABLE_PASSWORD' "$default_rendered"; then
   echo 'standalone chart must preserve DBX password protection by default' >&2

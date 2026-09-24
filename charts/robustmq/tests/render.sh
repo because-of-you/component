@@ -34,7 +34,8 @@ grep -Fq 'HostSNI(`amqp.tcp.acitrus.cn`)' "$rendered"
 grep -Fq -- '- gravitation' "$rendered"
 grep -Fq 'port: mqtt' "$rendered"
 grep -Fq 'port: amqp' "$rendered"
-grep -Fq 'certResolver: leresolver' "$rendered"
+grep -Fq 'name: default' "$rendered"
+grep -Fq 'namespace: traefik' "$rendered"
 
 if grep -Fq 'HostSNI(`*`)' "$rendered"; then
   echo 'the shared gravitation entrypoint must not use a catch-all MQTT route' >&2

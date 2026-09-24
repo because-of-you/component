@@ -90,4 +90,6 @@ rustfsIngress:
     entryPoints:
       - gravitation
   tls:
-    certResolver: leresolver
+    store:
+      name: default
+      namespace: traefik

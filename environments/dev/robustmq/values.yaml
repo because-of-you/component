@@ -17,7 +17,9 @@ ingressRoute:
     - name: authelia-forwardauth
       namespace: infra
   tls:
-    certResolver: leresolver
+    store:
+      name: default
+      namespace: traefik
 
 dashboard:
   apiBaseUrl: https://mq.acitrus.cn
@@ -30,9 +32,9 @@ mqttIngressRoute:
   entryPoints:
     - gravitation
   tls:
-    certResolver: leresolver
-    domains:
-      - main: mqtt.tcp.acitrus.cn
+    store:
+      name: default
+      namespace: traefik
 
 # RobustMQ AMQP support is experimental; expose it only in dev for protocol
 # compatibility testing. Traefik terminates TLS and forwards to port 5672.
@@ -42,9 +44,9 @@ amqpIngressRoute:
   entryPoints:
     - gravitation
   tls:
-    certResolver: leresolver
-    domains:
-      - main: amqp.tcp.acitrus.cn
+    store:
+      name: default
+      namespace: traefik
 
 resources:
   requests:

@@ -17,7 +17,9 @@ ingressRoute:
     - name: authelia-forwardauth
       namespace: infra
   tls:
-    certResolver: leresolver
+    store:
+      name: default
+      namespace: traefik
 
 secretFiles:
   enabled: true
