@@ -25,11 +25,24 @@ traefik:
       exposedPort: 1024
       protocol: TCP
 
+    metrics:
+      http:
+        aliasHeadersStrategy: delete
+
+    traefik:
+      http:
+        aliasHeadersStrategy: delete
+
+    web:
+      http:
+        aliasHeadersStrategy: delete
+
     websecure:
       http3:
         enabled: true
         advertisedPort: 443
       http:
+        aliasHeadersStrategy: delete
         tls:
           enabled: true
           options: ""
@@ -54,3 +67,4 @@ traefik:
     kubernetesCRD:
       allowCrossNamespace: true
       enabled: true
+      safeNaming: true
