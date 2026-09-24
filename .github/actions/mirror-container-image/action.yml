@@ -65,35 +65,18 @@ runs:
               "$DESTINATION_REGISTRY"
 
         source_digests=()
-        destination_digests=()
-        destination_complete=true
         for platform in "${platforms[@]}"; do
           source_digests+=("$(regctl image digest --platform "$platform" "$SOURCE_IMAGE")")
-          if destination_digest="$(regctl image digest --platform "$platform" "$DESTINATION_IMAGE" 2>/dev/null)"; then
-            destination_digests+=("$destination_digest")
-          else
-            destination_complete=false
-            destination_digests+=(missing)
-          fi
         done
 
-        if [[ "$destination_complete" == true ]] \
-          && [[ "${source_digests[*]}" == "${destination_digests[*]}" ]]; then
-          echo "Runtime images already mirrored; skipping copy"
-          exit 0
-        fi
-
-        if [[ "$destination_complete" == true ]]; then
-          echo "Runtime image digest changed; updating mirror"
-        else
-          echo "Destination runtime image is incomplete or missing; creating mirror"
-        fi
-
         for ((attempt = 1; attempt <= COPY_ATTEMPTS; attempt++)); do
-          if regctl index create "$DESTINATION_IMAGE" \
-            --ref "$SOURCE_IMAGE" \
-            --platform linux/amd64 \
-            --platform linux/arm64; then
+          # image copy transfers manifests, configs, and blobs. force-recursive
+          # also repairs a destination whose index exists but nested content is
+          # missing. The previous index-create approach only copied descriptors.
+          if regctl image copy "$SOURCE_IMAGE" "$DESTINATION_IMAGE" \
+            --force-recursive \
+            --platforms linux/amd64 \
+            --platforms linux/arm64; then
             mirror_valid=true
             for i in "${!platforms[@]}"; do
               destination_digest="$(
@@ -107,7 +90,7 @@ runs:
               fi
             done
             if [[ "$mirror_valid" == true ]]; then
-              echo "Mirrored runtime platforms: ${platforms[*]}"
+              echo "Mirrored and verified runtime platforms: ${platforms[*]}"
               exit 0
             fi
           fi
