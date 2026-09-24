@@ -10,6 +10,6 @@ helm template cert-manager "$chart_dir" \
   --namespace cert-manager > "$rendered"
 
 grep -Fq 'kind: Deployment' "$rendered"
-grep -Fq 'name: cert-manager-certManager' "$rendered"
+grep -Fq 'name: cert-manager-webhook' "$rendered"
 
 echo 'cert-manager render checks passed'
