@@ -54,7 +54,7 @@ runs:
 
         for ((attempt = 1; attempt <= COPY_ATTEMPTS; attempt++)); do
           if docker run --rm quay.io/skopeo/stable:latest copy \
-            --multi-arch=linux/amd64,linux/arm64 \
+            --multi-arch all \
             --retry-times 3 \
             --dest-creds "$DESTINATION_USERNAME:$DESTINATION_PASSWORD" \
             "docker://$SOURCE_IMAGE" \
