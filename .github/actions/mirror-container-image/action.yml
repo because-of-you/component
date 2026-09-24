@@ -70,14 +70,26 @@ runs:
         done
 
         for ((attempt = 1; attempt <= COPY_ATTEMPTS; attempt++)); do
-          # image copy transfers manifests, configs, and blobs. force-recursive
-          # also repairs a destination whose index exists but nested content is
-          # missing. The previous index-create approach only copied descriptors.
-          if regctl image copy "$SOURCE_IMAGE" "$DESTINATION_IMAGE" \
-            --force-recursive \
-            --platforms linux/amd64 \
-            --platforms linux/arm64; then
-            mirror_valid=true
+          mirror_valid=true
+          platform_refs=()
+          for platform in "${platforms[@]}"; do
+            platform_tag="${DESTINATION_IMAGE}-sync-${platform//\//-}"
+            # Copy each platform as a complete single-platform image first.
+            # This guarantees that the child manifest and every referenced Blob
+            # exist in the destination repository before assembling the index.
+            if ! regctl image copy "$SOURCE_IMAGE" "$platform_tag" \
+              --force-recursive \
+              --platform "$platform"; then
+              mirror_valid=false
+              break
+            fi
+            platform_refs+=("$platform_tag")
+          done
+
+          if [[ "$mirror_valid" == true ]] \
+            && regctl index create "$DESTINATION_IMAGE" \
+              --ref "${platform_refs[0]}" \
+              --ref "${platform_refs[1]}"; then
             for i in "${!platforms[@]}"; do
               destination_digest="$(
                 regctl image digest \
