@@ -2,7 +2,7 @@ traefik:
   image:
     registry: registry.cn-shenzhen.aliyuncs.com
     repository: gravitation/traefik
-    tag: v3.7.12
+    tag: v3.7.13
 
   deployment:
     kind: DaemonSet
@@ -80,16 +80,3 @@ traefik:
       allowCrossNamespace: true
       enabled: true
       safeNaming: true
-
-  # Keep temporary diagnostics enabled while validating the hostPort path.
-  accessLog:
-    enabled: true
-    format: json
-    fields:
-      defaultMode: keep
-      headers:
-        defaultMode: drop
-        names:
-          X-Forwarded-For: keep
-          X-Real-IP: keep
-          Forwarded: keep

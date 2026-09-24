@@ -506,7 +506,7 @@ jobs:
         run: |
           helm repo add --force-update traefik https://traefik.github.io/charts
           helm repo update
-          helm dependency build charts/traefik
+          helm dependency update charts/traefik
           helm show crds charts/traefik \
             | kubectl apply --server-side --force-conflicts -f -
 
