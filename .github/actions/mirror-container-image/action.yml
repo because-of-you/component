@@ -59,12 +59,34 @@ runs:
               --pass-stdin \
               "$DESTINATION_REGISTRY"
 
+        platforms=(linux/amd64 linux/arm64)
         for ((attempt = 1; attempt <= COPY_ATTEMPTS; attempt++)); do
-          if regctl image copy \
-            --platform linux/amd64,linux/arm64 \
-            "$SOURCE_IMAGE" \
-            "$DESTINATION_IMAGE"; then
-            echo "Mirrored amd64 and arm64 image manifests and layers"
+          if ! amd64_digest="$(regctl image digest --platform "${platforms[0]}" "$SOURCE_IMAGE")" \
+            || ! arm64_digest="$(regctl image digest --platform "${platforms[1]}" "$SOURCE_IMAGE")" \
+            || [[ "$amd64_digest" != sha256:* || "$arm64_digest" != sha256:* ]]; then
+            echo "Failed to resolve amd64/arm64 source digests" >&2
+            mirror_valid=false
+          else
+            echo "Source amd64 digest: $amd64_digest"
+            echo "Source arm64 digest: $arm64_digest"
+            if regctl index create "$DESTINATION_IMAGE" \
+              --ref "$SOURCE_IMAGE@$amd64_digest" \
+              --ref "$SOURCE_IMAGE@$arm64_digest"; then
+              if ! destination_amd64_digest="$(regctl image digest --platform "${platforms[0]}" "$DESTINATION_IMAGE")" \
+                || ! destination_arm64_digest="$(regctl image digest --platform "${platforms[1]}" "$DESTINATION_IMAGE")"; then
+                mirror_valid=false
+              elif [[ "$amd64_digest" == "$destination_amd64_digest" \
+                && "$arm64_digest" == "$destination_arm64_digest" ]]; then
+                mirror_valid=true
+              else
+                mirror_valid=false
+              fi
+            else
+              mirror_valid=false
+            fi
+          fi
+          if [[ "$mirror_valid" == true ]]; then
+            echo "Mirrored and verified amd64 and arm64 manifests"
             exit 0
           fi
           if [[ "$attempt" == "$COPY_ATTEMPTS" ]]; then
