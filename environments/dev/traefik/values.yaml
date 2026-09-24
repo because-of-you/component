@@ -9,8 +9,9 @@ traefik:
 
   service:
     spec:
-      type: LoadBalancer
-      externalTrafficPolicy: Local
+      # All public ports are bound directly by the Traefik DaemonSet below.
+      # Keep the Kubernetes Service internal so k3s ServiceLB is not involved.
+      type: ClusterIP
 
   tolerations:
     - key: node.kubernetes.io/unschedulable
@@ -20,6 +21,7 @@ traefik:
   ports:
     gravitation:
       port: 1024
+      hostPort: 1024
       expose:
         default: true
       exposedPort: 1024
@@ -34,10 +36,12 @@ traefik:
         aliasHeadersStrategy: delete
 
     web:
+      hostPort: 80
       http:
         aliasHeadersStrategy: delete
 
     websecure:
+      hostPort: 443
       http3:
         enabled: true
         advertisedPort: 443
