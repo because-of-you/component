@@ -1,4 +1,9 @@
 traefik:
+  image:
+    registry: registry.cn-shenzhen.aliyuncs.com
+    repository: gravitation/traefik
+    tag: v3.7.12
+
   deployment:
     kind: DaemonSet
 
