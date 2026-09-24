@@ -507,12 +507,19 @@ jobs:
 
       - name: Build cert-manager dependencies
         if: matrix.component == 'cert-manager'
-        run: helm dependency build charts/cert-manager
+        shell: bash
+        run: |
+          helm repo add --force-update jetstack https://charts.jetstack.io
+          helm repo add --force-update cert-manager-alidns-webhook https://devmachine-fr.github.io/cert-manager-alidns-webhook
+          helm repo update
+          helm dependency build charts/cert-manager
 
       - name: Upgrade Traefik CRDs
         if: matrix.component == 'traefik'
         shell: bash
         run: |
+          helm repo add --force-update traefik https://traefik.github.io/charts
+          helm repo update
           helm dependency build charts/traefik
           helm show crds charts/traefik \
             | kubectl apply --server-side --force-conflicts -f -
