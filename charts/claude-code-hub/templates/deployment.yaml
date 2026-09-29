@@ -100,6 +100,10 @@ spec:
                   key: {{ required "existingSecret.oidcClientSecretKey is required when OIDC is enabled" .Values.existingSecret.oidcClientSecretKey | quote }}
             - name: OIDC_REDIRECT_URI
               value: {{ required "config.oidc.redirectUri is required when OIDC is enabled" .Values.config.oidc.redirectUri | quote }}
+            {{- if .Values.config.oidc.redirectUriAllowlist }}
+            - name: OIDC_REDIRECT_URI_ALLOWLIST
+              value: {{ .Values.config.oidc.redirectUriAllowlist | quote }}
+            {{- end }}
             - name: OIDC_REQUIRED_GROUP
               value: {{ required "config.oidc.requiredGroup is required when OIDC is enabled" .Values.config.oidc.requiredGroup | quote }}
             {{- else }}

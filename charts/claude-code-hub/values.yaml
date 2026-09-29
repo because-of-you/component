@@ -10,7 +10,7 @@ strategy:
 
 image:
   repository: ghcr.io/because-of-you/claude-code-hub
-  tag: codex-authelia-oidc-424ac9b
+  tag: codex-authelia-oidc-9709ec3
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
@@ -87,6 +87,8 @@ config:
     issuerUrl: ""
     clientId: ""
     redirectUri: ""
+    # 逗号分隔的额外回调 URL（多域名登录时使用，每条都须在 IdP 侧注册）
+    redirectUriAllowlist: ""
     requiredGroup: lldap_admin
 
 extraEnv: []

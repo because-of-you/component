@@ -2,10 +2,10 @@
 
 该 Chart 参考 Claude Code Hub 官方 Kubernetes 清单维护，但只部署应用本体，复用集群中已有的
 PostgreSQL 和 Redis。当前发布固定使用 fork 的不可变提交镜像标签
-`codex-authelia-oidc-424ac9b`，并从深圳阿里云 ACR 拉取：
+`codex-authelia-oidc-9709ec3`，并从深圳阿里云 ACR 拉取：
 
 ```text
-registry.cn-shenzhen.aliyuncs.com/gravitation/claude-code-hub:codex-authelia-oidc-424ac9b
+registry.cn-shenzhen.aliyuncs.com/gravitation/claude-code-hub:codex-authelia-oidc-9709ec3
 ```
 
 源码工作流只构建 GHCR 镜像。CCH 的同步关系声明在 `images/claude-code-hub/images.yaml`；该文件在
@@ -90,6 +90,8 @@ config:
     issuerUrl: https://auth.acitrus.cn
     clientId: claude-code-hub
     redirectUri: https://coding.acitrus.cn/api/auth/oidc/callback
+    # 同一服务多域名登录时，逗号分隔的额外回调 URL（须在 IdP 侧一并注册）
+    redirectUriAllowlist: https://inner.coding.acitrus.cn/api/auth/oidc/callback
     requiredGroup: lldap_admin
 ```
 

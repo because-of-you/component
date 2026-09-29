@@ -197,6 +197,7 @@
             "issuerUrl": {"type": "string"},
             "clientId": {"type": "string"},
             "redirectUri": {"type": "string"},
+            "redirectUriAllowlist": {"type": "string"},
             "requiredGroup": {"type": "string", "minLength": 1}
           },
           "additionalProperties": false

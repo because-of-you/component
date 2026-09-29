@@ -23,6 +23,7 @@ config:
     issuerUrl: https://auth.acitrus.cn
     clientId: claude-code-hub
     redirectUri: https://coding.acitrus.cn/api/auth/oidc/callback
+    redirectUriAllowlist: https://inner.coding.acitrus.cn/api/auth/oidc/callback
     requiredGroup: lldap_admin
 
 resources:

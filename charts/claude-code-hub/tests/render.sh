@@ -10,14 +10,14 @@ pdb_rendered="$(mktemp)"
 trap 'rm -f "$rendered" "$pdb_rendered"' EXIT
 
 grep -Fq 'name: claude-code-hub' "$chart_dir/Chart.yaml"
-grep -Fq 'appVersion: "codex-authelia-oidc-424ac9b"' "$chart_dir/Chart.yaml"
-grep -Fq 'tag: codex-authelia-oidc-424ac9b' "$chart_dir/values.yaml"
+grep -Fq 'appVersion: "codex-authelia-oidc-9709ec3"' "$chart_dir/Chart.yaml"
+grep -Fq 'tag: codex-authelia-oidc-9709ec3' "$chart_dir/values.yaml"
 grep -Fq '"enum": ["legacy", "dual", "opaque"]' "$chart_dir/values.schema.json"
 
 helm template claude-code-hub "$chart_dir" --namespace app -f "$dev_values" >"$rendered"
 
 grep -Fq 'kind: Deployment' "$rendered"
-grep -Fq 'image: "registry.cn-shenzhen.aliyuncs.com/gravitation/claude-code-hub:codex-authelia-oidc-424ac9b"' "$rendered"
+grep -Fq 'image: "registry.cn-shenzhen.aliyuncs.com/gravitation/claude-code-hub:codex-authelia-oidc-9709ec3"' "$rendered"
 grep -Fq 'imagePullPolicy: Always' "$rendered"
 grep -Fq 'containerPort: 3000' "$rendered"
 grep -Fq 'name: DSN' "$rendered"
@@ -25,6 +25,7 @@ grep -Fq 'name: REDIS_URL' "$rendered"
 grep -Fq 'name: ADMIN_TOKEN' "$rendered"
 grep -A1 -F 'name: OIDC_ENABLED' "$rendered" | grep -Fq 'value: "true"'
 grep -A1 -F 'name: OIDC_REDIRECT_URI' "$rendered" | grep -Fq 'value: "https://coding.acitrus.cn/api/auth/oidc/callback"'
+grep -A1 -F 'name: OIDC_REDIRECT_URI_ALLOWLIST' "$rendered" | grep -Fq 'value: "https://inner.coding.acitrus.cn/api/auth/oidc/callback"'
 grep -A1 -F 'name: AUTO_MIGRATE' "$rendered" | grep -Fq 'value: "true"'
 grep -Fq 'name: SESSION_TOKEN_MODE' "$rendered"
 grep -A1 -F 'name: SESSION_TOKEN_MODE' "$rendered" | grep -Fq 'value: "opaque"'
@@ -103,8 +104,8 @@ grep -Fq -- '--ref "$SOURCE_IMAGE@$amd64_digest"' "$mirror_action"
 grep -Fq -- '--ref "$SOURCE_IMAGE@$arm64_digest"' "$mirror_action"
 image_manifest="$repo_root/images/claude-code-hub/images.yaml"
 test -f "$image_manifest"
-grep -Fq 'source: ghcr.io/because-of-you/claude-code-hub:codex-authelia-oidc-424ac9b' "$image_manifest"
-grep -Fq 'destination: registry.cn-shenzhen.aliyuncs.com/gravitation/claude-code-hub:codex-authelia-oidc-424ac9b' "$image_manifest"
+grep -Fq 'source: ghcr.io/because-of-you/claude-code-hub:codex-authelia-oidc-9709ec3' "$image_manifest"
+grep -Fq 'destination: registry.cn-shenzhen.aliyuncs.com/gravitation/claude-code-hub:codex-authelia-oidc-9709ec3' "$image_manifest"
 test ! -e "$repo_root/images/claude-code-hub/images.json"
 if grep -Eq 'images\.json|images\.yml' "$sync_workflow"; then
   echo "Sync Images must support only images.yaml manifests" >&2
