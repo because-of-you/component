@@ -52,28 +52,38 @@ runs:
           exit 1
         fi
 
+        log() {
+          printf '[%s] %s\n' "$(date -u +%H:%M:%S)" "$*"
+        }
+        started=$SECONDS
+
         trap 'regctl registry logout "$DESTINATION_REGISTRY" >/dev/null 2>&1 || true' EXIT
+        log "Login to $DESTINATION_REGISTRY"
         printf '%s' "$DESTINATION_PASSWORD" \
-          | regctl registry login \
+          | regctl -v info registry login \
               --user "$DESTINATION_USERNAME" \
               --pass-stdin \
               "$DESTINATION_REGISTRY"
 
         platforms=(linux/amd64 linux/arm64)
         for ((attempt = 1; attempt <= COPY_ATTEMPTS; attempt++)); do
-          if ! amd64_digest="$(regctl image digest --platform "${platforms[0]}" "$SOURCE_IMAGE")" \
-            || ! arm64_digest="$(regctl image digest --platform "${platforms[1]}" "$SOURCE_IMAGE")" \
+          log "Attempt $attempt/$COPY_ATTEMPTS: resolve source digests"
+          if ! amd64_digest="$(regctl -v info image digest --platform "${platforms[0]}" "$SOURCE_IMAGE")" \
+            || ! arm64_digest="$(regctl -v info image digest --platform "${platforms[1]}" "$SOURCE_IMAGE")" \
             || [[ "$amd64_digest" != sha256:* || "$arm64_digest" != sha256:* ]]; then
             echo "Failed to resolve amd64/arm64 source digests" >&2
             mirror_valid=false
           else
             echo "Source amd64 digest: $amd64_digest"
             echo "Source arm64 digest: $arm64_digest"
-            if regctl index create "$DESTINATION_IMAGE" \
+            log "Copy amd64+arm64 blobs to $DESTINATION_IMAGE (slow cross-registry transfer)"
+            copy_started=$SECONDS
+            if regctl -v info index create "$DESTINATION_IMAGE" \
               --ref "$SOURCE_IMAGE@$amd64_digest" \
               --ref "$SOURCE_IMAGE@$arm64_digest"; then
-              if ! destination_amd64_digest="$(regctl image digest --platform "${platforms[0]}" "$DESTINATION_IMAGE")" \
-                || ! destination_arm64_digest="$(regctl image digest --platform "${platforms[1]}" "$DESTINATION_IMAGE")"; then
+              log "Blob transfer finished in $((SECONDS - copy_started))s"
+              if ! destination_amd64_digest="$(regctl -v info image digest --platform "${platforms[0]}" "$DESTINATION_IMAGE")" \
+                || ! destination_arm64_digest="$(regctl -v info image digest --platform "${platforms[1]}" "$DESTINATION_IMAGE")"; then
                 mirror_valid=false
               elif [[ "$amd64_digest" == "$destination_amd64_digest" \
                 && "$arm64_digest" == "$destination_arm64_digest" ]]; then
@@ -86,14 +96,14 @@ runs:
             fi
           fi
           if [[ "$mirror_valid" == true ]]; then
-            echo "Mirrored and verified amd64 and arm64 manifests"
+            log "Mirrored and verified amd64 and arm64 manifests in $((SECONDS - started))s"
             exit 0
           fi
           if [[ "$attempt" == "$COPY_ATTEMPTS" ]]; then
-            echo "Failed to mirror $SOURCE_IMAGE after $COPY_ATTEMPTS attempts" >&2
+            log "Failed to mirror $SOURCE_IMAGE after $COPY_ATTEMPTS attempts"
             exit 1
           fi
           delay=$((attempt * 5))
-          echo "Image mirror attempt $attempt failed; retrying in ${delay}s" >&2
+          log "Image mirror attempt $attempt failed; retrying in ${delay}s"
           sleep "$delay"
         done
