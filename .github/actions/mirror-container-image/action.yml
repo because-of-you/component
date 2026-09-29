@@ -1,5 +1,5 @@
 name: Mirror container image
-description: Copy amd64 and arm64 runtime images between registries only when their digests change
+description: Copy the amd64 and arm64 runtime image between registries
 
 inputs:
   source-image:
@@ -25,10 +25,15 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Install regctl
-      uses: regclient/actions/regctl-installer@78eb729dbdb4ef6480e85ff697b4410e22112583
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v4
+
+    - name: Login to destination registry
+      uses: docker/login-action@v4
       with:
-        release: v0.11.5
+        registry: ${{ inputs.destination-registry }}
+        username: ${{ inputs.destination-username }}
+        password: ${{ inputs.destination-password }}
 
     - name: Copy image
       shell: bash
@@ -36,16 +41,12 @@ runs:
         SOURCE_IMAGE: ${{ inputs.source-image }}
         DESTINATION_IMAGE: ${{ inputs.destination-image }}
         DESTINATION_REGISTRY: ${{ inputs.destination-registry }}
-        DESTINATION_USERNAME: ${{ inputs.destination-username }}
-        DESTINATION_PASSWORD: ${{ inputs.destination-password }}
         COPY_ATTEMPTS: ${{ inputs.attempts }}
       run: |
         set -euo pipefail
         test -n "$SOURCE_IMAGE"
         test -n "$DESTINATION_IMAGE"
         test -n "$DESTINATION_REGISTRY"
-        test -n "$DESTINATION_USERNAME"
-        test -n "$DESTINATION_PASSWORD"
         [[ "$COPY_ATTEMPTS" =~ ^[1-9][0-9]*$ ]]
         if [[ "$DESTINATION_IMAGE" != "$DESTINATION_REGISTRY/"* ]]; then
           echo "Destination image '$DESTINATION_IMAGE' is outside registry '$DESTINATION_REGISTRY'" >&2
@@ -57,47 +58,30 @@ runs:
         }
         started=$SECONDS
 
-        trap 'regctl registry logout "$DESTINATION_REGISTRY" >/dev/null 2>&1 || true' EXIT
-        log "Login to $DESTINATION_REGISTRY"
-        printf '%s' "$DESTINATION_PASSWORD" \
-          | regctl -v info registry login \
-              --user "$DESTINATION_USERNAME" \
-              --pass-stdin \
-              "$DESTINATION_REGISTRY"
+        # Rebuilding FROM the source pulls only the runtime image for the requested
+        # platforms, so the source attestation manifests never reach the mirror.
+        # Some registries reject their application/vnd.oci.empty.v1+json configs.
+        context="$(mktemp -d)"
+        trap 'rm -rf "$context"' EXIT
+        printf 'FROM %s\n' "$SOURCE_IMAGE" > "$context/Dockerfile"
 
-        platforms=(linux/amd64 linux/arm64)
         for ((attempt = 1; attempt <= COPY_ATTEMPTS; attempt++)); do
-          log "Attempt $attempt/$COPY_ATTEMPTS: resolve source digests"
-          if ! amd64_digest="$(regctl -v info image digest --platform "${platforms[0]}" "$SOURCE_IMAGE")" \
-            || ! arm64_digest="$(regctl -v info image digest --platform "${platforms[1]}" "$SOURCE_IMAGE")" \
-            || [[ "$amd64_digest" != sha256:* || "$arm64_digest" != sha256:* ]]; then
-            echo "Failed to resolve amd64/arm64 source digests" >&2
-            mirror_valid=false
-          else
-            echo "Source amd64 digest: $amd64_digest"
-            echo "Source arm64 digest: $arm64_digest"
-            log "Copy amd64+arm64 blobs to $DESTINATION_IMAGE (slow cross-registry transfer)"
-            copy_started=$SECONDS
-            if regctl -v info index create "$DESTINATION_IMAGE" \
-              --ref "$SOURCE_IMAGE@$amd64_digest" \
-              --ref "$SOURCE_IMAGE@$arm64_digest"; then
-              log "Blob transfer finished in $((SECONDS - copy_started))s"
-              if ! destination_amd64_digest="$(regctl -v info image digest --platform "${platforms[0]}" "$DESTINATION_IMAGE")" \
-                || ! destination_arm64_digest="$(regctl -v info image digest --platform "${platforms[1]}" "$DESTINATION_IMAGE")"; then
-                mirror_valid=false
-              elif [[ "$amd64_digest" == "$destination_amd64_digest" \
-                && "$arm64_digest" == "$destination_arm64_digest" ]]; then
-                mirror_valid=true
-              else
-                mirror_valid=false
-              fi
-            else
-              mirror_valid=false
+          log "Attempt $attempt/$COPY_ATTEMPTS: copy linux/amd64+linux/arm64 to $DESTINATION_IMAGE"
+          copy_started=$SECONDS
+          if docker buildx build "$context" \
+            --file "$context/Dockerfile" \
+            --platform linux/amd64,linux/arm64 \
+            --provenance=false \
+            --sbom=false \
+            --push \
+            --tag "$DESTINATION_IMAGE"; then
+            log "Push finished in $((SECONDS - copy_started))s"
+            destination_platforms="$(docker buildx imagetools inspect "$DESTINATION_IMAGE" 2>/dev/null || true)"
+            if [[ "$destination_platforms" == *linux/amd64* && "$destination_platforms" == *linux/arm64* ]]; then
+              log "Mirrored amd64 and arm64 manifests in $((SECONDS - started))s"
+              exit 0
             fi
-          fi
-          if [[ "$mirror_valid" == true ]]; then
-            log "Mirrored and verified amd64 and arm64 manifests in $((SECONDS - started))s"
-            exit 0
+            echo "Destination is missing a runtime platform after push" >&2
           fi
           if [[ "$attempt" == "$COPY_ATTEMPTS" ]]; then
             log "Failed to mirror $SOURCE_IMAGE after $COPY_ATTEMPTS attempts"

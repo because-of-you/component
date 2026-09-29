@@ -96,12 +96,16 @@ if grep -Fq 'uses: ./.github/actions/mirror-container-image' "$repo_root/.github
 fi
 mirror_action="$repo_root/.github/actions/mirror-container-image/action.yml"
 test -f "$mirror_action"
-grep -Fq 'platforms=(linux/amd64 linux/arm64)' "$mirror_action"
-grep -Fq 'regctl image digest --platform "${platforms[0]}" "$SOURCE_IMAGE"' "$mirror_action"
-grep -Fq 'regctl image digest --platform "${platforms[1]}" "$SOURCE_IMAGE"' "$mirror_action"
-grep -Fq 'regctl index create "$DESTINATION_IMAGE"' "$mirror_action"
-grep -Fq -- '--ref "$SOURCE_IMAGE@$amd64_digest"' "$mirror_action"
-grep -Fq -- '--ref "$SOURCE_IMAGE@$arm64_digest"' "$mirror_action"
+grep -Fq 'FROM %s' "$mirror_action"
+grep -Fq -- '--platform linux/amd64,linux/arm64' "$mirror_action"
+grep -Fq -- '--provenance=false' "$mirror_action"
+grep -Fq -- '--sbom=false' "$mirror_action"
+grep -Fq -- '--push' "$mirror_action"
+grep -Fq -- '--tag "$DESTINATION_IMAGE"' "$mirror_action"
+if grep -Fq 'regctl' "$mirror_action"; then
+  echo "Mirror action must not use regctl" >&2
+  exit 1
+fi
 image_manifest="$repo_root/images/claude-code-hub/images.yaml"
 test -f "$image_manifest"
 grep -Fq 'source: ghcr.io/because-of-you/claude-code-hub:codex-authelia-oidc-9709ec3' "$image_manifest"
