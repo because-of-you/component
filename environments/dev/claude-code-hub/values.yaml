@@ -9,6 +9,7 @@ ingressRoute:
   host: inner.coding.acitrus.cn
   additionalHosts:
     - coding.acitrus.cn
+    - 863.coding.acitrus.cn
   entryPoints:
     - websecure
   tls:
@@ -23,7 +24,7 @@ config:
     issuerUrl: https://auth.acitrus.cn
     clientId: claude-code-hub
     redirectUri: https://coding.acitrus.cn/api/auth/oidc/callback
-    redirectUriAllowlist: https://inner.coding.acitrus.cn/api/auth/oidc/callback
+    redirectUriAllowlist: https://inner.coding.acitrus.cn/api/auth/oidc/callback,https://863.coding.acitrus.cn/api/auth/oidc/callback
     requiredGroup: lldap_admin
 
 resources:

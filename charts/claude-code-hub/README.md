@@ -2,10 +2,10 @@
 
 该 Chart 参考 Claude Code Hub 官方 Kubernetes 清单维护，但只部署应用本体，复用集群中已有的
 PostgreSQL 和 Redis。当前发布固定使用 fork 的不可变提交镜像标签
-`codex-authelia-oidc-ac1fcd4`，并从深圳阿里云 ACR 拉取：
+`codex-authelia-oidc-e3ab675`，并从深圳阿里云 ACR 拉取：
 
 ```text
-registry.cn-shenzhen.aliyuncs.com/gravitation/claude-code-hub:codex-authelia-oidc-ac1fcd4
+registry.cn-shenzhen.aliyuncs.com/gravitation/claude-code-hub:codex-authelia-oidc-e3ab675
 ```
 
 源码工作流只构建 GHCR 镜像。CCH 的同步关系声明在 `images/claude-code-hub/images.yaml`；该文件在
@@ -38,7 +38,7 @@ release 部署在 `app` 命名空间，连接：
 PostgreSQL: postgresql.infra.svc.cluster.local:5432 / claude_code_hub / postgres
 Redis:      redis-master.infra.svc.cluster.local:6379 / database 2
 Service:    claude-code-hub.app.svc.cluster.local:80
-HTTPS:      https://inner.coding.acitrus.cn, https://coding.acitrus.cn
+HTTPS:      https://inner.coding.acitrus.cn, https://coding.acitrus.cn, https://863.coding.acitrus.cn
 ```
 
 应用启动时使用官方 `AUTO_MIGRATE=true` 执行 Drizzle migrations；Chart 的 pre-install、
@@ -78,8 +78,8 @@ helm template claude-code-hub charts/claude-code-hub \
 helmfile -e dev --selector name=claude-code-hub sync
 ```
 
-dev 通过 Traefik `websecure` 和 `leresolver` 暴露 `inner.coding.acitrus.cn` 和
-`coding.acitrus.cn`。入口不挂载
+dev 通过 Traefik `websecure` 和 `leresolver` 暴露 `inner.coding.acitrus.cn`、
+`coding.acitrus.cn` 和 `863.coding.acitrus.cn`。入口不挂载
 Authelia ForwardAuth，也不按路径放行；所有页面与 API 请求都进入 CCH，由应用自身分别执行
 OIDC Session 或 API Key 鉴权。dev 已启用 fork 提供的原生 Authelia/OIDC，并固定配置为：
 
@@ -91,7 +91,7 @@ config:
     clientId: claude-code-hub
     redirectUri: https://coding.acitrus.cn/api/auth/oidc/callback
     # 同一服务多域名登录时，逗号分隔的额外回调 URL（须在 IdP 侧一并注册）
-    redirectUriAllowlist: https://inner.coding.acitrus.cn/api/auth/oidc/callback
+    redirectUriAllowlist: https://inner.coding.acitrus.cn/api/auth/oidc/callback,https://863.coding.acitrus.cn/api/auth/oidc/callback
     requiredGroup: lldap_admin
 ```
 

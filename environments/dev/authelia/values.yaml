@@ -101,6 +101,7 @@ authelia:
             redirect_uris:
               - https://coding.acitrus.cn/api/auth/oidc/callback
               - https://inner.coding.acitrus.cn/api/auth/oidc/callback
+              - https://863.coding.acitrus.cn/api/auth/oidc/callback
             scopes:
               - openid
               - profile
