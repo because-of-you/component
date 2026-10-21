@@ -500,6 +500,14 @@ jobs:
           helm repo update
           helm dependency build charts/cert-manager
 
+      - name: Build Authelia dependencies
+        if: matrix.component == 'authelia'
+        shell: bash
+        run: |
+          helm repo add --force-update authelia https://charts.authelia.com
+          helm repo update
+          helm dependency update charts/authelia
+
       - name: Upgrade Traefik CRDs
         if: matrix.component == 'traefik'
         shell: bash

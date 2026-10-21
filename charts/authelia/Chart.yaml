@@ -3,8 +3,8 @@ name: authelia
 description: Wrapper chart for Authelia with repository-owned defaults
 type: application
 version: 0.1.0
-appVersion: "4.39.20"
+appVersion: "4.39.24"
 dependencies:
   - name: authelia
-    version: 0.11.20
+    version: 0.11.22
     repository: https://charts.authelia.com

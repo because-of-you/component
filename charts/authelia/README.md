@@ -1,7 +1,7 @@
 # Authelia
 
-这个 Chart 封装 Authelia 官方 Helm Chart。当前依赖固定为 Chart `0.11.20`、Authelia
-`4.39.20`。
+这个 Chart 封装 Authelia 官方 Helm Chart。当前依赖固定为 Chart `0.11.22`、Authelia
+`4.39.24`。
 
 ## Values 结构
 
@@ -54,7 +54,7 @@ authelia:
 使用 Authelia CLI 同时生成 CCH 客户端明文密钥及其 PBKDF2 摘要：
 
 ```bash
-docker run --rm -it authelia/authelia:4.39.20 \
+docker run --rm -it authelia/authelia:4.39.24 \
   authelia crypto hash generate pbkdf2 --variant sha512 \
   --random --random.length 72 --random.charset rfc3986
 ```

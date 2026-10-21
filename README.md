@@ -396,7 +396,7 @@ Redis 的同步映射是 `REDIS_PASSWORD` → `infra/redis-auth/redis-password`�
 为 CCH 和 RustFS 分别执行一次以下命令，不要复用同一组输出：
 
 ```bash
-docker run --rm -it authelia/authelia:4.39.20 \
+docker run --rm -it authelia/authelia:4.39.24 \
   authelia crypto hash generate pbkdf2 --variant sha512 \
   --random --random.length 72 --random.charset rfc3986
 ```
