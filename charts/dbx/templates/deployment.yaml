@@ -61,6 +61,8 @@ spec:
           env:
             - name: DBX_DATA_DIR
               value: {{ .Values.config.dataDir | quote }}
+            - name: DBX_BACKUP_ROOT
+              value: {{ printf "%s/backups" .Values.config.dataDir | quote }}
             - name: DBX_PORT
               value: {{ .Values.service.targetPort | quote }}
             - name: TZ

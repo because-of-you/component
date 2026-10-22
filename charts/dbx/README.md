@@ -14,8 +14,8 @@ Deployment、ClusterIP Service、PVC 和可选的 Traefik IngressRoute；如果�
 - IngressRoute 默认关闭
 - DBX 自身密码默认保留，避免独立安装时意外暴露无认证实例
 
-DBX 将连接配置、查询历史和其他应用状态写入 `/app/data/dbx.db`。升级或卸载前应备份 PVC；不要让多个
-Pod 同时挂载并写入同一数据目录。
+DBX 将连接配置、查询历史和其他应用状态写入 `/app/data/dbx.db`，服务器备份写入 `/app/data/backups`。
+升级或卸载前应备份 PVC；不要让多个 Pod 同时挂载并写入同一数据目录。
 
 ## dev 环境
 

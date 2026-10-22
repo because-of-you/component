@@ -23,6 +23,7 @@ grep -Fq 'image: "t8y2/dbx:0.6.51"' "$rendered"
 grep -Fq 'containerPort: 4224' "$rendered"
 grep -A1 -F 'name: DBX_DISABLE_PASSWORD' "$rendered" | grep -Fq 'value: "1"'
 grep -A1 -F 'name: DBX_DATA_DIR' "$rendered" | grep -Fq 'value: "/app/data"'
+grep -A1 -F 'name: DBX_BACKUP_ROOT' "$rendered" | grep -Fq 'value: "/app/data/backups"'
 grep -Fq 'path: /api/auth/check' "$rendered"
 grep -Fq 'automountServiceAccountToken: false' "$rendered"
 grep -Fq 'readOnlyRootFilesystem: true' "$rendered"
