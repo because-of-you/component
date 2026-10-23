@@ -8,7 +8,7 @@
     "test:atlas": "node --test apps/service-atlas/tests/*.test.mjs"
   },
   "devDependencies": {
-    "vite": "^7.3.6"
+    "vite": "^7.3.7"
   },
   "dependencies": {
     "@viz-js/viz": "3.28.0"
