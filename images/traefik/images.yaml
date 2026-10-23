@@ -2,5 +2,5 @@ component: traefik
 
 images:
   - name: proxy
-    source: docker.io/traefik:v3.7.13
-    destination: registry.cn-shenzhen.aliyuncs.com/gravitation/traefik:v3.7.13
+    source: docker.io/traefik:v3.7.16
+    destination: registry.cn-shenzhen.aliyuncs.com/gravitation/traefik:v3.7.16
