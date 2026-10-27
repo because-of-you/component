@@ -2,9 +2,9 @@ apiVersion: v2
 name: rustfs
 description: Wrapper chart for RustFS with project-specific Traefik and OIDC defaults
 type: application
-version: 0.1.2
-appVersion: "1.0.0"
+version: 0.1.3
+appVersion: "1.0.4"
 dependencies:
   - name: rustfs
-    version: 1.0.0
+    version: 1.0.4
     repository: https://charts.rustfs.com

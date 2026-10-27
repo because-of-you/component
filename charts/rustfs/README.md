@@ -1,10 +1,10 @@
 # RustFS
 
-这个 Chart 封装官方 RustFS Helm Chart `1.0.0`（GA 版本），并追加本仓库使用的 Traefik HTTP
-`IngressRoute`。上游 Chart 与 RustFS 镜像都固定为 `1.0.0`，升级时必须同步更新。
+这个 Chart 封装官方 RustFS Helm Chart `1.0.4`，并追加本仓库使用的 Traefik HTTP
+`IngressRoute`。上游 Chart 与 RustFS 镜像都固定为 `1.0.4`，升级时必须同步更新。
 
-`1.0.0` 相对 `1.0.0-rc.4` 的上游 Chart 只改了 `Chart.yaml` 版本号与一处 KMS 文档措辞，
-`values.yaml` 与全部模板逐字节相同，因此本次升级不涉及 values 键名或渲染结果的变化，
+`1.0.4` 是当前官方最新稳定版本，包含证书校验与信任根更新，并移除了受信任存储中的
+不再信任的 emSign ECC Root CA - G3。此次升级不改变本项目的 values 键名或 PVC 拓扑，
 dev 环境已有的 data/log PVC 可以原地复用。
 
 ## dev 拓扑
