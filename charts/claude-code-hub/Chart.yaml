@@ -3,4 +3,4 @@ name: claude-code-hub
 description: Helm chart for Claude Code Hub using external PostgreSQL and Redis
 type: application
 version: 0.1.8
-appVersion: "codex-authelia-oidc-44403f7"
+appVersion: "codex-authelia-oidc-eb03b74"

@@ -2,5 +2,5 @@ component: claude-code-hub
 
 images:
   - name: application
-    source: ghcr.io/because-of-you/claude-code-hub:codex-authelia-oidc-44403f7
-    destination: registry.cn-shenzhen.aliyuncs.com/gravitation/claude-code-hub:codex-authelia-oidc-44403f7
+    source: ghcr.io/because-of-you/claude-code-hub:codex-authelia-oidc-eb03b74
+    destination: registry.cn-shenzhen.aliyuncs.com/gravitation/claude-code-hub:codex-authelia-oidc-eb03b74
