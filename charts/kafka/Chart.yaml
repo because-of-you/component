@@ -7,4 +7,4 @@ appVersion: "4.0.0"
 dependencies:
   - name: kafka
     version: 32.5.0
-    repository: oci://registry-1.docker.io/bitnamicharts
+    repository: https://charts.bitnami.com/bitnami
