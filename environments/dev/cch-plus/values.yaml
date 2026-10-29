@@ -20,6 +20,14 @@ config:
   allowedOrigins: https://cchp.acitrus.cn
   gatewayPublicUrl: https://api.cchp.acitrus.cn
 
+postgres:
+  image:
+    repository: registry.cn-shenzhen.aliyuncs.com/gravitation/timescaledb
+
+dragonfly:
+  image:
+    repository: registry.cn-shenzhen.aliyuncs.com/gravitation/dragonfly
+
 # Secrets are created by the deploy workflow from GitHub Environment Secrets.
 secrets:
   create: false

@@ -217,7 +217,8 @@ charts/claude-code-hub/README.md
 cch-plus 与旧版 Claude Code Hub 并行部署，使用独立的 `cchp` 命名空间、TimescaleDB、
 Dragonfly、PVC、Secrets 和控制台/API 域名。Chart 使用官方
 固定版本 `ghcr.io/cch-hq/cch-plus:1.0.13` 镜像同步为 ACR 的
-`registry.cn-shenzhen.aliyuncs.com/gravitation/cch-plus:dev-1.0.13`，并将官方的
+`registry.cn-shenzhen.aliyuncs.com/gravitation/cch-plus:dev-1.0.13`；TimescaleDB 和
+Dragonfly 依赖也同步到 ACR，避免运行时从境外仓库拉取。并将官方的
 ingress-nginx 清单适配为现有 Traefik `IngressRoute`。旧版 release、数据库和缓存保持不变。
 配置与存储要求见：
 

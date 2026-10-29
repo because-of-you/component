@@ -5,3 +5,9 @@ images:
   - name: application
     source: ghcr.io/cch-hq/cch-plus:1.0.13
     destination: registry.cn-shenzhen.aliyuncs.com/gravitation/cch-plus:dev-1.0.13
+  - name: timescaledb
+    source: timescale/timescaledb:2.31.0-pg18
+    destination: registry.cn-shenzhen.aliyuncs.com/gravitation/timescaledb:2.31.0-pg18
+  - name: dragonfly
+    source: docker.dragonflydb.io/dragonflydb/dragonfly:v2.0.2
+    destination: registry.cn-shenzhen.aliyuncs.com/gravitation/dragonfly:v2.0.2

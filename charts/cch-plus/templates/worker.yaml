@@ -65,11 +65,11 @@ spec:
                   key: CCHP_DATABASE_RUNTIME_ROLE
           resources:
             requests:
-              cpu: 10m
-              memory: 64Mi
+              cpu: 5m
+              memory: 32Mi
             limits:
-              cpu: 200m
-              memory: 256Mi
+              cpu: 100m
+              memory: 128Mi
           securityContext:
             {{- include "cch-plus.securityContext" . | nindent 12 }}
       containers:

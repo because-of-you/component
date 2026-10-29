@@ -18,6 +18,10 @@
 `--set image.tag=dev-1.0.13` 固定部署版本。升级时应同时更新镜像清单、环境 values 和工作流
 中的版本，避免重新使用浮动标签。
 
+TimescaleDB 和 Dragonfly 也会同步到 ACR，dev values 分别使用
+`gravitation/timescaledb:2.31.0-pg18` 和 `gravitation/dragonfly:v2.0.2`，避免 Pod 启动时
+直接从境外仓库拉取。
+
 ## Secret
 
 默认不由 Chart 创建 Secret，部署工作流应在 Helm 同步前创建以下资源：
@@ -68,3 +72,7 @@ TimescaleDB、Dragonfly、数据库迁移和 cch-plus 应用使用独立存储�
 
 官方迁移只向前执行；升级前请先备份 `cchp` PostgreSQL。不要把新旧版本指向同一数据库，
 也不要把 Helm 回滚当作数据库回滚方案。
+
+当前默认 requests 已按低流量单节点场景下调，limits 保留较宽余量；如节点压力仍高，可继续
+覆盖 `postgres.resources`、`dragonfly.resources` 和 `workloads.*.resources`，不要降低 PVC
+容量来解决 CPU/内存压力。
