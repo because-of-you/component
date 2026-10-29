@@ -106,6 +106,13 @@ releases:
     values:
       - ./environments/{{ .Environment.Name }}/postgresql/values.yaml
 
+  - name: kafka
+    namespace: infra
+    createNamespace: true
+    chart: ./charts/kafka
+    values:
+      - ./environments/{{ .Environment.Name }}/kafka/values.yaml
+
   - name: lldap
     namespace: infra
     createNamespace: true

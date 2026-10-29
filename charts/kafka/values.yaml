@@ -1,0 +1,82 @@
+# Bitnami Kafka runs inside the cluster. Public Kafka traffic is handled by
+# Conduktor Gateway, so Kafka's own externalAccess remains disabled.
+global:
+  security:
+    # The development image replaces Bitnami's bundled JDK with OpenJ9.
+    allowInsecureImages: true
+
+kafka:
+  image:
+    registry: registry.cn-shenzhen.aliyuncs.com
+    repository: gravitation/kafka
+    tag: dev
+    pullPolicy: IfNotPresent
+
+  kraft:
+    enabled: true
+
+  zookeeper:
+    enabled: false
+
+  # OpenJ9 keeps the Java heap below half of the container limit and uses the
+  # shared class cache flags already used by the older component images.
+  heapOpts: >-
+    -XX:+UseContainerSupport
+    -XX:InitialRAMPercentage=20.0
+    -XX:MaxRAMPercentage=45.0
+    -Xshareclasses:cacheDir=/tmp/javasharedresources,name=kafka
+    -Xtune:virtualized
+    -Xquickstart
+
+  listeners:
+    client:
+      protocol: PLAINTEXT
+    controller:
+      protocol: PLAINTEXT
+    interbroker:
+      protocol: PLAINTEXT
+
+  controller:
+    replicaCount: 3
+    controllerOnly: false
+    heapOpts: >-
+      -XX:+UseContainerSupport
+      -XX:InitialRAMPercentage=20.0
+      -XX:MaxRAMPercentage=45.0
+      -Xshareclasses:cacheDir=/tmp/javasharedresources,name=kafka
+      -Xtune:virtualized
+      -Xquickstart
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+      limits:
+        cpu: "1"
+        memory: 1Gi
+    persistence:
+      enabled: true
+      size: 10Gi
+
+  broker:
+    replicaCount: 0
+    heapOpts: >-
+      -XX:+UseContainerSupport
+      -XX:InitialRAMPercentage=20.0
+      -XX:MaxRAMPercentage=45.0
+      -Xshareclasses:cacheDir=/tmp/javasharedresources,name=kafka
+      -Xtune:virtualized
+      -Xquickstart
+
+  externalAccess:
+    enabled: false
+
+  service:
+    type: ClusterIP
+
+  extraConfigYaml:
+    auto.create.topics.enable: "true"
+    default.replication.factor: "3"
+    min.insync.replicas: "2"
+    offsets.topic.replication.factor: "3"
+    transaction.state.log.min.isr: "2"
+    transaction.state.log.replication.factor: "3"

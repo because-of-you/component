@@ -83,6 +83,14 @@ helm upgrade --install postgresql oci://ghcr.io/because-of-you/charts/postgresql
   --namespace infra \
   --create-namespace
 
+# Kafka uses the repository's OpenJ9 image and KRaft defaults.
+# The dev workflow builds and publishes the image before deploying this chart.
+helm upgrade --install kafka oci://ghcr.io/because-of-you/charts/kafka \
+  --version 0.0.0-dev \
+  --namespace infra \
+  --create-namespace \
+  -f environments/dev/kafka/values.yaml
+
 helm upgrade --install lldap oci://ghcr.io/because-of-you/charts/lldap \
   --version 0.0.0-dev \
   --namespace infra \
@@ -137,7 +145,7 @@ kubectl -n traefik get certificate acitrus-tls
 命名空间约定：
 
 ```text
-infra: redis, postgresql, rabbitmq, lldap, authelia, rustfs, robustmq
+infra: redis, postgresql, kafka, rabbitmq, lldap, authelia, rustfs, robustmq
 app: claude-code-hub, dbx, service-atlas, test-charts
 traefik: traefik
 cert-manager: cert-manager
