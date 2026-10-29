@@ -655,13 +655,13 @@ jobs:
         if: matrix.component == 'cch-plus'
         shell: bash
         env:
-          CCHP_POSTGRES_PASSWORD: ${{ secrets.CCHP_POSTGRES_PASSWORD }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           CCHP_DATABASE_RUNTIME_PASSWORD: ${{ secrets.CCHP_DATABASE_RUNTIME_PASSWORD }}
           CCHP_TOKEN_PEPPER: ${{ secrets.CCHP_TOKEN_PEPPER }}
           CCHP_MASTER_KEY: ${{ secrets.CCHP_MASTER_KEY }}
           CCHP_DRAGONFLY_KEY_SECRET: ${{ secrets.CCHP_DRAGONFLY_KEY_SECRET }}
         run: |
-          test -n "$CCHP_POSTGRES_PASSWORD"
+          test -n "$POSTGRES_PASSWORD"
           test -n "$CCHP_DATABASE_RUNTIME_PASSWORD"
           test -n "$CCHP_TOKEN_PEPPER"
           test -n "$CCHP_MASTER_KEY"
@@ -669,9 +669,9 @@ jobs:
           umask 077
           credentials_dir="$(mktemp -d)"
           trap 'rm -rf "$credentials_dir"' EXIT
-          encoded_postgres_password="$(jq -rn --arg value "$CCHP_POSTGRES_PASSWORD" '$value|@uri')"
+          encoded_postgres_password="$(jq -rn --arg value "$POSTGRES_PASSWORD" '$value|@uri')"
           encoded_runtime_password="$(jq -rn --arg value "$CCHP_DATABASE_RUNTIME_PASSWORD" '$value|@uri')"
-          printf '%s' "$CCHP_POSTGRES_PASSWORD" > "$credentials_dir/POSTGRES_PASSWORD"
+          printf '%s' "$POSTGRES_PASSWORD" > "$credentials_dir/POSTGRES_PASSWORD"
           printf '%s' "postgres://hub:${encoded_postgres_password}@postgres:5432/app?sslmode=disable" > "$credentials_dir/ATLAS_DATABASE_URL"
           printf '%s' "$CCHP_DATABASE_RUNTIME_PASSWORD" > "$credentials_dir/CCHP_DATABASE_RUNTIME_PASSWORD"
           kubectl -n cchp create secret generic cchp-migration-secrets \

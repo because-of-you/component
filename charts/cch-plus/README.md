@@ -28,6 +28,9 @@
 - `ATLAS_DATABASE_URL`
 - `CCHP_DATABASE_RUNTIME_PASSWORD`
 
+当前 dev 工作流将已有 GitHub Environment Secret `POSTGRES_PASSWORD` 复用为 cch-plus
+专用 TimescaleDB 的管理员密码；cch-plus 仍使用独立数据库和 PVC，不会连接旧版数据库。
+
 `cchp-secrets`：
 
 - `DATABASE_URL`

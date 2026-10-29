@@ -416,7 +416,7 @@ helmfile -e dev --selector name=redis sync
 | 名称 | 类型 | 使用方 | 生成或来源 |
 | --- | --- | --- | --- |
 | `REDIS_PASSWORD` | Secret | Redis、Authelia、CCH | 新环境可用 `openssl rand -base64 32`；已有 PVC 必须先确认服务当前密码。 |
-| `POSTGRES_PASSWORD` | Secret | PostgreSQL、LLDAP、Authelia、CCH | 新环境可用 `openssl rand -base64 32`；已有 PVC 不能只改 Secret。 |
+| `POSTGRES_PASSWORD` | Secret | PostgreSQL、LLDAP、Authelia、旧版 CCH，以及暂时复用该值的 cch-plus | 新环境可用 `openssl rand -base64 32`；已有 PVC 不能只改 Secret。 |
 | `LLDAP_JWT_SECRET` | Secret | LLDAP | `openssl rand -base64 48`。 |
 | `LLDAP_KEY_SEED` | Secret | LLDAP | `openssl rand -base64 32`。 |
 | `LLDAP_ADMIN_PASSWORD` | Secret | LLDAP 管理员 | `openssl rand -base64 32`。 |
@@ -458,7 +458,6 @@ docker run --rm -it authelia/authelia:4.39.24 \
 | 名称 | 类型 | 使用方与生成方式 |
 | --- | --- | --- |
 | `CCH_ADMIN_TOKEN` | Secret | Claude Code Hub 紧急管理入口，可用 `openssl rand -hex 32`。 |
-| `CCHP_POSTGRES_PASSWORD` | Secret | cch-plus 专用 TimescaleDB 管理员密码。 |
 | `CCHP_DATABASE_RUNTIME_PASSWORD` | Secret | cch-plus 运行时数据库角色密码。 |
 | `CCHP_TOKEN_PEPPER` | Secret | cch-plus Token Pepper。 |
 | `CCHP_MASTER_KEY` | Secret | cch-plus 主加密密钥。 |
