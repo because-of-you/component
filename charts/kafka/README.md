@@ -18,6 +18,7 @@ heap is sized from the container limit and uses OpenJ9 shared classes:
 -Xquickstart
 ```
 
-The image is built from `images/kafka/Dockerfile`, declared in
+The image is built from `images/kafka/Dockerfile` using the
+`bitnamilegacy/kafka:4.0.0-debian-12-r10` base, declared in
 `images/kafka/images.yaml`, and published by the image synchronization
 workflow before the Kafka release is synchronized.
