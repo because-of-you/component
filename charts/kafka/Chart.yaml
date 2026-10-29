@@ -3,8 +3,8 @@ name: kafka
 description: Wrapper chart for Bitnami Kafka with KRaft and the repository's JVM defaults
 type: application
 version: 0.1.0
-appVersion: "3.9.0"
+appVersion: "4.0.0"
 dependencies:
   - name: kafka
-    version: 31.3.1
-    repository: https://charts.bitnami.com/bitnami
+    version: 32.5.0
+    repository: oci://registry-1.docker.io/bitnamicharts

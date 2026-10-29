@@ -33,7 +33,6 @@ on:
       - 'environments/dev/cert-manager-webhook/**'
       - 'environments/dev/cert-manager-resources/**'
       - 'apps/service-atlas/**'
-      - 'images/kafka/**'
       - 'package.json'
       - 'package-lock.json'
       - 'environments/dev/values.yaml'
@@ -91,7 +90,6 @@ jobs:
             kafka:
               - 'charts/kafka/**'
               - 'environments/dev/kafka/**'
-              - 'images/kafka/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
             lldap:
@@ -218,11 +216,12 @@ jobs:
           cache-from: type=gha,scope=service-atlas
           cache-to: type=gha,mode=max,scope=service-atlas
 
-      - name: Set up Docker Buildx for Kafka
-        if: matrix.component == 'kafka'
-        uses: docker/setup-buildx-action@v4
+      - name: Set up Helmfile
+        uses: mamezou-tech/setup-helmfile@v2.2.0
+        with:
+          helmfile-version: v1.7.1
 
-      - name: Login to Aliyun ACR for Kafka
+      - name: Login to Aliyun ACR for Kafka image verification
         if: matrix.component == 'kafka'
         uses: docker/login-action@v4
         with:
@@ -230,26 +229,25 @@ jobs:
           username: ${{ vars.ALIYUN_ACR_USERNAME }}
           password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
 
-      - name: Build and publish Kafka image
+      - name: Wait for Kafka image synchronization
         if: matrix.component == 'kafka'
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          file: ./images/kafka/Dockerfile
-          build-args: |
-            KAFKA_TAG=3.9.0-debian-12-r6
-          push: true
-          provenance: false
-          sbom: false
-          tags: |
-            ${{ vars.ALIYUN_ACR_REGISTRY }}/gravitation/kafka:dev-${{ github.sha }}
-          cache-from: type=gha,scope=kafka
-          cache-to: type=gha,mode=max,scope=kafka
-
-      - name: Set up Helmfile
-        uses: mamezou-tech/setup-helmfile@v2.2.0
-        with:
-          helmfile-version: v1.7.1
+        env:
+          KAFKA_IMAGE: ${{ vars.ALIYUN_ACR_REGISTRY }}/gravitation/kafka:4.0.0-debian-12-r10-openj9
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5 6 7 8 9 10 11 12; do
+            if docker manifest inspect "$KAFKA_IMAGE" >/dev/null 2>&1; then
+              exit 0
+            fi
+            if [[ "$attempt" == 12 ]]; then
+              echo "Kafka image was not published by sync-images: $KAFKA_IMAGE" >&2
+              exit 1
+            fi
+            delay=$((attempt * 5))
+            echo "Kafka image is not available yet; retrying in ${delay}s"
+            sleep "$delay"
+          done
 
       - name: Connect to Tailscale
         uses: tailscale/github-action@v4
@@ -542,8 +540,6 @@ jobs:
         if: matrix.component == 'kafka'
         shell: bash
         run: |
-          helm repo add --force-update bitnami https://charts.bitnami.com/bitnami
-          helm repo update
           helm dependency update charts/kafka
 
       - name: Build Authelia dependencies
@@ -581,13 +577,10 @@ jobs:
       - name: Deploy ${{ matrix.component }}
         env:
           SERVICE_ATLAS_IMAGE_TAG: dev-${{ github.sha }}
-          KAFKA_IMAGE_TAG: dev-${{ github.sha }}
         shell: bash
         run: |
           if [[ "${{ matrix.component }}" == "service-atlas" ]]; then
             helmfile -e dev --selector name=service-atlas sync --set image.tag="$SERVICE_ATLAS_IMAGE_TAG"
-          elif [[ "${{ matrix.component }}" == "kafka" ]]; then
-            helmfile -e dev --selector name=kafka sync --set kafka.image.tag="$KAFKA_IMAGE_TAG"
           elif [[ "${{ matrix.component }}" == "cert-manager" ]]; then
             helmfile -e dev --selector component=cert-manager sync
           else

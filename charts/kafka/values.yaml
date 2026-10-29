@@ -9,14 +9,8 @@ kafka:
   image:
     registry: registry.cn-shenzhen.aliyuncs.com
     repository: gravitation/kafka
-    tag: dev
+    tag: 4.0.0-debian-12-r10-openj9
     pullPolicy: IfNotPresent
-
-  kraft:
-    enabled: true
-
-  zookeeper:
-    enabled: false
 
   # OpenJ9 keeps the Java heap below half of the container limit and uses the
   # shared class cache flags already used by the older component images.
@@ -73,7 +67,7 @@ kafka:
   service:
     type: ClusterIP
 
-  extraConfigYaml:
+  overrideConfiguration:
     auto.create.topics.enable: "true"
     default.replication.factor: "3"
     min.insync.replicas: "2"

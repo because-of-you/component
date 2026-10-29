@@ -84,7 +84,7 @@ helm upgrade --install postgresql oci://ghcr.io/because-of-you/charts/postgresql
   --create-namespace
 
 # Kafka uses the repository's OpenJ9 image and KRaft defaults.
-# The dev workflow builds and publishes the image before deploying this chart.
+# Run the image sync workflow before deploying this chart.
 helm upgrade --install kafka oci://ghcr.io/because-of-you/charts/kafka \
   --version 0.0.0-dev \
   --namespace infra \

@@ -6,8 +6,8 @@ with one combined controller/broker node to keep resource usage low. Kafka is
 intentionally exposed as a `ClusterIP`; Conduktor Gateway will provide the
 public SNI endpoint later.
 
-The development values use a custom Kafka image that keeps the Bitnami Kafka
-entrypoint and replaces the bundled JDK with IBM Semeru OpenJ9 17. The JVM
+The development values use a custom Kafka 4.0 image that keeps the Bitnami
+Kafka entrypoint and replaces the bundled JDK with IBM Semeru OpenJ9 17. The JVM
 heap is sized from the container limit and uses OpenJ9 shared classes:
 
 ```text
@@ -18,5 +18,6 @@ heap is sized from the container limit and uses OpenJ9 shared classes:
 -Xquickstart
 ```
 
-The image is built from `images/kafka/Dockerfile` and published by the dev
-deployment workflow before the Kafka release is synchronized.
+The image is built from `images/kafka/Dockerfile`, declared in
+`images/kafka/images.yaml`, and published by the image synchronization
+workflow before the Kafka release is synchronized.

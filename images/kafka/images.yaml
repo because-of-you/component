@@ -1,0 +1,10 @@
+component: kafka
+
+images:
+  - name: application
+    destination: registry.cn-shenzhen.aliyuncs.com/gravitation/kafka:4.0.0-debian-12-r10-openj9
+    build:
+      context: .
+      dockerfile: images/kafka/Dockerfile
+      args:
+        KAFKA_TAG: 4.0.0-debian-12-r10

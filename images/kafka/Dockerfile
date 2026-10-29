@@ -1,4 +1,4 @@
-ARG KAFKA_TAG=3.9.0-debian-12-r6
+ARG KAFKA_TAG=4.0.0-debian-12-r10
 
 FROM ibm-semeru-runtimes:open-17-jdk AS openj9
 FROM bitnami/kafka:${KAFKA_TAG}
