@@ -1,6 +1,8 @@
 repositories:
   - name: bitnami
     url: https://charts.bitnami.com/bitnami
+  - name: conduktor
+    url: https://helm.conduktor.io
   - name: traefik
     url: https://traefik.github.io/charts
   - name: authelia
@@ -112,6 +114,27 @@ releases:
     chart: ./charts/kafka
     values:
       - ./environments/{{ .Environment.Name }}/kafka/values.yaml
+
+  - name: conduktor-gateway
+    namespace: infra
+    createNamespace: true
+    chart: ./charts/conduktor-gateway
+    needs:
+      - infra/kafka
+      - cert-manager/cert-manager-resources
+    values:
+      - ./environments/{{ .Environment.Name }}/conduktor-gateway/values.yaml
+
+  - name: conduktor-console
+    namespace: app
+    createNamespace: true
+    chart: ./charts/conduktor-console
+    needs:
+      - infra/kafka
+      - infra/postgresql
+      - cert-manager/cert-manager-resources
+    values:
+      - ./environments/{{ .Environment.Name }}/conduktor-console/values.yaml
 
   - name: lldap
     namespace: infra

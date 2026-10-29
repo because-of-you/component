@@ -8,6 +8,8 @@ on:
       - 'charts/redis/**'
       - 'charts/postgresql/**'
       - 'charts/kafka/**'
+      - 'charts/conduktor-gateway/**'
+      - 'charts/conduktor-console/**'
       - 'charts/lldap/**'
       - 'charts/authelia/**'
       - 'charts/rustfs/**'
@@ -21,6 +23,8 @@ on:
       - 'environments/dev/redis/**'
       - 'environments/dev/postgresql/**'
       - 'environments/dev/kafka/**'
+      - 'environments/dev/conduktor-gateway/**'
+      - 'environments/dev/conduktor-console/**'
       - 'environments/dev/lldap/**'
       - 'environments/dev/authelia/**'
       - 'environments/dev/rustfs/**'
@@ -48,6 +52,8 @@ on:
           - redis
           - postgresql
           - kafka
+          - conduktor-gateway
+          - conduktor-console
           - lldap
           - authelia
           - rustfs
@@ -90,6 +96,16 @@ jobs:
             kafka:
               - 'charts/kafka/**'
               - 'environments/dev/kafka/**'
+              - 'environments/dev/values.yaml'
+              - 'helmfile.yaml'
+            conduktor-gateway:
+              - 'charts/conduktor-gateway/**'
+              - 'environments/dev/conduktor-gateway/**'
+              - 'environments/dev/values.yaml'
+              - 'helmfile.yaml'
+            conduktor-console:
+              - 'charts/conduktor-console/**'
+              - 'environments/dev/conduktor-console/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
             lldap:
@@ -249,6 +265,47 @@ jobs:
             sleep "$delay"
           done
 
+      - name: Login to Aliyun ACR for Conduktor image verification
+        if: matrix.component == 'conduktor-gateway' || matrix.component == 'conduktor-console'
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ vars.ALIYUN_ACR_REGISTRY }}
+          username: ${{ vars.ALIYUN_ACR_USERNAME }}
+          password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
+
+      - name: Wait for Conduktor image synchronization
+        if: matrix.component == 'conduktor-gateway' || matrix.component == 'conduktor-console'
+        env:
+          ACR_REGISTRY: ${{ vars.ALIYUN_ACR_REGISTRY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${{ matrix.component }}" in
+            conduktor-gateway)
+              images=("$ACR_REGISTRY/gravitation/conduktor-gateway:3.22.3")
+              ;;
+            conduktor-console)
+              images=(
+                "$ACR_REGISTRY/gravitation/conduktor-console:1.48.1-openj9"
+                "$ACR_REGISTRY/gravitation/conduktor-console-cortex:1.48.1"
+              )
+              ;;
+          esac
+          for image in "${images[@]}"; do
+            for attempt in 1 2 3 4 5 6 7 8 9 10 11 12; do
+              if docker manifest inspect "$image" >/dev/null 2>&1; then
+                break
+              fi
+              if [[ "$attempt" == 12 ]]; then
+                echo "Conduktor image was not published by sync-images: $image" >&2
+                exit 1
+              fi
+              delay=$((attempt * 5))
+              echo "Conduktor image is not available yet; retrying in ${delay}s"
+              sleep "$delay"
+            done
+          done
+
       - name: Connect to Tailscale
         uses: tailscale/github-action@v4
         with:
@@ -280,11 +337,11 @@ jobs:
           done
 
       - name: Ensure infra namespace
-        if: matrix.component == 'redis' || matrix.component == 'postgresql' || matrix.component == 'kafka' || matrix.component == 'lldap' || matrix.component == 'authelia' || matrix.component == 'rustfs' || matrix.component == 'robustmq'
+        if: matrix.component == 'redis' || matrix.component == 'postgresql' || matrix.component == 'kafka' || matrix.component == 'conduktor-gateway' || matrix.component == 'lldap' || matrix.component == 'authelia' || matrix.component == 'rustfs' || matrix.component == 'robustmq'
         run: kubectl create namespace infra --dry-run=client -o yaml | bash .github/scripts/kubectl-apply-retry.sh
 
       - name: Ensure app namespace
-        if: matrix.component == 'claude-code-hub' || matrix.component == 'dbx' || matrix.component == 'service-atlas'
+        if: matrix.component == 'claude-code-hub' || matrix.component == 'dbx' || matrix.component == 'service-atlas' || matrix.component == 'conduktor-console'
         run: kubectl create namespace app --dry-run=client -o yaml | bash .github/scripts/kubectl-apply-retry.sh
 
       - name: Ensure traefik namespace
@@ -353,6 +410,52 @@ jobs:
             | kubectl -n infra create secret generic postgresql-auth \
                 --from-file=postgres-password=/dev/stdin \
                 --dry-run=client -o yaml \
+            | bash .github/scripts/kubectl-apply-retry.sh
+
+      - name: Sync Conduktor Gateway credentials
+        if: matrix.component == 'conduktor-gateway'
+        shell: bash
+        env:
+          GATEWAY_LICENSE_KEY: ${{ secrets.GATEWAY_LICENSE_KEY }}
+          GATEWAY_ADMIN_PASSWORD: ${{ secrets.GATEWAY_ADMIN_PASSWORD }}
+          GATEWAY_USER_POOL_SECRET_KEY: ${{ secrets.GATEWAY_USER_POOL_SECRET_KEY }}
+        run: |
+          test -n "$GATEWAY_LICENSE_KEY"
+          test -n "$GATEWAY_ADMIN_PASSWORD"
+          test -n "$GATEWAY_USER_POOL_SECRET_KEY"
+          umask 077
+          credentials_dir="$(mktemp -d)"
+          trap 'rm -rf "$credentials_dir"' EXIT
+          printf '%s' "$GATEWAY_LICENSE_KEY" > "$credentials_dir/license-key"
+          printf '%s' "[{\"username\":\"admin\",\"password\":$(jq -Rn --arg value "$GATEWAY_ADMIN_PASSWORD" '$value|@json'),\"admin\":true}]" > "$credentials_dir/admin-api-users"
+          printf '%s' "$GATEWAY_USER_POOL_SECRET_KEY" > "$credentials_dir/user-pool-secret-key"
+          kubectl -n infra create secret generic gateway-secrets \
+            --from-file=GATEWAY_LICENSE_KEY="$credentials_dir/license-key" \
+            --from-file=GATEWAY_ADMIN_API_USERS="$credentials_dir/admin-api-users" \
+            --from-file=GATEWAY_USER_POOL_SECRET_KEY="$credentials_dir/user-pool-secret-key" \
+            --dry-run=client -o yaml \
+            | bash .github/scripts/kubectl-apply-retry.sh
+
+      - name: Sync Conduktor Console credentials
+        if: matrix.component == 'conduktor-console'
+        shell: bash
+        env:
+          CONDUKTOR_ORGANIZATION_NAME: ${{ secrets.CONDUKTOR_ORGANIZATION_NAME }}
+          CONSOLE_ADMIN_EMAIL: ${{ secrets.CONSOLE_ADMIN_EMAIL }}
+          CONSOLE_ADMIN_PASSWORD: ${{ secrets.CONSOLE_ADMIN_PASSWORD }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        run: |
+          test -n "$CONDUKTOR_ORGANIZATION_NAME"
+          test -n "$CONSOLE_ADMIN_EMAIL"
+          test -n "$CONSOLE_ADMIN_PASSWORD"
+          test -n "$POSTGRES_PASSWORD"
+          kubectl -n app create secret generic console-secrets \
+            --from-literal=CDK_ORGANIZATION_NAME="$CONDUKTOR_ORGANIZATION_NAME" \
+            --from-literal=CDK_ADMIN_EMAIL="$CONSOLE_ADMIN_EMAIL" \
+            --from-literal=CDK_ADMIN_PASSWORD="$CONSOLE_ADMIN_PASSWORD" \
+            --from-literal=CDK_DATABASE_USERNAME=postgres \
+            --from-literal=CDK_DATABASE_PASSWORD="$POSTGRES_PASSWORD" \
+            --dry-run=client -o yaml \
             | bash .github/scripts/kubectl-apply-retry.sh
 
       - name: Sync LLDAP credentials
@@ -541,6 +644,18 @@ jobs:
         shell: bash
         run: |
           helm dependency update charts/kafka
+
+      - name: Build Conduktor Gateway dependencies
+        if: matrix.component == 'conduktor-gateway'
+        shell: bash
+        run: |
+          helm dependency update charts/conduktor-gateway
+
+      - name: Build Conduktor Console dependencies
+        if: matrix.component == 'conduktor-console'
+        shell: bash
+        run: |
+          helm dependency update charts/conduktor-console
 
       - name: Build Authelia dependencies
         if: matrix.component == 'authelia'

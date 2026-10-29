@@ -1,0 +1,10 @@
+apiVersion: v2
+name: conduktor-gateway
+description: Wrapper chart for Conduktor Gateway with SNI routing defaults
+type: application
+version: 0.1.0
+appVersion: "3.22.3"
+dependencies:
+  - name: conduktor-gateway
+    version: 3.24.2
+    repository: https://helm.conduktor.io

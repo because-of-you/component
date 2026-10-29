@@ -1,0 +1,66 @@
+gatewayServiceName: conduktor-gateway-external
+
+conduktor-gateway:
+  fullnameOverride: conduktor-gateway
+
+  gateway:
+    image:
+      registry: registry.cn-shenzhen.aliyuncs.com
+      repository: gravitation/conduktor-gateway
+      tag: 3.22.3
+      pullPolicy: IfNotPresent
+    replicas: 1
+    secretRef: gateway-secrets
+    securityMode: GATEWAY_MANAGED
+    aclEnabled: true
+    kafka:
+      brokerIds:
+        - "0"
+    listeners:
+      internal:
+        enable: false
+      external:
+        enable: true
+        securityProtocol: SASL_SSL
+        routing: sni
+        ports:
+          - "1024"
+        advertisedHost: kafka.tcp.acitrus.cn
+        advertisedHostPattern: broker{{nodeId}}.kafka.tcp.acitrus.cn
+        bootstrapHostPattern: kafka.tcp.acitrus.cn
+        sslClientAuth: NONE
+    env:
+      KAFKA_BOOTSTRAP_SERVERS: kafka.infra.svc.cluster.local:9092
+      KAFKA_SECURITY_PROTOCOL: PLAINTEXT
+      KAFKA_SASL_MECHANISM: PLAIN
+    resources:
+      requests:
+        cpu: 10m
+        memory: 256Mi
+      limits:
+        cpu: "1"
+        memory: 1Gi
+    admin:
+      port: 8888
+
+  service:
+    external:
+      enable: true
+      type: ClusterIP
+      admin: false
+
+  tls:
+    certManager:
+      enabled: false
+      issuerRef:
+        name: letsencrypt
+        kind: ClusterIssuer
+      extraDnsNames:
+        - kafka.tcp.acitrus.cn
+        - "*.kafka.tcp.acitrus.cn"
+      httpsAdminApi:
+        enabled: true
+
+  metrics:
+    prometheus:
+      enable: false

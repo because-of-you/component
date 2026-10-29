@@ -1,0 +1,73 @@
+console:
+  config:
+    existingSecret: console-secrets
+    database:
+      host: postgresql.infra.svc.cluster.local
+      port: 5432
+      name: postgres
+    clusters:
+      - id: kafka-default
+        name: Kafka
+        color: "#6A57C8"
+        icon: kafka
+        bootstrapServers: kafka.infra.svc.cluster.local:9092
+        properties: |
+          security.protocol=PLAINTEXT
+
+  platform:
+    image:
+      registry: registry.cn-shenzhen.aliyuncs.com
+      repository: gravitation/conduktor-console
+      tag: 1.48.1-openj9
+      pullPolicy: IfNotPresent
+    replicaCount: 1
+    resources:
+      requests:
+        cpu: 10m
+        memory: 512Mi
+      limits:
+        cpu: "1"
+        memory: 2Gi
+    extraEnvVars:
+      - name: CONSOLE_MEMORY_OPTS
+        value: >-
+          -XX:+UseContainerSupport -Xmx768m
+          -Xshareclasses:cacheDir=/tmp/javasharedresources,name=console
+          -Xtune:virtualized -Xquickstart
+      - name: GOVERNANCE_MEMORY_OPTS
+        value: >-
+          -XX:+UseContainerSupport -Xmx256m
+          -Xshareclasses:cacheDir=/tmp/javasharedresources,name=governance
+          -Xtune:virtualized -Xquickstart
+      - name: AUTHENTICATOR_MEMORY_OPTS
+        value: >-
+          -XX:+UseContainerSupport -Xmx128m
+          -Xshareclasses:cacheDir=/tmp/javasharedresources,name=authenticator
+          -Xtune:virtualized -Xquickstart
+
+  platformCortex:
+    enabled: true
+    image:
+      registry: registry.cn-shenzhen.aliyuncs.com
+      repository: gravitation/conduktor-console-cortex
+      tag: 1.48.1
+      pullPolicy: IfNotPresent
+    replicaCount: 1
+    resources:
+      requests:
+        cpu: 10m
+        memory: 128Mi
+      limits:
+        cpu: "1"
+        memory: 512Mi
+
+  service:
+    type: ClusterIP
+
+  ingress:
+    enabled: true
+    hostname: console.acitrus.cn
+    ingressClassName: traefik
+    tls: true
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt

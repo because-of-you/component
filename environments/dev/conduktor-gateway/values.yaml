@@ -1,0 +1,30 @@
+conduktor-gateway:
+  replicas: 1
+  gateway:
+    image:
+      registry: registry.cn-shenzhen.aliyuncs.com
+      repository: gravitation/conduktor-gateway
+      tag: 3.22.3
+    secretRef: gateway-secrets
+    listeners:
+      external:
+        advertisedHost: kafka.tcp.acitrus.cn
+        advertisedHostPattern: broker{{nodeId}}.kafka.tcp.acitrus.cn
+        bootstrapHostPattern: kafka.tcp.acitrus.cn
+    env:
+      KAFKA_BOOTSTRAP_SERVERS: kafka.infra.svc.cluster.local:9092
+      KAFKA_SECURITY_PROTOCOL: PLAINTEXT
+  service:
+    external:
+      type: ClusterIP
+  tls:
+    certManager:
+      enabled: true
+      issuerRef:
+        name: letsencrypt
+        kind: ClusterIssuer
+      extraDnsNames:
+        - kafka.tcp.acitrus.cn
+        - "*.kafka.tcp.acitrus.cn"
+      httpsAdminApi:
+        enabled: true

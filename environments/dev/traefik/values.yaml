@@ -80,3 +80,5 @@ traefik:
       allowCrossNamespace: true
       enabled: true
       safeNaming: true
+    kubernetesIngress:
+      enabled: true

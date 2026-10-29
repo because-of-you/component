@@ -1,0 +1,10 @@
+apiVersion: v2
+name: conduktor-console
+description: Wrapper chart for Conduktor Console and its optional Cortex monitoring service
+type: application
+version: 0.1.0
+appVersion: "1.48.1"
+dependencies:
+  - name: console
+    version: 1.33.1
+    repository: https://helm.conduktor.io

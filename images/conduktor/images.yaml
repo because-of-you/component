@@ -1,0 +1,16 @@
+component: conduktor
+
+images:
+  - name: gateway
+    source: docker.io/conduktor/conduktor-gateway:3.22.3
+    destination: registry.cn-shenzhen.aliyuncs.com/gravitation/conduktor-gateway:3.22.3
+  - name: console
+    destination: registry.cn-shenzhen.aliyuncs.com/gravitation/conduktor-console:1.48.1-openj9
+    build:
+      context: .
+      dockerfile: images/conduktor/console/Dockerfile
+      args:
+        CONSOLE_TAG: 1.48.1
+  - name: cortex
+    source: docker.io/conduktor/conduktor-console-cortex:1.48.1
+    destination: registry.cn-shenzhen.aliyuncs.com/gravitation/conduktor-console-cortex:1.48.1

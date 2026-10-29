@@ -91,6 +91,22 @@ helm upgrade --install kafka oci://ghcr.io/because-of-you/charts/kafka \
   --create-namespace \
   -f environments/dev/kafka/values.yaml
 
+# Prerequisite: create the gateway-secrets Secret described in
+# charts/conduktor-gateway/README.md.
+helm upgrade --install conduktor-gateway oci://ghcr.io/because-of-you/charts/conduktor-gateway \
+  --version 0.0.0-dev \
+  --namespace infra \
+  --create-namespace \
+  -f environments/dev/conduktor-gateway/values.yaml
+
+# Prerequisite: create the console-secrets Secret described in
+# charts/conduktor-console/README.md.
+helm upgrade --install conduktor-console oci://ghcr.io/because-of-you/charts/conduktor-console \
+  --version 0.0.0-dev \
+  --namespace app \
+  --create-namespace \
+  -f environments/dev/conduktor-console/values.yaml
+
 helm upgrade --install lldap oci://ghcr.io/because-of-you/charts/lldap \
   --version 0.0.0-dev \
   --namespace infra \
@@ -137,6 +153,20 @@ cert-manager 和 AliDNS DNS01 webhook 由 Helmfile 统一部署，并为 Traefik
 准备 `traefik/acitrus-tls` 通配符证书。部署前必须配置 `ALIYUN_DNS_KEY` 和
 `ALIYUN_DNS_SECRET`：
 
+Conduktor Gateway 和 Console 的 dev 部署还需要配置 GitHub Environment Secrets：
+
+```text
+GATEWAY_LICENSE_KEY
+GATEWAY_ADMIN_PASSWORD
+GATEWAY_USER_POOL_SECRET_KEY
+CONDUKTOR_ORGANIZATION_NAME
+CONSOLE_ADMIN_EMAIL
+CONSOLE_ADMIN_PASSWORD
+```
+
+`POSTGRES_PASSWORD` 复用现有 PostgreSQL Secret。详细的 Kubernetes Secret
+键名见 `charts/conduktor-gateway/README.md` 和 `charts/conduktor-console/README.md`。
+
 ```bash
 helmfile -e dev sync --selector component=cert-manager
 kubectl -n traefik get certificate acitrus-tls
@@ -145,8 +175,8 @@ kubectl -n traefik get certificate acitrus-tls
 命名空间约定：
 
 ```text
-infra: redis, postgresql, kafka, rabbitmq, lldap, authelia, rustfs, robustmq
-app: claude-code-hub, dbx, service-atlas, test-charts
+infra: redis, postgresql, kafka, conduktor-gateway, rabbitmq, lldap, authelia, rustfs, robustmq
+app: claude-code-hub, conduktor-console, dbx, service-atlas, test-charts
 traefik: traefik
 cert-manager: cert-manager
 ```

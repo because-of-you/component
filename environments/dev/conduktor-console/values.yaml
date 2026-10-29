@@ -1,0 +1,25 @@
+console:
+  config:
+    existingSecret: console-secrets
+    database:
+      host: postgresql.infra.svc.cluster.local
+      port: 5432
+      name: postgres
+    clusters:
+      - id: kafka-default
+        name: Kafka
+        color: "#6A57C8"
+        icon: kafka
+        bootstrapServers: kafka.infra.svc.cluster.local:9092
+        properties: |
+          security.protocol=PLAINTEXT
+  platform:
+    image:
+      registry: registry.cn-shenzhen.aliyuncs.com
+      repository: gravitation/conduktor-console
+      tag: 1.48.1-openj9
+  platformCortex:
+    image:
+      registry: registry.cn-shenzhen.aliyuncs.com
+      repository: gravitation/conduktor-console-cortex
+      tag: 1.48.1
