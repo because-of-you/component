@@ -1,0 +1,78 @@
+{{- if .Values.ingressRoute.enabled }}
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: cchp-api
+  namespace: {{ include "cch-plus.namespace" . }}
+  labels:
+    {{- include "cch-plus.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ingress
+spec:
+  entryPoints:
+    {{- toYaml .Values.ingressRoute.entryPoints | nindent 4 }}
+  routes:
+    - kind: Rule
+      match: 'Host(`{{ required "ingressRoute.apiHost is required when ingressRoute is enabled" .Values.ingressRoute.apiHost }}`) && (PathPrefix(`/v`) || PathPrefix(`/v1`) || PathPrefix(`/v1beta`) || PathPrefix(`/v4`) || PathPrefix(`/ws`))'
+      priority: 10
+      {{- with .Values.ingressRoute.middlewares }}
+      middlewares:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      services:
+        - name: gateway
+          port: {{ .Values.workloads.gateway.servicePort }}
+  tls:
+    {{- toYaml .Values.ingressRoute.tls | nindent 4 }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: cchp-console
+  namespace: {{ include "cch-plus.namespace" . }}
+  labels:
+    {{- include "cch-plus.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ingress
+spec:
+  entryPoints:
+    {{- toYaml .Values.ingressRoute.entryPoints | nindent 4 }}
+  routes:
+    - kind: Rule
+      match: 'Host(`{{ required "ingressRoute.consoleHost is required when ingressRoute is enabled" .Values.ingressRoute.consoleHost }}`)'
+      priority: 1
+      {{- with .Values.ingressRoute.middlewares }}
+      middlewares:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      services:
+        - name: control
+          port: {{ .Values.workloads.control.servicePort }}
+  tls:
+    {{- toYaml .Values.ingressRoute.tls | nindent 4 }}
+---
+# CC Hub export upload endpoint. Keep it separate so a Traefik buffering middleware
+# can be added here later without affecting the streaming API routes.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: cchp-cchub-import-upload
+  namespace: {{ include "cch-plus.namespace" . }}
+  labels:
+    {{- include "cch-plus.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ingress
+spec:
+  entryPoints:
+    {{- toYaml .Values.ingressRoute.entryPoints | nindent 4 }}
+  routes:
+    - kind: Rule
+      match: 'Host(`{{ required "ingressRoute.consoleHost is required when ingressRoute is enabled" .Values.ingressRoute.consoleHost }}`) && Path(`/api/admin/cchub-import/upload`)'
+      priority: 100
+      {{- with .Values.ingressRoute.middlewares }}
+      middlewares:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      services:
+        - name: control
+          port: {{ .Values.workloads.control.servicePort }}
+  tls:
+    {{- toYaml .Values.ingressRoute.tls | nindent 4 }}
+{{- end }}

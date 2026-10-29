@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cchp-objectstore
+  namespace: {{ include "cch-plus.namespace" . }}
+  labels:
+    {{- include "cch-plus.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- with .Values.storage.objectstore.storageClassName }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.storage.objectstore.size }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cchp-task-results
+  namespace: {{ include "cch-plus.namespace" . }}
+  labels:
+    {{- include "cch-plus.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- with .Values.storage.taskResults.storageClassName }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.storage.taskResults.size }}

@@ -1,0 +1,7 @@
+component: cch-plus
+
+images:
+  # Keep the destination tag in sync with deploy-dev.yaml and environments/dev/cch-plus/values.yaml.
+  - name: application
+    source: ghcr.io/cch-hq/cch-plus:1.0.13
+    destination: registry.cn-shenzhen.aliyuncs.com/gravitation/cch-plus:dev-1.0.13

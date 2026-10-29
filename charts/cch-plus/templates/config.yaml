@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cchp-config
+  namespace: {{ include "cch-plus.namespace" . }}
+  labels:
+    {{- include "cch-plus.labels" . | nindent 4 }}
+data:
+  APP_ENV: {{ .Values.config.appEnv | quote }}
+  CCHP_DATABASE_RUNTIME_ROLE: {{ .Values.config.runtimeRole | quote }}
+  CCH_PUBLIC_BASE_URL: {{ .Values.config.publicBaseUrl | quote }}
+  CCH_CONTROL_PLANE_ALLOWED_ORIGINS: {{ .Values.config.allowedOrigins | quote }}
+  CCH_GATEWAY_PUBLIC_URL: {{ .Values.config.gatewayPublicUrl | quote }}
+  CCH_SIEM_MODE: {{ .Values.config.siemMode | quote }}
+  CCHP_DATABASE_STORAGE_SOURCE: {{ .Values.config.databaseStorageSource | quote }}
+  CCHP_DATABASE_STORAGE_PATH: {{ .Values.config.databaseStoragePath | quote }}
+---
+{{- if .Values.secrets.create }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Values.secrets.migrationName }}
+  namespace: {{ include "cch-plus.namespace" . }}
+  labels:
+    {{- include "cch-plus.labels" . | nindent 4 }}
+type: Opaque
+stringData:
+  POSTGRES_PASSWORD: {{ required "secrets.migration.postgresPassword is required when secrets.create is true" .Values.secrets.migration.postgresPassword | quote }}
+  ATLAS_DATABASE_URL: {{ required "secrets.migration.atlasDatabaseUrl is required when secrets.create is true" .Values.secrets.migration.atlasDatabaseUrl | quote }}
+  CCHP_DATABASE_RUNTIME_PASSWORD: {{ required "secrets.migration.runtimePassword is required when secrets.create is true" .Values.secrets.migration.runtimePassword | quote }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Values.secrets.appName }}
+  namespace: {{ include "cch-plus.namespace" . }}
+  labels:
+    {{- include "cch-plus.labels" . | nindent 4 }}
+type: Opaque
+stringData:
+  DATABASE_URL: {{ required "secrets.app.databaseUrl is required when secrets.create is true" .Values.secrets.app.databaseUrl | quote }}
+  DRAGONFLY_URL: {{ .Values.secrets.app.dragonflyUrl | quote }}
+  CCH_TOKEN_PEPPER: {{ required "secrets.app.tokenPepper is required when secrets.create is true" .Values.secrets.app.tokenPepper | quote }}
+  CCH_MASTER_KEY: {{ required "secrets.app.masterKey is required when secrets.create is true" .Values.secrets.app.masterKey | quote }}
+  DRAGONFLY_KEY_SECRET: {{ required "secrets.app.dragonflyKeySecret is required when secrets.create is true" .Values.secrets.app.dragonflyKeySecret | quote }}
+{{- end }}

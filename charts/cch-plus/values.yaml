@@ -1,0 +1,165 @@
+replicaCount:
+  control: 1
+  gateway: 1
+  worker: 1
+
+image:
+  repository: ghcr.io/cch-hq/cch-plus
+  tag: 1.0.13
+  pullPolicy: IfNotPresent
+imagePullSecrets: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+namespaceOverride: ""
+
+secrets:
+  # Keep false for GitOps deployments and create these secrets in CI or out-of-band.
+  create: false
+  migrationName: cchp-migration-secrets
+  appName: cchp-secrets
+  migration:
+    postgresPassword: ""
+    atlasDatabaseUrl: ""
+    runtimePassword: ""
+  app:
+    databaseUrl: ""
+    dragonflyUrl: "redis://dragonfly:6379/0"
+    tokenPepper: ""
+    masterKey: ""
+    dragonflyKeySecret: ""
+
+config:
+  appEnv: production
+  runtimeRole: cchp_runtime
+  publicBaseUrl: https://cchp.example.com
+  allowedOrigins: https://cchp.example.com
+  gatewayPublicUrl: https://api.cchp.example.com
+  siemMode: disabled
+  databaseStorageSource: filesystem
+  databaseStoragePath: /var/lib/cchp/data/objectstore
+
+postgres:
+  enabled: true
+  image:
+    repository: timescale/timescaledb
+    tag: 2.31.0-pg18
+    pullPolicy: IfNotPresent
+  service:
+    name: postgres
+    port: 5432
+  user: hub
+  database: app
+  dataPath: /var/lib/postgresql/data/pgdata
+  persistence:
+    size: 20Gi
+    storageClassName: ""
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      memory: 2Gi
+  maxConnections: 200
+
+dragonfly:
+  enabled: true
+  image:
+    repository: docker.dragonflydb.io/dragonflydb/dragonfly
+    tag: v2.0.2
+    pullPolicy: IfNotPresent
+  service:
+    name: dragonfly
+    port: 6379
+  persistence:
+    size: 2Gi
+    storageClassName: ""
+  proactorThreads: 2
+  maxMemory: 768mb
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 1Gi
+
+storage:
+  objectstore:
+    size: 20Gi
+    storageClassName: ""
+  taskResults:
+    size: 50Gi
+    storageClassName: ""
+
+workloads:
+  control:
+    servicePort: 8080
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: "1"
+        memory: 512Mi
+    scratchSize: 64Gi
+  gateway:
+    servicePort: 8081
+    terminationGracePeriodSeconds: 930
+    resources:
+      requests:
+        cpu: 250m
+        memory: 256Mi
+      limits:
+        cpu: "2"
+        memory: 1Gi
+    scratchSize: 9Gi
+    archiveSize: 16Gi
+  worker:
+    servicePort: 8082
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: "1"
+        memory: 512Mi
+    scratchSize: 300Gi
+
+migration:
+  enabled: true
+  activeDeadlineSeconds: 44640
+  ttlSecondsAfterFinished: 3600
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+  scratchSize: 1Gi
+
+ingressRoute:
+  enabled: false
+  entryPoints:
+    - websecure
+  apiHost: api.cchp.example.com
+  consoleHost: cchp.example.com
+  tls:
+    store:
+      name: default
+      namespace: traefik
+  middlewares: []
+
+podAnnotations: {}
+podLabels: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL

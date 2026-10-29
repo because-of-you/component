@@ -80,6 +80,14 @@ releases:
     values:
       - ./environments/{{ .Environment.Name }}/claude-code-hub/values.yaml
 
+  - name: cch-plus
+    namespace: cchp
+    createNamespace: true
+    chart: ./charts/cch-plus
+    timeout: 1200
+    values:
+      - ./environments/{{ .Environment.Name }}/cch-plus/values.yaml
+
   - name: dbx
     namespace: app
     createNamespace: true

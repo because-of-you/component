@@ -177,6 +177,7 @@ kubectl -n traefik get certificate acitrus-tls
 ```text
 infra: redis, postgresql, kafka, conduktor-gateway, rabbitmq, lldap, authelia, rustfs, robustmq
 app: claude-code-hub, conduktor-console, dbx, service-atlas, test-charts
+cchp: cch-plus and its dedicated TimescaleDB/Dragonfly workloads
 traefik: traefik
 cert-manager: cert-manager
 ```
@@ -211,6 +212,17 @@ Claude Code Hub 使用仓库自有 Chart 部署无状态应用，复用 `infra` 
 
 ```text
 charts/claude-code-hub/README.md
+```
+
+cch-plus 与旧版 Claude Code Hub 并行部署，使用独立的 `cchp` 命名空间、TimescaleDB、
+Dragonfly、PVC、Secrets 和控制台/API 域名。Chart 使用官方
+固定版本 `ghcr.io/cch-hq/cch-plus:1.0.13` 镜像同步为 ACR 的
+`registry.cn-shenzhen.aliyuncs.com/gravitation/cch-plus:dev-1.0.13`，并将官方的
+ingress-nginx 清单适配为现有 Traefik `IngressRoute`。旧版 release、数据库和缓存保持不变。
+配置与存储要求见：
+
+```text
+charts/cch-plus/README.md
 ```
 
 RustFS 使用官方 Chart 的 standalone 模式，数据和日志分别保存在 `10Gi` 与 `1Gi` PVC；控制台通过
@@ -370,7 +382,7 @@ PR 合并前会执行：
 
 ## dev 集群部署
 
-Push 到 `dev` 分支并修改 Redis、PostgreSQL、LLDAP、Authelia、Claude Code Hub、DBX、Service Atlas、RustFS、RobustMQ、cert-manager 或 Traefik
+Push 到 `dev` 分支并修改 Redis、PostgreSQL、LLDAP、Authelia、Claude Code Hub、cch-plus、DBX、Service Atlas、RustFS、RobustMQ、cert-manager 或 Traefik
 的 Chart/values 后，
 [deploy-dev.yaml](./.github/workflows/deploy-dev.yaml) 会检测发生变化的组件，并为每个组件创建独立 Matrix Job。
 每个 Job 通过 Tailscale 连接 K3s，并按组件名执行 Helmfile。例如只修改 Redis 时只运行：
@@ -446,6 +458,11 @@ docker run --rm -it authelia/authelia:4.39.24 \
 | 名称 | 类型 | 使用方与生成方式 |
 | --- | --- | --- |
 | `CCH_ADMIN_TOKEN` | Secret | Claude Code Hub 紧急管理入口，可用 `openssl rand -hex 32`。 |
+| `CCHP_POSTGRES_PASSWORD` | Secret | cch-plus 专用 TimescaleDB 管理员密码。 |
+| `CCHP_DATABASE_RUNTIME_PASSWORD` | Secret | cch-plus 运行时数据库角色密码。 |
+| `CCHP_TOKEN_PEPPER` | Secret | cch-plus Token Pepper。 |
+| `CCHP_MASTER_KEY` | Secret | cch-plus 主加密密钥。 |
+| `CCHP_DRAGONFLY_KEY_SECRET` | Secret | cch-plus Dragonfly 密钥。 |
 | `RUSTFS_ACCESS_KEY` | Secret | S3 Access Key ID，使用 `openssl rand -hex 16` 生成 32 个十六进制字符。 |
 | `RUSTFS_SECRET_KEY` | Secret | S3 Secret Access Key，使用 `openssl rand -hex 32` 生成 64 个十六进制字符。 |
 
@@ -456,6 +473,7 @@ RustFS 的 Access Key/Secret Key 与 OIDC Client Secret 是两套独立凭据，
 - `charts/lldap/README.md`
 - `charts/authelia/README.md`
 - `charts/claude-code-hub/README.md`
+- `charts/cch-plus/README.md`
 - `charts/rustfs/README.md`
 - `charts/robustmq/README.md`
 - `charts/traefik/README.md`

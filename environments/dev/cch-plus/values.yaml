@@ -1,0 +1,27 @@
+# cch-plus is deliberately isolated from the legacy claude-code-hub release.
+image:
+  repository: registry.cn-shenzhen.aliyuncs.com/gravitation/cch-plus
+  tag: dev-1.0.13
+  pullPolicy: IfNotPresent
+
+ingressRoute:
+  enabled: true
+  apiHost: api.cchp.acitrus.cn
+  consoleHost: cchp.acitrus.cn
+  entryPoints:
+    - websecure
+  tls:
+    store:
+      name: default
+      namespace: traefik
+
+config:
+  publicBaseUrl: https://cchp.acitrus.cn
+  allowedOrigins: https://cchp.acitrus.cn
+  gatewayPublicUrl: https://api.cchp.acitrus.cn
+
+# Secrets are created by the deploy workflow from GitHub Environment Secrets.
+secrets:
+  create: false
+  migrationName: cchp-migration-secrets
+  appName: cchp-secrets

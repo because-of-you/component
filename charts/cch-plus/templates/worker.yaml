@@ -1,0 +1,145 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: {{ include "cch-plus.namespace" . }}
+  labels:
+    {{- include "cch-plus.labels" . | nindent 4 }}
+    app.kubernetes.io/component: worker
+spec:
+  replicas: {{ .Values.replicaCount.worker }}
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 45
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        fsGroup: 65532
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: wait-for-migrations
+          image: {{ include "cch-plus.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["db", "wait", "--timeout=744m"]
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.appName }}
+                  key: DATABASE_URL
+            - name: CCHP_DATABASE_RUNTIME_ROLE
+              valueFrom:
+                configMapKeyRef:
+                  name: cchp-config
+                  key: CCHP_DATABASE_RUNTIME_ROLE
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          securityContext:
+            {{- include "cch-plus.securityContext" . | nindent 12 }}
+      containers:
+        - name: worker
+          image: {{ include "cch-plus.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["api", "--role=worker"]
+          envFrom:
+            - configMapRef:
+                name: cchp-config
+            - secretRef:
+                name: {{ .Values.secrets.appName }}
+          env:
+            - name: CCH_WORKER_OBSERVABILITY_ADDR
+              value: ":8082"
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: CCH_NODE_INTERNAL_URL
+              value: http://$(POD_IP):8093
+          ports:
+            - name: operations
+              containerPort: 8082
+              protocol: TCP
+            - name: node-internal
+              containerPort: 8093
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: operations
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: operations
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 2
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: operations
+            periodSeconds: 2
+            failureThreshold: 30
+          resources:
+            {{- toYaml .Values.workloads.worker.resources | nindent 12 }}
+          securityContext:
+            {{- include "cch-plus.securityContext" . | nindent 12 }}
+          volumeMounts:
+            - name: objectstore
+              mountPath: /var/lib/cchp/data/objectstore
+            - name: task-results
+              mountPath: /var/lib/cchp/data/task-results
+            - name: scratch
+              mountPath: /var/cache/cchp
+      volumes:
+        - name: objectstore
+          persistentVolumeClaim:
+            claimName: cchp-objectstore
+        - name: task-results
+          persistentVolumeClaim:
+            claimName: cchp-task-results
+        - name: scratch
+          ephemeral:
+            volumeClaimTemplate:
+              spec:
+                accessModes:
+                  - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: {{ .Values.workloads.worker.scratchSize }}

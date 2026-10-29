@@ -15,6 +15,7 @@ on:
       - 'charts/rustfs/**'
       - 'charts/robustmq/**'
       - 'charts/claude-code-hub/**'
+      - 'charts/cch-plus/**'
       - 'charts/dbx/**'
       - 'charts/service-atlas/**'
       - 'charts/traefik/**'
@@ -30,6 +31,7 @@ on:
       - 'environments/dev/rustfs/**'
       - 'environments/dev/robustmq/**'
       - 'environments/dev/claude-code-hub/**'
+      - 'environments/dev/cch-plus/**'
       - 'environments/dev/dbx/**'
       - 'environments/dev/service-atlas/**'
       - 'environments/dev/traefik/**'
@@ -59,6 +61,7 @@ on:
           - rustfs
           - robustmq
           - claude-code-hub
+          - cch-plus
           - dbx
           - service-atlas
           - traefik
@@ -134,6 +137,11 @@ jobs:
               - 'charts/claude-code-hub/values.schema.json'
               - 'charts/claude-code-hub/templates/**'
               - 'environments/dev/claude-code-hub/**'
+              - 'environments/dev/values.yaml'
+              - 'helmfile.yaml'
+            cch-plus:
+              - 'charts/cch-plus/**'
+              - 'environments/dev/cch-plus/**'
               - 'environments/dev/values.yaml'
               - 'helmfile.yaml'
             dbx:
@@ -306,6 +314,35 @@ jobs:
             done
           done
 
+      - name: Login to Aliyun ACR for CCH Plus image verification
+        if: matrix.component == 'cch-plus'
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ vars.ALIYUN_ACR_REGISTRY }}
+          username: ${{ vars.ALIYUN_ACR_USERNAME }}
+          password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
+
+      - name: Wait for CCH Plus image synchronization
+        if: matrix.component == 'cch-plus'
+        env:
+          # Keep this fixed tag in sync with images/cch-plus/images.yaml.
+          CCHP_IMAGE: ${{ vars.ALIYUN_ACR_REGISTRY }}/gravitation/cch-plus:dev-1.0.13
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5 6 7 8 9 10 11 12; do
+            if docker manifest inspect "$CCHP_IMAGE" >/dev/null 2>&1; then
+              exit 0
+            fi
+            if [[ "$attempt" == 12 ]]; then
+              echo "CCH Plus image was not published by sync-images: $CCHP_IMAGE" >&2
+              exit 1
+            fi
+            delay=$((attempt * 5))
+            echo "CCH Plus image is not available yet; retrying in ${delay}s"
+            sleep "$delay"
+          done
+
       - name: Connect to Tailscale
         uses: tailscale/github-action@v4
         with:
@@ -343,6 +380,10 @@ jobs:
       - name: Ensure app namespace
         if: matrix.component == 'claude-code-hub' || matrix.component == 'dbx' || matrix.component == 'service-atlas' || matrix.component == 'conduktor-console'
         run: kubectl create namespace app --dry-run=client -o yaml | bash .github/scripts/kubectl-apply-retry.sh
+
+      - name: Ensure cch-plus namespace
+        if: matrix.component == 'cch-plus'
+        run: kubectl create namespace cchp --dry-run=client -o yaml | bash .github/scripts/kubectl-apply-retry.sh
 
       - name: Ensure traefik namespace
         if: matrix.component == 'traefik'
@@ -610,6 +651,49 @@ jobs:
             --dry-run=client -o yaml \
             | bash .github/scripts/kubectl-apply-retry.sh
 
+      - name: Sync CCH Plus credentials
+        if: matrix.component == 'cch-plus'
+        shell: bash
+        env:
+          CCHP_POSTGRES_PASSWORD: ${{ secrets.CCHP_POSTGRES_PASSWORD }}
+          CCHP_DATABASE_RUNTIME_PASSWORD: ${{ secrets.CCHP_DATABASE_RUNTIME_PASSWORD }}
+          CCHP_TOKEN_PEPPER: ${{ secrets.CCHP_TOKEN_PEPPER }}
+          CCHP_MASTER_KEY: ${{ secrets.CCHP_MASTER_KEY }}
+          CCHP_DRAGONFLY_KEY_SECRET: ${{ secrets.CCHP_DRAGONFLY_KEY_SECRET }}
+        run: |
+          test -n "$CCHP_POSTGRES_PASSWORD"
+          test -n "$CCHP_DATABASE_RUNTIME_PASSWORD"
+          test -n "$CCHP_TOKEN_PEPPER"
+          test -n "$CCHP_MASTER_KEY"
+          test -n "$CCHP_DRAGONFLY_KEY_SECRET"
+          umask 077
+          credentials_dir="$(mktemp -d)"
+          trap 'rm -rf "$credentials_dir"' EXIT
+          encoded_postgres_password="$(jq -rn --arg value "$CCHP_POSTGRES_PASSWORD" '$value|@uri')"
+          encoded_runtime_password="$(jq -rn --arg value "$CCHP_DATABASE_RUNTIME_PASSWORD" '$value|@uri')"
+          printf '%s' "$CCHP_POSTGRES_PASSWORD" > "$credentials_dir/POSTGRES_PASSWORD"
+          printf '%s' "postgres://hub:${encoded_postgres_password}@postgres:5432/app?sslmode=disable" > "$credentials_dir/ATLAS_DATABASE_URL"
+          printf '%s' "$CCHP_DATABASE_RUNTIME_PASSWORD" > "$credentials_dir/CCHP_DATABASE_RUNTIME_PASSWORD"
+          kubectl -n cchp create secret generic cchp-migration-secrets \
+            --from-file=POSTGRES_PASSWORD="$credentials_dir/POSTGRES_PASSWORD" \
+            --from-file=ATLAS_DATABASE_URL="$credentials_dir/ATLAS_DATABASE_URL" \
+            --from-file=CCHP_DATABASE_RUNTIME_PASSWORD="$credentials_dir/CCHP_DATABASE_RUNTIME_PASSWORD" \
+            --dry-run=client -o yaml \
+            | bash .github/scripts/kubectl-apply-retry.sh
+          printf '%s' "postgres://cchp_runtime:${encoded_runtime_password}@postgres:5432/app?sslmode=disable" > "$credentials_dir/DATABASE_URL"
+          printf '%s' 'redis://dragonfly:6379/0' > "$credentials_dir/DRAGONFLY_URL"
+          printf '%s' "$CCHP_TOKEN_PEPPER" > "$credentials_dir/CCH_TOKEN_PEPPER"
+          printf '%s' "$CCHP_MASTER_KEY" > "$credentials_dir/CCH_MASTER_KEY"
+          printf '%s' "$CCHP_DRAGONFLY_KEY_SECRET" > "$credentials_dir/DRAGONFLY_KEY_SECRET"
+          kubectl -n cchp create secret generic cchp-secrets \
+            --from-file=DATABASE_URL="$credentials_dir/DATABASE_URL" \
+            --from-file=DRAGONFLY_URL="$credentials_dir/DRAGONFLY_URL" \
+            --from-file=CCH_TOKEN_PEPPER="$credentials_dir/CCH_TOKEN_PEPPER" \
+            --from-file=CCH_MASTER_KEY="$credentials_dir/CCH_MASTER_KEY" \
+            --from-file=DRAGONFLY_KEY_SECRET="$credentials_dir/DRAGONFLY_KEY_SECRET" \
+            --dry-run=client -o yaml \
+            | bash .github/scripts/kubectl-apply-retry.sh
+
       - name: Sync cert-manager Aliyun DNS credentials
         if: matrix.component == 'cert-manager'
         shell: bash
@@ -692,10 +776,17 @@ jobs:
       - name: Deploy ${{ matrix.component }}
         env:
           SERVICE_ATLAS_IMAGE_TAG: dev-${{ github.sha }}
+          CCHP_IMAGE_REPOSITORY: ${{ vars.ALIYUN_ACR_REGISTRY }}/gravitation/cch-plus
+          # Keep this fixed tag in sync with images/cch-plus/images.yaml.
+          CCHP_IMAGE_TAG: dev-1.0.13
         shell: bash
         run: |
           if [[ "${{ matrix.component }}" == "service-atlas" ]]; then
             helmfile -e dev --selector name=service-atlas sync --set image.tag="$SERVICE_ATLAS_IMAGE_TAG"
+          elif [[ "${{ matrix.component }}" == "cch-plus" ]]; then
+            helmfile -e dev --selector name=cch-plus sync \
+              --set image.repository="$CCHP_IMAGE_REPOSITORY" \
+              --set image.tag="$CCHP_IMAGE_TAG"
           elif [[ "${{ matrix.component }}" == "cert-manager" ]]; then
             helmfile -e dev --selector component=cert-manager sync
           else
@@ -722,6 +813,15 @@ jobs:
         run: |
           kubectl -n app rollout restart deployment/claude-code-hub
           kubectl -n app rollout status deployment/claude-code-hub --timeout=300s
+
+      - name: Restart CCH Plus after deployment
+        if: matrix.component == 'cch-plus'
+        shell: bash
+        run: |
+          kubectl -n cchp rollout restart deployment/control deployment/worker statefulset/gateway
+          kubectl -n cchp rollout status deployment/control --timeout=300s
+          kubectl -n cchp rollout status deployment/worker --timeout=300s
+          kubectl -n cchp rollout status statefulset/gateway --timeout=1000s
 
       - name: Verify Service Atlas deployment
         if: matrix.component == 'service-atlas'

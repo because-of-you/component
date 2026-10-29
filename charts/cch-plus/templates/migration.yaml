@@ -1,0 +1,82 @@
+{{- if .Values.migration.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "cch-plus.name" . }}-migrate-{{ .Release.Revision }}
+  namespace: {{ include "cch-plus.namespace" . }}
+  labels:
+    {{- include "cch-plus.labels" . | nindent 4 }}
+    app.kubernetes.io/component: migration
+  {{- if .Release.IsUpgrade }}
+  annotations:
+    helm.sh/hook: pre-upgrade
+    helm.sh/hook-weight: "10"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+  {{- end }}
+spec:
+  backoffLimit: 6
+  activeDeadlineSeconds: {{ .Values.migration.activeDeadlineSeconds }}
+  ttlSecondsAfterFinished: {{ .Values.migration.ttlSecondsAfterFinished }}
+  template:
+    metadata:
+      labels:
+        {{- include "cch-plus.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: migration
+    spec:
+      restartPolicy: OnFailure
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: migrate
+          image: {{ include "cch-plus.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /usr/local/bin/migrate
+          args:
+            - apply
+          env:
+            - name: APP_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: cchp-config
+                  key: APP_ENV
+            - name: CCHP_DATABASE_RUNTIME_ROLE
+              valueFrom:
+                configMapKeyRef:
+                  name: cchp-config
+                  key: CCHP_DATABASE_RUNTIME_ROLE
+            - name: ATLAS_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.migrationName }}
+                  key: ATLAS_DATABASE_URL
+            - name: CCHP_DATABASE_RUNTIME_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.migrationName }}
+                  key: CCHP_DATABASE_RUNTIME_PASSWORD
+            - name: CCH_MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.appName }}
+                  key: CCH_MASTER_KEY
+            - name: CCH_SCRATCH_DIR
+              value: /var/cache/cchp
+          resources:
+            {{- toYaml .Values.migration.resources | nindent 12 }}
+          securityContext:
+            {{- include "cch-plus.securityContext" . | nindent 12 }}
+          volumeMounts:
+            - name: scratch
+              mountPath: /var/cache/cchp
+      volumes:
+        - name: scratch
+          emptyDir: {}
+{{- end }}
