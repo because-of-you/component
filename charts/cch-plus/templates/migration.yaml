@@ -61,6 +61,9 @@ spec:
               cpu: 100m
               memory: 128Mi
           securityContext:
+            runAsNonRoot: true
+            runAsUser: 70
+            runAsGroup: 70
             {{- include "cch-plus.securityContext" . | nindent 12 }}
       {{- end }}
       containers:
