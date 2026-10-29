@@ -33,6 +33,36 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if .Values.postgres.enabled }}
+      initContainers:
+        - name: wait-for-postgres
+          image: "{{ .Values.postgres.image.repository }}:{{ .Values.postgres.image.tag }}"
+          imagePullPolicy: {{ .Values.postgres.image.pullPolicy }}
+          command:
+            - sh
+            - -ec
+          args:
+            - |
+              until pg_isready -h {{ .Values.postgres.service.name }} -p {{ .Values.postgres.service.port }} -U {{ .Values.postgres.user }} -d {{ .Values.postgres.database }}; do
+                echo "waiting for PostgreSQL"
+                sleep 2
+              done
+          env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.migrationName }}
+                  key: POSTGRES_PASSWORD
+          resources:
+            requests:
+              cpu: 10m
+              memory: 10Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          securityContext:
+            {{- include "cch-plus.securityContext" . | nindent 12 }}
+      {{- end }}
       containers:
         - name: migrate
           image: {{ include "cch-plus.image" . | quote }}

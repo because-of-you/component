@@ -8,7 +8,7 @@
 
 - `control` Deployment、`gateway` StatefulSet、`worker` Deployment
 - `cch-plus-migrate-<revision>` 数据库迁移 Job（首次安装普通运行，后续 Helm 升级使用
-  `pre-upgrade` Hook）
+  `pre-upgrade` Hook；首次执行前会等待内置 PostgreSQL 通过 `pg_isready`
 - TimescaleDB PostgreSQL 18 和 Dragonfly 独立 StatefulSet
 - `cchp-objectstore`、`cchp-task-results` 和各工作负载的临时卷
 - Traefik `IngressRoute`：API、控制台和 CC Hub 导入上传入口
@@ -73,6 +73,7 @@ TimescaleDB、Dragonfly、数据库迁移和 cch-plus 应用使用独立存储�
 官方迁移只向前执行；升级前请先备份 `cchp` PostgreSQL。不要把新旧版本指向同一数据库，
 也不要把 Helm 回滚当作数据库回滚方案。
 
-当前默认 requests 已按低流量单节点场景下调，limits 保留较宽余量；如节点压力仍高，可继续
+当前默认 CPU/内存 requests 已按低流量单节点场景下调为每个工作负载 `10m/10Mi`，limits
+保留较宽余量；如节点压力仍高，可继续
 覆盖 `postgres.resources`、`dragonfly.resources` 和 `workloads.*.resources`，不要降低 PVC
 容量来解决 CPU/内存压力。

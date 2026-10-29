@@ -66,8 +66,8 @@ spec:
                   key: CCHP_DATABASE_RUNTIME_ROLE
           resources:
             requests:
-              cpu: 5m
-              memory: 32Mi
+              cpu: 10m
+              memory: 10Mi
             limits:
               cpu: 100m
               memory: 128Mi

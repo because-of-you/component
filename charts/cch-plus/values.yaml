@@ -57,8 +57,8 @@ postgres:
     storageClassName: ""
   resources:
     requests:
-      cpu: 50m
-      memory: 128Mi
+      cpu: 10m
+      memory: 10Mi
     limits:
       cpu: "1"
       memory: 2Gi
@@ -81,7 +81,7 @@ dragonfly:
   resources:
     requests:
       cpu: 10m
-      memory: 64Mi
+      memory: 10Mi
     limits:
       cpu: 500m
       memory: 1Gi
@@ -100,7 +100,7 @@ workloads:
     resources:
       requests:
         cpu: 10m
-        memory: 64Mi
+        memory: 10Mi
       limits:
         cpu: "1"
         memory: 512Mi
@@ -110,8 +110,8 @@ workloads:
     terminationGracePeriodSeconds: 930
     resources:
       requests:
-        cpu: 20m
-        memory: 64Mi
+        cpu: 10m
+        memory: 10Mi
       limits:
         cpu: "2"
         memory: 1Gi
@@ -122,7 +122,7 @@ workloads:
     resources:
       requests:
         cpu: 10m
-        memory: 64Mi
+        memory: 10Mi
       limits:
         cpu: "1"
         memory: 512Mi
@@ -135,7 +135,7 @@ migration:
   resources:
     requests:
       cpu: 10m
-      memory: 64Mi
+      memory: 10Mi
     limits:
       cpu: "1"
       memory: 512Mi

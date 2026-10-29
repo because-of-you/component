@@ -19,6 +19,8 @@ grep -Fq 'image: "registry.cn-shenzhen.aliyuncs.com/gravitation/cch-plus:dev-1.0
 grep -Fq 'image: "registry.cn-shenzhen.aliyuncs.com/gravitation/timescaledb:2.31.0-pg18"' "$rendered"
 grep -Fq 'image: "registry.cn-shenzhen.aliyuncs.com/gravitation/dragonfly:v2.0.2"' "$rendered"
 grep -Fq 'name: cch-plus-migrate-1' "$rendered"
+grep -Fq 'name: wait-for-postgres' "$rendered"
+grep -Fq 'pg_isready -h postgres -p 5432 -U hub -d app' "$rendered"
 upgrade_rendered="$(mktemp)"
 trap 'rm -f "$rendered" "$upgrade_rendered"' EXIT
 helm template cch-plus "$chart_dir" \
