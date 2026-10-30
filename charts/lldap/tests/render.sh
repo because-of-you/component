@@ -25,14 +25,17 @@ grep -Fq 'kind: Service' "$rendered"
 grep -Fq 'port: 3890' "$rendered"
 grep -Fq 'port: 17170' "$rendered"
 
-grep -Fq 'kind: Ingress' "$rendered"
+grep -Fq 'kind: IngressRoute' "$rendered"
 grep -Fq 'ldap.acitrus.cn' "$rendered"
-grep -Fq 'traefik.ingress.kubernetes.io/router.entrypoints: websecure' "$rendered"
-grep -Fq 'traefik.ingress.kubernetes.io/router.middlewares: infra-authelia-forwardauth@kubernetescrd' "$rendered"
-grep -Fq 'traefik.ingress.kubernetes.io/router.tls.certresolver: leresolver' "$rendered"
+grep -Fq 'name: "authelia-forwardauth"' "$rendered"
+grep -Fq 'namespace: "infra"' "$rendered"
+grep -Fq 'name: "lldap"' "$rendered"
+grep -Fq 'port: 17170' "$rendered"
+grep -Fq 'name: default' "$rendered"
+grep -Fq 'namespace: traefik' "$rendered"
 
-for forbidden_kind in HorizontalPodAutoscaler PersistentVolumeClaim Certificate Secret IngressRoute; do
-  if grep -Fq "kind: $forbidden_kind" "$rendered"; then
+for forbidden_kind in HorizontalPodAutoscaler PersistentVolumeClaim Certificate Secret Ingress; do
+  if grep -Fxq "kind: $forbidden_kind" "$rendered"; then
     echo "dev rendering must not create $forbidden_kind" >&2
     exit 1
   fi

@@ -14,7 +14,7 @@
 
 ## Helm Chart 选择
 
-使用 LLDAP 官方安装文档在 Kubernetes 章节推荐的 `Evantage-WS/lldap-kubernetes` Helm 仓库，不在本仓库重新实现 LLDAP Deployment、Service、PVC、HPA 或标准 Ingress。
+使用 LLDAP 官方安装文档在 Kubernetes 章节推荐的 `Evantage-WS/lldap-kubernetes` Helm 仓库，不在本仓库重新实现 LLDAP Deployment、Service、PVC 或 HPA。公网入口由 wrapper 创建 Traefik `IngressRoute`，不使用上游标准 `Ingress`。
 
 Wrapper Chart `charts/lldap` 固定依赖：
 
@@ -33,7 +33,7 @@ dependencies:
 - 关闭 HPA。
 - 关闭 SQLite PVC，改用 PostgreSQL。
 - 使用外部 Kubernetes Secret，不提交 Chart 示例凭据。
-- 使用上游标准 Ingress，并通过 Traefik annotations 启用 `websecure` 和 `leresolver`。
+- 关闭上游标准 Ingress，由 wrapper 的 Traefik `IngressRoute` 使用 `websecure` 和默认 TLS Store。
 - 不开启 cert-manager 或 LDAPS。
 
 Wrapper 自有模板只处理上游 Chart 不负责的本集群集成：幂等创建 PostgreSQL 数据库，以及幂等创建 Authelia 只读绑定账号。
@@ -122,7 +122,7 @@ PostgreSQL -> LLDAP -> Authelia
 ## 验证
 
 - `helm dependency build charts/lldap` 锁定上游 Chart `0.4.0`。
-- `helm lint` 和 `helm template` 验证上游 Deployment/Service/Ingress 与 wrapper Hooks。
+- `helm lint` 和 `helm template` 验证上游 Deployment/Service、wrapper IngressRoute 与 Hooks。
 - 渲染结果必须关闭 HPA、PVC、cert-manager、LDAPS 和内置 Secret。
 - 渲染结果必须使用官方镜像、外部 Secret、PostgreSQL URL 和 `ldap.acitrus.cn`。
 - Authelia 渲染必须使用 `implementation: lldap`、内部地址和只读绑定 DN。

@@ -8,9 +8,10 @@ chart: lldap
 version: 0.4.0
 ```
 
-上游 Chart 负责 Deployment、Service、Ingress、探针和标准 Kubernetes 资源。本仓库通过 values
+上游 Chart 负责 Deployment、Service、探针和标准 Kubernetes 资源。本仓库通过 values
 切换到官方 `lldap/lldap:stable-alpine-rootless` 镜像，关闭 HPA、PVC、cert-manager 和 LDAPS，
-并追加 PostgreSQL 建库及 Authelia 只读账号 bootstrap Hooks。
+并追加 PostgreSQL 建库及 Authelia 只读账号 bootstrap Hooks。公网入口由 wrapper 自己创建
+Traefik `IngressRoute`，不再使用上游标准 `Ingress`。
 
 ## dev 配置
 
@@ -24,8 +25,8 @@ Bind DN:   uid=authelia,ou=people,dc=acitrus,dc=cn
 Bind group: lldap_strict_readonly
 ```
 
-LDAP 端口只通过 ClusterIP 提供，不创建公网 TCP 路由。Web UI 通过 Traefik `websecure` 和
-`leresolver` 提供 HTTPS。
+LDAP 端口只通过 ClusterIP 提供，不创建公网 TCP 路由。Web UI 通过 Traefik `websecure` 的
+`IngressRoute` 和默认 TLS Store 提供 HTTPS。
 
 ## GitHub Secrets
 
@@ -80,7 +81,7 @@ helmfile -e dev sync --selector name=lldap
 4. 按需把 `wfy` 加入业务组。
 5. 在 `https://auth.acitrus.cn` 使用 `wfy` 或邮箱登录。
 
-`ldap.acitrus.cn` 的 Traefik Ingress 引用了 `infra/authelia-forwardauth` Middleware。只有属于
+`ldap.acitrus.cn` 的 Traefik IngressRoute 引用了 `infra/authelia-forwardauth` Middleware。只有属于
 `lldap_admin` 组的用户可以访问管理页面；集群内部 LDAP Service 和 bootstrap Job 不经过该入口。
 
 LLDAP 不需要指定 SSHA、SHA256 等算法；通过 Web UI 设置明文密码后，服务端自行安全存储并通过
@@ -105,7 +106,7 @@ kubectl -n infra logs job/lldap-bootstrap
 验证服务和 Secret 引用：
 
 ```bash
-kubectl -n infra get deploy,svc,ingress,job -l app.kubernetes.io/instance=lldap
+kubectl -n infra get deploy,svc,ingressroute,job -l app.kubernetes.io/instance=lldap
 kubectl -n infra describe deployment lldap
 ```
 

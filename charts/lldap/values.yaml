@@ -58,6 +58,18 @@ lldap:
     name: lldap-secrets
     useExisting: true
 
+ingressRoute:
+  enabled: false
+  name: lldap
+  host: ""
+  entryPoints:
+    - websecure
+  middlewares: []
+  service:
+    name: lldap
+    port: 17170
+  tls: {}
+
 databaseBootstrap:
   enabled: true
   image:

@@ -201,7 +201,7 @@ charts/authelia/README.md
 ```
 
 LLDAP 使用官方安装文档推荐的 `Evantage-WS/lldap-kubernetes` Helm Chart，数据保存在 PostgreSQL，
-并通过 `ldap.acitrus.cn` 提供管理页面。Secrets、首次登录、日志和完整清理见：
+并通过 Traefik `IngressRoute` 的 `ldap.acitrus.cn` 提供管理页面。Secrets、首次登录、日志和完整清理见：
 
 ```text
 charts/lldap/README.md
