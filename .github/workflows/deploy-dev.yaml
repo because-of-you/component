@@ -245,6 +245,34 @@ jobs:
         with:
           helmfile-version: v1.7.1
 
+      - name: Login to Aliyun ACR for Authelia image verification
+        if: matrix.component == 'authelia'
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ vars.ALIYUN_ACR_REGISTRY }}
+          username: ${{ vars.ALIYUN_ACR_USERNAME }}
+          password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
+
+      - name: Wait for Authelia image synchronization
+        if: matrix.component == 'authelia'
+        env:
+          AUTHELIA_IMAGE: ${{ vars.ALIYUN_ACR_REGISTRY }}/gravitation/authelia:sha-5c1b47cb550f43cef92316ff9f4105ba6f961b8a
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5 6 7 8 9 10 11 12; do
+            if docker manifest inspect "$AUTHELIA_IMAGE" >/dev/null 2>&1; then
+              exit 0
+            fi
+            if [[ "$attempt" == 12 ]]; then
+              echo "Authelia image was not published by sync-images: $AUTHELIA_IMAGE" >&2
+              exit 1
+            fi
+            delay=$((attempt * 5))
+            echo "Authelia image is not available yet; retrying in ${delay}s"
+            sleep "$delay"
+          done
+
       - name: Login to Aliyun ACR for Kafka image verification
         if: matrix.component == 'kafka'
         uses: docker/login-action@v4

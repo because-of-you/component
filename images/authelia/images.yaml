@@ -1,0 +1,6 @@
+component: authelia
+
+images:
+  - name: application
+    source: ghcr.io/because-of-you/authelia:sha-5c1b47cb550f43cef92316ff9f4105ba6f961b8a
+    destination: registry.cn-shenzhen.aliyuncs.com/gravitation/authelia:sha-5c1b47cb550f43cef92316ff9f4105ba6f961b8a

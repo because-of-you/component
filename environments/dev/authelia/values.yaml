@@ -1,7 +1,7 @@
 authelia:
   image:
-    registry: ghcr.io
-    repository: because-of-you/authelia
+    registry: registry.cn-shenzhen.aliyuncs.com
+    repository: gravitation/authelia
     tag: sha-5c1b47cb550f43cef92316ff9f4105ba6f961b8a
 
   pod:
