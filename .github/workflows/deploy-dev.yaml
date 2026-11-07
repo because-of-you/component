@@ -256,7 +256,7 @@ jobs:
       - name: Wait for Authelia image synchronization
         if: matrix.component == 'authelia'
         env:
-          AUTHELIA_IMAGE: ${{ vars.ALIYUN_ACR_REGISTRY }}/gravitation/authelia:sha-54f7a91703227646bb703fef6dccd22af640c1f4
+          AUTHELIA_IMAGE: ${{ vars.ALIYUN_ACR_REGISTRY }}/gravitation/authelia:sha-dca16bc48df5a5e6ee50ed4c360ca80082a87238
         shell: bash
         run: |
           set -euo pipefail

@@ -25,7 +25,7 @@ if grep -Fq 'kind: Secret' "$rendered"; then
   exit 1
 fi
 grep -Fq 'secretName: authelia-secrets' "$rendered"
-grep -Fq 'image: registry.cn-shenzhen.aliyuncs.com/gravitation/authelia:sha-54f7a91703227646bb703fef6dccd22af640c1f4' "$rendered"
+grep -Fq 'image: registry.cn-shenzhen.aliyuncs.com/gravitation/authelia:sha-dca16bc48df5a5e6ee50ed4c360ca80082a87238' "$rendered"
 grep -Fq 'AUTHELIA_AUTHENTICATION_BACKEND_WECHAT_STORAGE_ENABLED' "$rendered"
 grep -Fq 'AUTHELIA_WECHAT_APP_ID' "$rendered"
 grep -Fq 'AUTHELIA_WECHAT_APP_SECRET' "$rendered"
