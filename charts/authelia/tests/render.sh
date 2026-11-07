@@ -25,10 +25,17 @@ if grep -Fq 'kind: Secret' "$rendered"; then
   exit 1
 fi
 grep -Fq 'secretName: authelia-secrets' "$rendered"
-grep -Fq "implementation: 'lldap'" "$rendered"
-grep -Fq "address: 'ldap://lldap.infra.svc.cluster.local:3890'" "$rendered"
-grep -Fq "base_dn: 'dc=acitrus,dc=cn'" "$rendered"
-grep -Fq "user: 'uid=authelia,ou=people,dc=acitrus,dc=cn'" "$rendered"
+grep -Fq 'image: ghcr.io/because-of-you/authelia:sha-5c1b47cb550f43cef92316ff9f4105ba6f961b8a' "$rendered"
+grep -Fq 'AUTHELIA_AUTHENTICATION_BACKEND_WECHAT_STORAGE_ENABLED' "$rendered"
+grep -Fq 'AUTHELIA_WECHAT_APP_ID' "$rendered"
+grep -Fq 'AUTHELIA_WECHAT_APP_SECRET' "$rendered"
+grep -Fq 'AUTHELIA_WECHAT_QR_ENV_VERSION' "$rendered"
+grep -Fq 'key: wechat-app-id' "$rendered"
+grep -Fq 'key: wechat-app-secret' "$rendered"
+if grep -Fq "implementation: 'lldap'" "$rendered"; then
+  echo 'WeChat authentication must not render an LDAP backend' >&2
+  exit 1
+fi
 if grep -Eq 'opendirectory\.net|start_tls: true|memberUid|posixGroup' "$rendered"; then
   echo 'Authelia must not render the legacy OpenDirectory configuration' >&2
   exit 1

@@ -1,5 +1,26 @@
 authelia:
+  image:
+    registry: ghcr.io
+    repository: because-of-you/authelia
+    tag: sha-5c1b47cb550f43cef92316ff9f4105ba6f961b8a
+
   pod:
+    env:
+      - name: AUTHELIA_AUTHENTICATION_BACKEND_WECHAT_STORAGE_ENABLED
+        value: "true"
+      - name: AUTHELIA_WECHAT_APP_ID
+        valueFrom:
+          secretKeyRef:
+            name: authelia-secrets
+            key: wechat-app-id
+      - name: AUTHELIA_WECHAT_APP_SECRET
+        valueFrom:
+          secretKeyRef:
+            name: authelia-secrets
+            key: wechat-app-secret
+      # Use release after the miniapp is published.
+      - name: AUTHELIA_WECHAT_QR_ENV_VERSION
+        value: trial
     resources:
       requests:
         cpu: 50m
@@ -36,11 +57,9 @@ authelia:
 
     authentication_backend:
       ldap:
-        enabled: true
-        implementation: lldap
-        address: ldap://lldap.infra.svc.cluster.local:3890
-        base_dn: dc=acitrus,dc=cn
-        user: uid=authelia,ou=people,dc=acitrus,dc=cn
+        enabled: false
+      file:
+        enabled: false
 
     session:
       cookies:

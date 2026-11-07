@@ -1,5 +1,12 @@
 # Authelia
 
+> **微信认证切换准备**：dev 环境将使用自定义镜像和微信用户目录，二维码指向小程序体验版。请先确认该体验版已发布且使用者有体验权限。推送本仓库的 `dev` 分支会触发自动部署，因此切换前应确认 PostgreSQL 备份及回滚方案。已有 LDAP 用户不会自动成为微信用户。
+>
+> 首个微信用户需先在小程序登录完成自动注册；账号初始为禁用。管理员必须在 PostgreSQL 中以确认过的用户名启用账号，并分配 `admin` 和访问所需的 `lldap_admin` 等组，之后才能通过小程序管理组。切换前后需要验证 ACL、Claude Code Hub 和 RustFS 的 OIDC 身份及自填邮箱（未验证）行为。
+>
+> GitHub Actions 的 `dev` 环境需要读取本仓库 Secrets `AUTHELIA_WECHAT_APP_ID` 和 `AUTHELIA_WECHAT_APP_SECRET`；它们在部署时同步进 `infra/authelia-secrets`，不会写入镜像。部署配置固定使用镜像 SHA 标签。
+
+
 这个 Chart 封装 Authelia 官方 Helm Chart。当前依赖固定为 Chart `0.11.22`、Authelia
 `4.39.24`。
 
@@ -20,14 +27,16 @@ dev 环境配置维护在：
 environments/dev/authelia/values.yaml
 ```
 
-LDAP 地址、Bind DN、Cookie 域名、Traefik IngressRoute、ForwardAuth 地址和现有 Secret 引用都
+镜像版本、微信认证配置、Cookie 域名、Traefik IngressRoute、ForwardAuth 地址和现有 Secret 引用都
 属于环境配置，不会被打包进 OCI Chart。
 
 ## dev 密钥配置
 
 在 GitHub `dev` Environment Secrets 中配置：
 
-- `LLDAP_AUTHELIA_PASSWORD`
+- `LLDAP_AUTHELIA_PASSWORD`（切换期间保留以支持现有密钥同步）
+- `AUTHELIA_WECHAT_APP_ID`
+- `AUTHELIA_WECHAT_APP_SECRET`
 - `AUTHELIA_SESSION_ENCRYPTION_KEY`，至少 32 个字符
 - `AUTHELIA_STORAGE_ENCRYPTION_KEY`，至少 20 个字符
 - `AUTHELIA_RESET_PASSWORD_JWT_SECRET`，至少 32 个字符
@@ -144,19 +153,9 @@ GRANT USAGE ON SCHEMA public TO PUBLIC;
 
 Helm 和部署工作流不会自动执行旧 schema 清理。
 
-## LDAP 与入口
+## 微信认证与入口
 
-dev 环境使用集群内 LLDAP：
-
-```text
-ldap://lldap.infra.svc.cluster.local:3890
-dc=acitrus,dc=cn
-uid=authelia,ou=people,dc=acitrus,dc=cn
-```
-
-Authelia 使用原生 `implementation: lldap` 模板，用户可以通过用户名或邮箱登录。绑定账号
-`authelia` 属于 `lldap_strict_readonly`，只查询用户和组，不持有 LLDAP 管理员权限。LDAP 连接
-只经过 `infra` 命名空间内的 ClusterIP，不开放公网；LLDAP 管理页面通过 HTTPS 暴露。
+dev 环境使用微信身份和 Authelia 存储中的用户目录；原 LLDAP 不再作为认证后端。用户在小程序登录后自动注册，初始状态为禁用；启用并分配访问组后才能授权网站登录。小程序码使用体验版，需将用户加入体验成员。
 
 Traefik IngressRoute 暴露 `auth.acitrus.cn`。保护其他 IngressRoute 时引用：
 
@@ -169,8 +168,25 @@ middlewares:
 ForwardAuth 成功后会传递 `Remote-User`、`Remote-Name`、`Remote-Email` 和 `Remote-Groups`。
 
 dev 环境将 `default_policy` 设置为 `deny`。`ldap.acitrus.cn`、`mq.acitrus.cn` 通过
-Traefik ForwardAuth 接入 Authelia，仅允许 LLDAP `lldap_admin` 组成员以 one-factor 访问；
+Traefik ForwardAuth 接入 Authelia，仅允许微信目录中 `lldap_admin` 组成员以 one-factor 访问；
 其他用户默认拒绝。
+
+## 初始化微信管理员
+
+切换后，先用需要成为管理员的微信账号登录小程序。新账号自动注册为禁用状态。通过受控的数据库管理方式确认该用户的 `wechat_users.username`，再以这个准确用户名作为 `psql` 变量 `username` 执行以下 SQL。`lldap_admin` 是现有 ACL 使用的组名，此处不依赖 LDAP。仅在确认账号属于预期管理员后执行。
+
+```sql
+BEGIN;
+INSERT INTO wechat_groups (name) VALUES ('admin'), ('lldap_admin') ON CONFLICT (name) DO NOTHING;
+UPDATE wechat_users SET enabled = TRUE WHERE username = :'username';
+INSERT INTO wechat_user_groups (user_id, group_id)
+SELECT u.id, g.id FROM wechat_users u CROSS JOIN wechat_groups g
+WHERE u.username = :'username' AND g.name IN ('admin', 'lldap_admin')
+ON CONFLICT (user_id, group_id) DO NOTHING;
+COMMIT;
+```
+
+确认 `UPDATE` 影响一条记录；之后重新进入小程序，确认管理员组与网页登录。其他用户需要按实际需要启用和分组。切换过程中，未完成管理员初始化的用户无法授权网页登录。
 
 ## 渲染与部署
 
