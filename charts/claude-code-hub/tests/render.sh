@@ -87,7 +87,7 @@ grep -Fq 'CCH_ADMIN_TOKEN: ${{ secrets.CCH_ADMIN_TOKEN }}' "$repo_root/.github/w
 grep -Fq 'CCH_OIDC_CLIENT_SECRET: ${{ secrets.CCH_OIDC_CLIENT_SECRET }}' "$repo_root/.github/workflows/deploy-dev.yaml"
 sync_workflow="$repo_root/.github/workflows/sync-images.yaml"
 test -f "$sync_workflow"
-grep -Fq "'images/*/images.yaml'" "$sync_workflow"
+grep -Fq "'images/**'" "$sync_workflow"
 grep -Fq 'ruby .github/scripts/build-image-matrix.rb' "$sync_workflow"
 grep -Fq 'uses: ./.github/actions/mirror-container-image' "$sync_workflow"
 grep -Fq 'destination-password: ${{ secrets.ALIYUN_ACR_PASSWORD }}' "$sync_workflow"
