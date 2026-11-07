@@ -2,7 +2,7 @@ authelia:
   image:
     registry: registry.cn-shenzhen.aliyuncs.com
     repository: gravitation/authelia
-    tag: sha-2b2e31d6f2c13dce70c0e5200d18a3795a295ba4
+    tag: sha-54f7a91703227646bb703fef6dccd22af640c1f4
 
   pod:
     env:
