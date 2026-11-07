@@ -92,14 +92,14 @@ config:
     redirectUri: https://coding.acitrus.cn/api/auth/oidc/callback
     # 同一服务多域名登录时，逗号分隔的额外回调 URL（须在 IdP 侧一并注册）
     redirectUriAllowlist: https://inner.coding.acitrus.cn/api/auth/oidc/callback,https://863.coding.acitrus.cn/api/auth/oidc/callback
-    requiredGroup: lldap_admin
+    requiredGroup: admin
 ```
 
 明文客户端密钥由 `CCH_OIDC_CLIENT_SECRET` 同步到 `app/claude-code-hub-secrets` 的
 `oidc-client-secret`。Authelia 端注册了同一 Client ID 和回调地址，允许
 `openid`、`profile`、`email`、`groups` scope，使用
 `client_secret_basic`、授权码流程和 S256 PKCE，并通过 claims policy 把 `groups` 放入 ID Token。
-只有 `lldap_admin` 组成员可以完成 CCH 登录；`ADMIN_TOKEN` 登录仍保留为紧急管理入口。
+只有 `admin` 组成员可以完成 CCH 登录；`ADMIN_TOKEN` 登录仍保留为紧急管理入口。
 
 滚动更新策略、Deployment/Service annotations、nodeSelector、tolerations、affinity 和
 topologySpreadConstraints 均可通过 values 覆盖。`values.schema.json` 会在 lint、template 和

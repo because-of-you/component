@@ -141,4 +141,4 @@ grep -A1 -F 'name: OIDC_ENABLED' "$oidc_rendered" | grep -Fq 'value: "true"'
 grep -A1 -F 'name: OIDC_ISSUER_URL' "$oidc_rendered" | grep -Fq 'value: "https://auth.acitrus.cn"'
 grep -Fq 'name: OIDC_CLIENT_SECRET' "$oidc_rendered"
 grep -Fq 'key: "oidc-client-secret"' "$oidc_rendered"
-grep -A1 -F 'name: OIDC_REQUIRED_GROUP' "$oidc_rendered" | grep -Fq 'value: "lldap_admin"'
+grep -A1 -F 'name: OIDC_REQUIRED_GROUP' "$oidc_rendered" | grep -Fq 'value: "admin"'

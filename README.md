@@ -236,7 +236,7 @@ charts/rustfs/README.md
 ```
 
 RobustMQ 使用仓库自有 Chart 部署官方 `v0.4.11` 镜像，单节点数据保存在 `10Gi` PVC；管理端通过
-`https://mq.acitrus.cn` 提供并由 Authelia ForwardAuth 保护，仅允许 `lldap_admin` 组访问。
+`https://mq.acitrus.cn` 提供并由 Authelia ForwardAuth 保护，仅允许 `admin` 组访问。
 dev 环境通过 `mqtts://mqtt.tcp.acitrus.cn:1024` 提供 MQTT over TLS，暂时使用官方开发凭据，
 并通过 `amqps://amqp.tcp.acitrus.cn:1024/default` 提供实验性的 AMQP 0.9.1 入口；两者均
 不得照搬到生产环境。配置与安全说明见：
@@ -246,7 +246,7 @@ charts/robustmq/README.md
 ```
 
 DBX 使用仓库自有 Chart 部署官方 Web 镜像，通过 `db.acitrus.cn` 暴露，并由现有 Authelia ForwardAuth
-保护。应用数据保存在 PVC；dev 环境关闭 DBX 自身密码，仅允许 `lldap_admin` 组访问。配置见：
+保护。应用数据保存在 PVC；dev 环境关闭 DBX 自身密码，仅允许 `admin` 组访问。配置见：
 
 ```text
 charts/dbx/README.md

@@ -89,7 +89,7 @@ config:
     redirectUri: ""
     # 逗号分隔的额外回调 URL（多域名登录时使用，每条都须在 IdP 侧注册）
     redirectUriAllowlist: ""
-    requiredGroup: lldap_admin
+    requiredGroup: admin
 
 extraEnv: []
 

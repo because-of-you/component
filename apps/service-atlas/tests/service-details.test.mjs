@@ -49,7 +49,7 @@ test("renders SSO guidance and required groups only when configured", () => {
       {
         name: "统一登录",
         login: "通过 acitrus.cn SSO 统一登录",
-        groups: ["lldap_admin", "dbx_mcp"],
+        groups: ["admin", "dbx_mcp"],
       },
       {
         name: "Open SSO",
@@ -61,7 +61,7 @@ test("renders SSO guidance and required groups only when configured", () => {
   assert.doesNotMatch(markup, /Authelia OIDC/);
   assert.match(markup, /通过 acitrus\.cn SSO 统一登录/);
   assert.match(markup, /所需组/);
-  assert.match(markup, /lldap_admin/);
+  assert.match(markup, /admin/);
   assert.match(markup, /dbx_mcp/);
   assert.equal((markup.match(/service-details__groups/g) ?? []).length, 1);
 });

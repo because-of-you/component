@@ -25,7 +25,7 @@ config:
     clientId: claude-code-hub
     redirectUri: https://coding.acitrus.cn/api/auth/oidc/callback
     redirectUriAllowlist: https://inner.coding.acitrus.cn/api/auth/oidc/callback,https://863.coding.acitrus.cn/api/auth/oidc/callback
-    requiredGroup: lldap_admin
+    requiredGroup: admin
 
 resources:
   requests:

@@ -2,7 +2,7 @@ authelia:
   image:
     registry: registry.cn-shenzhen.aliyuncs.com
     repository: gravitation/authelia
-    tag: sha-5c1b47cb550f43cef92316ff9f4105ba6f961b8a
+    tag: sha-2b2e31d6f2c13dce70c0e5200d18a3795a295ba4
 
   pod:
     env:
@@ -36,24 +36,24 @@ authelia:
         - domain: atlas.acitrus.cn
           policy: one_factor
           subject:
-            - group:lldap_admin
+            - group:admin
         - domain: db.acitrus.cn
           policy: one_factor
           subject:
-            - group:lldap_admin
+            - group:admin
             - group:dbx_mcp
         - domain: ldap.acitrus.cn
           policy: one_factor
           subject:
-            - group:lldap_admin
+            - group:admin
         - domain: mq.acitrus.cn
           policy: one_factor
           subject:
-            - group:lldap_admin
+            - group:admin
         - domain: traefik.acitrus.cn
           policy: one_factor
           subject:
-            - group:lldap_admin
+            - group:admin
 
     authentication_backend:
       ldap:

@@ -4,7 +4,7 @@
       "id": "traefik", "name": "Traefik", "href": "https://traefik.acitrus.cn", "landmark": "ingress", "tier": "ingress", "color": "#3478f6",
       "description": "集群统一入口网关，负责 HTTPS、TCP 路由、TLS 证书和前置鉴权。",
       "endpoints": [{ "name": "Dashboard", "protocol": "HTTPS", "address": "https://traefik.acitrus.cn", "default": true, "description": "路由、服务和中间件的只读管理视图。" }],
-      "credentials": [{ "name": "统一登录", "login": "通过 acitrus.cn SSO 统一登录。", "groups": ["lldap_admin"] }]
+      "credentials": [{ "name": "统一登录", "login": "通过 acitrus.cn SSO 统一登录。", "groups": ["admin"] }]
     },
     {
       "id": "authelia", "name": "Authelia", "href": "https://auth.acitrus.cn", "landmark": "identity", "tier": "identity", "color": "#e7b547",
@@ -19,13 +19,13 @@
       "id": "claude-code-hub", "name": "Claude Code Hub", "href": "https://inner.coding.acitrus.cn", "landmark": "application", "tier": "application", "color": "#a782f4",
       "description": "内部 Claude Code 服务入口，通过 acitrus.cn SSO 统一登录并使用 PostgreSQL、Redis。",
       "endpoints": [{ "name": "Web 控制台", "protocol": "HTTPS", "address": "https://inner.coding.acitrus.cn", "default": true, "description": "应用主页和 API 的统一入口。" }],
-      "credentials": [{ "name": "统一登录", "login": "通过 acitrus.cn SSO 统一登录。", "groups": ["lldap_admin"] }]
+      "credentials": [{ "name": "统一登录", "login": "通过 acitrus.cn SSO 统一登录。", "groups": ["admin"] }]
     },
     {
       "id": "dbx", "name": "DBX", "href": "https://db.acitrus.cn", "landmark": "application", "tier": "application", "color": "#b8d957",
       "description": "内部数据库管理工具，入口由 Authelia 保护；dev 已关闭 DBX 自身的二次密码页。",
       "endpoints": [{ "name": "Web / MCP 入口", "protocol": "HTTPS", "address": "https://db.acitrus.cn", "default": true, "description": "Web 页面和 DBX 对外接口共用该受保护域名。" }],
-      "credentials": [{ "name": "统一登录", "login": "通过 acitrus.cn SSO 统一登录；DBX 自身无需二次输入密码。", "groups": ["lldap_admin", "dbx_mcp"] }]
+      "credentials": [{ "name": "统一登录", "login": "通过 acitrus.cn SSO 统一登录；DBX 自身无需二次输入密码。", "groups": ["admin", "dbx_mcp"] }]
     },
     {
       "id": "rustfs", "name": "RustFS", "href": "https://s3.acitrus.cn", "landmark": "storage", "tier": "data", "color": "#48c98e",
@@ -48,7 +48,7 @@
         { "name": "AMQP", "protocol": "AMQPS", "address": "amqps://amqp.tcp.acitrus.cn:1024/default", "description": "实验性的 AMQP 0.9.1 TLS 接入地址。" }
       ],
       "credentials": [
-        { "name": "Dashboard", "login": "通过 acitrus.cn SSO 统一登录。", "groups": ["lldap_admin"] },
+        { "name": "Dashboard", "login": "通过 acitrus.cn SSO 统一登录。", "groups": ["admin"] },
         { "name": "Web 管理账号", "username": "admin", "password": "amdin" },
         { "name": "MQTT / AMQP", "username": "admin", "password": "robustmq" }
       ]
@@ -61,7 +61,7 @@
         { "name": "LDAP（集群内）", "protocol": "LDAP", "address": "ldap://lldap.infra.svc.cluster.local:3890", "description": "Base DN 为 dc=acitrus,dc=cn，不提供公网 TCP 路由。" }
       ],
       "credentials": [
-        { "name": "管理界面", "login": "通过 acitrus.cn SSO 统一登录。", "groups": ["lldap_admin"] },
+        { "name": "管理界面", "login": "通过 acitrus.cn SSO 统一登录。", "groups": ["admin"] },
         { "name": "LLDAP 管理员", "username": "admin", "source": "部署后由 Pod 挂载 Kubernetes Secret 并展示密码。" }
       ]
     },

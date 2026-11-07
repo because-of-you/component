@@ -256,21 +256,20 @@ jobs:
       - name: Wait for Authelia image synchronization
         if: matrix.component == 'authelia'
         env:
-          AUTHELIA_IMAGE: ${{ vars.ALIYUN_ACR_REGISTRY }}/gravitation/authelia:sha-5c1b47cb550f43cef92316ff9f4105ba6f961b8a
+          AUTHELIA_IMAGE: ${{ vars.ALIYUN_ACR_REGISTRY }}/gravitation/authelia:sha-2b2e31d6f2c13dce70c0e5200d18a3795a295ba4
         shell: bash
         run: |
           set -euo pipefail
-          for attempt in 1 2 3 4 5 6 7 8 9 10 11 12; do
+          for ((attempt = 1; attempt <= 50; attempt++)); do
             if docker manifest inspect "$AUTHELIA_IMAGE" >/dev/null 2>&1; then
               exit 0
             fi
-            if [[ "$attempt" == 12 ]]; then
+            if (( attempt == 50 )); then
               echo "Authelia image was not published by sync-images: $AUTHELIA_IMAGE" >&2
               exit 1
             fi
-            delay=$((attempt * 5))
-            echo "Authelia image is not available yet; retrying in ${delay}s"
-            sleep "$delay"
+            echo "Waiting for Authelia image synchronization ($attempt/50)"
+            sleep 30
           done
 
       - name: Login to Aliyun ACR for Kafka image verification

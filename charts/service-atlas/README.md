@@ -2,7 +2,7 @@
 
 此 Chart 将运行时依赖图谱部署到 `app` 命名空间，并通过 Traefik 暴露
 `https://atlas.acitrus.cn`。应用是无状态静态站点，目录配置由 ConfigMap 提供；入口通过
-acitrus.cn SSO 保护，仅允许 `lldap_admin` 组访问。
+acitrus.cn SSO 保护，仅允许 `admin` 组访问。
 
 ## 渲染与检查
 

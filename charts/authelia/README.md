@@ -2,7 +2,7 @@
 
 > **微信认证切换准备**：dev 环境将使用自定义镜像和微信用户目录，二维码指向小程序体验版。请先确认该体验版已发布且使用者有体验权限。推送本仓库的 `dev` 分支会触发自动部署，因此切换前应确认 PostgreSQL 备份及回滚方案。已有 LDAP 用户不会自动成为微信用户。
 >
-> 首个微信用户需先在小程序登录完成自动注册；账号初始为禁用。管理员必须在 PostgreSQL 中以确认过的用户名启用账号，并分配 `admin` 和访问所需的 `lldap_admin` 等组，之后才能通过小程序管理组。切换前后需要验证 ACL、Claude Code Hub 和 RustFS 的 OIDC 身份及自填邮箱（未验证）行为。
+> 首个微信用户需先在小程序登录完成自动注册；账号初始为禁用。管理员必须在 PostgreSQL 中以确认过的用户名启用账号，并分配 `admin` 组，之后才能通过小程序管理组。切换前后需要验证 ACL、Claude Code Hub 和 RustFS 的 OIDC 身份及自填邮箱（未验证）行为。
 >
 > GitHub Actions 的 `dev` 环境读取变量 `AUTHELIA_WECHAT_APP_ID` 和 Secret `AUTHELIA_WECHAT_APP_SECRET`；它们在部署时同步进 `infra/authelia-secrets`，不会写入镜像。镜像通过 `images/authelia/images.yaml` 从 GHCR 同步到阿里云 ACR，部署等待对应 SHA 标签可用后再继续。更新镜像时需同步修改镜像清单、dev values、部署等待步骤和渲染测试中的标签。
 
@@ -91,7 +91,7 @@ dev 中注册的 Client ID 为 `claude-code-hub`，回调地址严格匹配
 `https://coding.acitrus.cn/api/auth/oidc/callback`、
 `https://inner.coding.acitrus.cn/api/auth/oidc/callback` 和
 `https://863.coding.acitrus.cn/api/auth/oidc/callback`（公网、内网与 863 租户域名）。claims policy
-会把 `groups` 写入 ID Token，CCH 再校验用户必须属于 `lldap_admin`。
+会把 `groups` 写入 ID Token，CCH 再校验用户必须属于 `admin`。
 
 ## 外部 PostgreSQL 与 Redis
 
@@ -169,20 +169,20 @@ middlewares:
 ForwardAuth 成功后会传递 `Remote-User`、`Remote-Name`、`Remote-Email` 和 `Remote-Groups`。
 
 dev 环境将 `default_policy` 设置为 `deny`。`ldap.acitrus.cn`、`mq.acitrus.cn` 通过
-Traefik ForwardAuth 接入 Authelia，仅允许微信目录中 `lldap_admin` 组成员以 one-factor 访问；
+Traefik ForwardAuth 接入 Authelia，仅允许微信目录中 `admin` 组成员以 one-factor 访问；
 其他用户默认拒绝。
 
 ## 初始化微信管理员
 
-切换后，先用需要成为管理员的微信账号登录小程序。新账号自动注册为禁用状态。通过受控的数据库管理方式确认该用户的 `wechat_users.username`，再以这个准确用户名作为 `psql` 变量 `username` 执行以下 SQL。`lldap_admin` 是现有 ACL 使用的组名，此处不依赖 LDAP。仅在确认账号属于预期管理员后执行。
+切换后，先用需要成为管理员的微信账号登录小程序。新账号自动注册为禁用状态。通过受控的数据库管理方式确认该用户的 `wechat_users.username`，再以这个准确用户名作为 `psql` 变量 `username` 执行以下 SQL。`admin` 用于小程序管理和现有 ACL。仅在确认账号属于预期管理员后执行。
 
 ```sql
 BEGIN;
-INSERT INTO wechat_groups (name) VALUES ('admin'), ('lldap_admin') ON CONFLICT (name) DO NOTHING;
+INSERT INTO wechat_groups (name) VALUES ('admin') ON CONFLICT (name) DO NOTHING;
 UPDATE wechat_users SET enabled = TRUE WHERE username = :'username';
 INSERT INTO wechat_user_groups (user_id, group_id)
 SELECT u.id, g.id FROM wechat_users u CROSS JOIN wechat_groups g
-WHERE u.username = :'username' AND g.name IN ('admin', 'lldap_admin')
+WHERE u.username = :'username' AND g.name = 'admin'
 ON CONFLICT (user_id, group_id) DO NOTHING;
 COMMIT;
 ```

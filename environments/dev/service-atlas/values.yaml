@@ -55,14 +55,14 @@ catalogue:
         - name: 统一登录
           login: 通过 acitrus.cn SSO 统一登录。
           groups:
-            - lldap_admin
+            - admin
     - id: authelia
       name: Authelia
       href: https://auth.acitrus.cn
       landmark: identity
       tier: identity
       color: "#e7b547"
-      description: 统一登录、ForwardAuth 与 OIDC 身份提供方，用户和组来自 LLDAP。
+      description: 统一登录、ForwardAuth 与 OIDC 身份提供方，用户和组来自微信用户目录。
       endpoints:
         - name: 登录门户
           protocol: HTTPS
@@ -93,7 +93,7 @@ catalogue:
         - name: 统一登录
           login: 通过 acitrus.cn SSO 统一登录。
           groups:
-            - lldap_admin
+            - admin
     - id: dbx
       name: DBX
       href: https://db.acitrus.cn
@@ -111,7 +111,7 @@ catalogue:
         - name: 统一登录
           login: 通过 acitrus.cn SSO 统一登录；DBX 自身无需二次输入密码。
           groups:
-            - lldap_admin
+            - admin
             - dbx_mcp
     - id: rustfs
       name: RustFS
@@ -161,7 +161,7 @@ catalogue:
         - name: Dashboard
           login: 通过 acitrus.cn SSO 统一登录。
           groups:
-            - lldap_admin
+            - admin
         - name: Web 管理账号
           username: admin
           password: amdin
@@ -189,7 +189,7 @@ catalogue:
         - name: 管理界面
           login: 通过 acitrus.cn SSO 统一登录。
           groups:
-            - lldap_admin
+            - admin
         - name: LLDAP 管理员
           username: admin
           passwordFile: ./config/secrets/lldap-admin-password

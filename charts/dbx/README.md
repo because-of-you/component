@@ -33,7 +33,7 @@ config:
 dev 同时启用 NetworkPolicy，仅允许 `traefik` 命名空间访问 DBX Web 端口，避免集群内其他 Pod 通过 ClusterIP
 绕过 Authelia。该策略不限制 DBX 的出站数据库连接。
 
-当前 Authelia 规则只允许 LLDAP `lldap_admin` 组访问。Authelia 只负责入口授权；DBX 不会依据
+当前 Authelia 规则只允许 微信用户目录的 `admin` 组访问。Authelia 只负责入口授权；DBX 不会依据
 `Remote-User` 或 `Remote-Groups` 提供多用户 RBAC。需要保证数据库只读时，必须让 DBX 使用数据库原生只读账号。
 
 ## 渲染与部署
