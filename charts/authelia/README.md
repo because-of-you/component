@@ -4,7 +4,7 @@
 >
 > 首个微信用户需先在小程序登录完成自动注册；账号初始为禁用。管理员必须在 PostgreSQL 中以确认过的用户名启用账号，并分配 `admin` 和访问所需的 `lldap_admin` 等组，之后才能通过小程序管理组。切换前后需要验证 ACL、Claude Code Hub 和 RustFS 的 OIDC 身份及自填邮箱（未验证）行为。
 >
-> GitHub Actions 的 `dev` 环境需要读取本仓库 Secrets `AUTHELIA_WECHAT_APP_ID` 和 `AUTHELIA_WECHAT_APP_SECRET`；它们在部署时同步进 `infra/authelia-secrets`，不会写入镜像。部署配置固定使用镜像 SHA 标签。
+> GitHub Actions 的 `dev` 环境读取变量 `AUTHELIA_WECHAT_APP_ID` 和 Secret `AUTHELIA_WECHAT_APP_SECRET`；它们在部署时同步进 `infra/authelia-secrets`，不会写入镜像。部署配置固定使用镜像 SHA 标签。
 
 
 这个 Chart 封装 Authelia 官方 Helm Chart。当前依赖固定为 Chart `0.11.22`、Authelia
@@ -32,10 +32,11 @@ environments/dev/authelia/values.yaml
 
 ## dev 密钥配置
 
-在 GitHub `dev` Environment Secrets 中配置：
+在 GitHub Actions 的 Repository variables 或 `dev` Environment variables 中配置 `AUTHELIA_WECHAT_APP_ID`。
+
+在 GitHub `dev` Environment Secrets 或 Repository secrets 中配置：
 
 - `LLDAP_AUTHELIA_PASSWORD`（切换期间保留以支持现有密钥同步）
-- `AUTHELIA_WECHAT_APP_ID`
 - `AUTHELIA_WECHAT_APP_SECRET`
 - `AUTHELIA_SESSION_ENCRYPTION_KEY`，至少 32 个字符
 - `AUTHELIA_STORAGE_ENCRYPTION_KEY`，至少 20 个字符
