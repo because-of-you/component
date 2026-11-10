@@ -1,7 +1,7 @@
 externalHttpRoutes:
   - name: lan-api
     host: api.acitrus.cn
-    address: 192.168.0.2
+    address: 100.124.162.72
     port: 48080
 
 traefik:

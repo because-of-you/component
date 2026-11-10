@@ -74,7 +74,7 @@ AliDNS 凭据只由 cert-manager 使用，保存在 `cert-manager/alidns-secrets
 externalHttpRoutes:
   - name: lan-api
     host: api.acitrus.cn
-    address: 192.168.0.2
+    address: 100.124.162.72
     port: 48080
 ```
 
