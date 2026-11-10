@@ -1,3 +1,9 @@
+externalHttpRoutes:
+  - name: lan-api
+    host: api.acitrus.cn
+    address: 192.168.0.2
+    port: 48080
+
 traefik:
   image:
     registry: registry.cn-shenzhen.aliyuncs.com

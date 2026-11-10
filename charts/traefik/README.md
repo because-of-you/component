@@ -66,6 +66,24 @@ dev 环境的证书由 cert-manager 和 AliDNS webhook 申请，生成到
 
 AliDNS 凭据只由 cert-manager 使用，保存在 `cert-manager/alidns-secrets` Secret 中。
 
+## 代理局域网 HTTP 服务
+
+在环境 values 的顶层 `externalHttpRoutes` 中添加路由，例如：
+
+```yaml
+externalHttpRoutes:
+  - name: lan-api
+    host: api.acitrus.cn
+    address: 192.168.0.2
+    port: 48080
+```
+
+Chart 为每项创建无 selector 的 Service、EndpointSlice 和 HTTPS IngressRoute。
+Traefik 终止 TLS，并以 HTTP 转发至指定 IPv4 地址和端口。域名需指向 Traefik，
+Traefik Pod 必须能访问后端；路由不附加认证，外部可达时由后端自行控制访问。
+提交 dev 配置后，现有 Traefik 部署流水线会应用变更；移除对应条目并再次部署，
+Helm 会删除该条目的三个资源。每项的 name 必须在 Traefik 命名空间内唯一。
+
 ## 本地调试
 
 首次克隆仓库，或者修改 `Chart.yaml` 里的依赖后，先更新依赖：
