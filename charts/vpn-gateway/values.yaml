@@ -1,0 +1,17 @@
+openvpn:
+  image: vpn-pyrl-openvpn:3.0.0
+  pullPolicy: IfNotPresent
+  existingSecret: vpn-pyrl-openvpn
+  resources:
+    requests: {cpu: 10m, memory: 64Mi}
+    limits: {cpu: 500m, memory: 256Mi}
+tailscale:
+  image: tailscale/tailscale:v1.84.3
+  pullPolicy: IfNotPresent
+  hostname: vpn-pyrl
+  resources:
+    requests: {cpu: 10m, memory: 64Mi}
+    limits: {cpu: 500m, memory: 256Mi}
+nodeSelector: {}
+tolerations: []
+affinity: {}

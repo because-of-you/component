@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vpn-gateway
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: vpn-gateway
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+        sysctls:
+          - name: net.ipv4.ip_forward
+            value: "1"
+      initContainers:
+        - name: firewall
+          image: {{ .Values.openvpn.image | quote }}
+          imagePullPolicy: {{ .Values.openvpn.pullPolicy }}
+          command: ["/bin/sh", "-ec"]
+          args:
+            - |
+              iptables -t mangle -I FORWARD 1 -i tailscale0 ! -o tun+ -j DROP
+              ip6tables -t mangle -I FORWARD 1 -i tailscale0 -j DROP
+              iptables -I FORWARD 1 -i tailscale0 -o tun+ -j ACCEPT
+              iptables -I FORWARD 1 -i tun+ -o tailscale0 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+              iptables -t nat -A POSTROUTING -o tun+ -j MASQUERADE
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+              add: [NET_ADMIN]
+          resources:
+            {{- toYaml .Values.openvpn.resources | nindent 12 }}
+      containers:
+        - name: openvpn
+          image: {{ .Values.openvpn.image | quote }}
+          imagePullPolicy: {{ .Values.openvpn.pullPolicy }}
+          command: ["/usr/bin/tini", "--", "python3", "-u", "/usr/local/bin/vpn-supervisor"]
+          securityContext:
+            allowPrivilegeEscalation: true
+            capabilities:
+              add: [NET_ADMIN, NET_RAW]
+          volumeMounts:
+            - {name: openvpn-config, mountPath: /etc/openvpn/client, readOnly: true}
+            - {name: tun, mountPath: /dev/net/tun}
+          resources:
+            {{- toYaml .Values.openvpn.resources | nindent 12 }}
+        - name: tailscale
+          image: {{ .Values.tailscale.image | quote }}
+          imagePullPolicy: {{ .Values.tailscale.pullPolicy }}
+          env:
+            - name: TS_HOSTNAME
+              value: {{ .Values.tailscale.hostname | quote }}
+            - {name: TS_USERSPACE, value: "false"}
+            - {name: TS_STATE_DIR, value: /tmp/tailscale}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+              add: [NET_ADMIN, NET_RAW]
+          volumeMounts:
+            - {name: tun, mountPath: /dev/net/tun}
+            - {name: tailscale-state, mountPath: /tmp/tailscale}
+          resources:
+            {{- toYaml .Values.tailscale.resources | nindent 12 }}
+      volumes:
+        - name: openvpn-config
+          secret:
+            secretName: {{ .Values.openvpn.existingSecret | quote }}
+            defaultMode: 0400
+        - name: tun
+          hostPath:
+            path: /dev/net/tun
+            type: CharDevice
+        - name: tailscale-state
+          emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity: {{- toYaml . | nindent 8 }}
+      {{- end }}

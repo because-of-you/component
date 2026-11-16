@@ -5,6 +5,8 @@ on:
     branches:
       - dev
     paths:
+      - 'charts/vpn-gateway/**'
+      - 'environments/dev/vpn-pyrl/**'
       - 'charts/redis/**'
       - 'charts/postgresql/**'
       - 'charts/kafka/**'
@@ -51,6 +53,7 @@ on:
         required: true
         type: choice
         options:
+          - vpn-pyrl
           - redis
           - postgresql
           - kafka
@@ -86,6 +89,9 @@ jobs:
         with:
           base: ${{ github.ref }}
           filters: |
+            vpn-pyrl:
+              - 'charts/vpn-gateway/**'
+              - 'environments/dev/vpn-pyrl/**'
             redis:
               - 'charts/redis/**'
               - 'environments/dev/redis/**'
@@ -244,6 +250,33 @@ jobs:
         uses: mamezou-tech/setup-helmfile@v2.2.0
         with:
           helmfile-version: v1.7.1
+
+      - name: Login to Aliyun ACR for VPN image verification
+        if: matrix.component == 'vpn-pyrl'
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ vars.ALIYUN_ACR_REGISTRY }}
+          username: ${{ vars.ALIYUN_ACR_USERNAME }}
+          password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
+
+      - name: Wait for VPN image synchronization
+        if: matrix.component == 'vpn-pyrl'
+        env:
+          VPN_IMAGE: registry.cn-shenzhen.aliyuncs.com/gravitation/vpn-gateway:3.0.0
+        shell: bash
+        run: |
+          set -euo pipefail
+          for ((attempt = 1; attempt <= 50; attempt++)); do
+            if docker manifest inspect "$VPN_IMAGE" >/dev/null 2>&1; then
+              exit 0
+            fi
+            if (( attempt == 50 )); then
+              echo "VPN image was not published by sync-images: $VPN_IMAGE" >&2
+              exit 1
+            fi
+            echo "Waiting for VPN image synchronization ($attempt/50)"
+            sleep 30
+          done
 
       - name: Login to Aliyun ACR for Authelia image verification
         if: matrix.component == 'authelia'

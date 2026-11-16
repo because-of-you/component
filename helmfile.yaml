@@ -32,6 +32,13 @@ environments:
 ---
 
 releases:
+  - name: vpn-pyrl
+    namespace: openvpn
+    createNamespace: true
+    chart: ./charts/vpn-gateway
+    values:
+      - ./environments/{{ .Environment.Name }}/vpn-pyrl/values.yaml
+
   - name: cert-manager
     namespace: cert-manager
     createNamespace: true

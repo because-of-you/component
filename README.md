@@ -383,6 +383,8 @@ PR 合并前会执行：
 
 ## dev 集群部署
 
+VPN 网关的镜像、私有 Secret、Tailscale 加入与路由配置参见 [vpn-gateway 教程](./charts/vpn-gateway/README.md)。首次部署前须先准备镜像和 Secret。
+
 Push 到 `dev` 分支并修改 Redis、PostgreSQL、LLDAP、Authelia、Claude Code Hub、cch-plus、DBX、Service Atlas、RustFS、RobustMQ、cert-manager 或 Traefik
 的 Chart/values 后，
 [deploy-dev.yaml](./.github/workflows/deploy-dev.yaml) 会检测发生变化的组件，并为每个组件创建独立 Matrix Job。

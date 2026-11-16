@@ -1,0 +1,6 @@
+openvpn:
+  image: registry.cn-shenzhen.aliyuncs.com/gravitation/vpn-gateway:3.0.0
+  pullPolicy: Always
+  existingSecret: vpn-pyrl-openvpn
+tailscale:
+  hostname: vpn-pyrl

@@ -1,0 +1,8 @@
+component: vpn-gateway
+
+images:
+  - name: openvpn3
+    destination: registry.cn-shenzhen.aliyuncs.com/gravitation/vpn-gateway:3.0.0
+    build:
+      context: images/vpn-gateway
+      dockerfile: images/vpn-gateway/Dockerfile
