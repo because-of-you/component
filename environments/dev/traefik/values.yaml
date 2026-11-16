@@ -1,4 +1,8 @@
-externalHttpRoutes: []
+externalHttpRoutes:
+  - name: lan-api
+    host: api.acitrus.cn
+    address: 100.124.162.72
+    port: 48080
 
 traefik:
   image:
