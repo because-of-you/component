@@ -10,14 +10,18 @@ pdb_rendered="$(mktemp)"
 trap 'rm -f "$rendered" "$pdb_rendered"' EXIT
 
 grep -Fq 'name: claude-code-hub' "$chart_dir/Chart.yaml"
-grep -Fq 'appVersion: "codex-authelia-oidc-eb03b74"' "$chart_dir/Chart.yaml"
-grep -Fq 'tag: codex-authelia-oidc-eb03b74' "$chart_dir/values.yaml"
+image_tag="$(sed -n 's/^appVersion: "\([^"]*\)"$/\1/p' "$chart_dir/Chart.yaml")"
+if [[ -z "$image_tag" ]]; then
+  echo "Chart appVersion must specify the image tag" >&2
+  exit 1
+fi
+grep -Fxq "  tag: $image_tag" "$chart_dir/values.yaml"
 grep -Fq '"enum": ["legacy", "dual", "opaque"]' "$chart_dir/values.schema.json"
 
 helm template claude-code-hub "$chart_dir" --namespace app -f "$dev_values" >"$rendered"
 
 grep -Fq 'kind: Deployment' "$rendered"
-grep -Fq 'image: "registry.cn-shenzhen.aliyuncs.com/gravitation/claude-code-hub:codex-authelia-oidc-eb03b74"' "$rendered"
+grep -Fq "image: \"registry.cn-shenzhen.aliyuncs.com/gravitation/claude-code-hub:$image_tag\"" "$rendered"
 grep -Fq 'imagePullPolicy: Always' "$rendered"
 grep -Fq 'containerPort: 3000' "$rendered"
 grep -Fq 'name: DSN' "$rendered"
@@ -109,8 +113,8 @@ if grep -Fq 'regctl' "$mirror_action"; then
 fi
 image_manifest="$repo_root/images/claude-code-hub/images.yaml"
 test -f "$image_manifest"
-grep -Fq 'source: ghcr.io/because-of-you/claude-code-hub:codex-authelia-oidc-eb03b74' "$image_manifest"
-grep -Fq 'destination: registry.cn-shenzhen.aliyuncs.com/gravitation/claude-code-hub:codex-authelia-oidc-eb03b74' "$image_manifest"
+grep -Fq "source: ghcr.io/because-of-you/claude-code-hub:$image_tag" "$image_manifest"
+grep -Fq "destination: registry.cn-shenzhen.aliyuncs.com/gravitation/claude-code-hub:$image_tag" "$image_manifest"
 test ! -e "$repo_root/images/claude-code-hub/images.json"
 if grep -Eq 'images\.json|images\.yml' "$sync_workflow"; then
   echo "Sync Images must support only images.yaml manifests" >&2
