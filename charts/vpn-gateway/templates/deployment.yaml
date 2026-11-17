@@ -59,11 +59,16 @@ spec:
         - name: tailscale
           image: {{ .Values.tailscale.image | quote }}
           imagePullPolicy: {{ .Values.tailscale.pullPolicy }}
-          env:
-            - name: TS_HOSTNAME
-              value: {{ .Values.tailscale.hostname | quote }}
-            - {name: TS_USERSPACE, value: "false"}
-            - {name: TS_STATE_DIR, value: /tmp/tailscale}
+          command: ["/usr/local/bin/tailscaled"]
+          args:
+            - "--tun=tailscale0"
+            - "--state=/tmp/tailscale/tailscaled.state"
+            - "--socket=/tmp/tailscale/tailscaled.sock"
+          startupProbe:
+            exec:
+              command: ["/bin/sh", "-c", "test -S /tmp/tailscale/tailscaled.sock"]
+            periodSeconds: 2
+            failureThreshold: 30
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

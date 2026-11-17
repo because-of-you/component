@@ -77,10 +77,10 @@ kubectl -n openvpn logs -f deployment/vpn-pyrl -c openvpn
 
 ```bash
 kubectl -n openvpn exec -it deploy/vpn-pyrl -c tailscale -- \
-  tailscale up --advertise-routes=<目标IPv4/CIDR>
+  tailscale --socket=/tmp/tailscale/tailscaled.sock up --hostname=vpn-pyrl --accept-dns=false --advertise-routes=<目标IPv4/CIDR>
 ```
 
-根据终端输出打开登录链接完成授权。如果命令等待时间过长，另开终端查看 `kubectl -n openvpn logs deployment/vpn-pyrl -c tailscale`。如需标签，确保账号具备标签分配权限，再在上述 `tailscale up` 命令中增加 `--advertise-tags=tag:vpn-gateway`；普通手动登录并不会自动应用该标签。
+根据终端输出打开登录链接完成授权。如果命令等待时间过长，另开终端查看 `kubectl -n openvpn logs deployment/vpn-pyrl -c tailscale`。Tailscale CLI 每次调用均需带 `--socket=/tmp/tailscale/tailscaled.sock`，例如 `tailscale --socket=/tmp/tailscale/tailscaled.sock status`。如果只想先登录而不发布路由，可以暂时省略 `--advertise-routes`，验证 OpenVPN 路由后再添加。网关直接运行 `tailscaled`，没有 60 秒的交互登录期限，也无需 Kubernetes ServiceAccount 凭据。`--hostname` 在手动登录时指定，将来创建其他网关时记得更换。如需标签，确保账号具备标签分配权限，再在上述 `tailscale up` 命令中增加 `--advertise-tags=tag:vpn-gateway`；普通手动登录并不会自动应用该标签。
 
 请在 Tailnet 管理后台确认设备已加入并批准它发布的子网路由，或预先配置适用的自动批准策略。Tailscale Linux 客户端可能需启用 `--accept-routes`。路由和访问策略还要允许客户端访问对应地址。手动登录通常创建普通设备，Pod 消失后请在管理后台自行删除旧设备，不要依赖自动清理。
 
