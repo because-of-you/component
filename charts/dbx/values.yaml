@@ -7,7 +7,7 @@ strategy:
 
 image:
   repository: t8y2/dbx
-  tag: "0.6.62"
+  tag: "0.6.72"
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
