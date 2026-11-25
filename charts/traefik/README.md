@@ -72,10 +72,10 @@ AliDNS 凭据只由 cert-manager 使用，保存在 `cert-manager/alidns-secrets
 
 ```yaml
 externalHttpRoutes:
-  - name: lan-api
-    host: api.acitrus.cn
-    address: 100.124.162.72
-    port: 48080
+  - name: lan-service
+    host: service.example.com
+    address: 192.0.2.10
+    port: 8080
 ```
 
 Chart 为每项创建无 selector 的 Service、EndpointSlice 和 HTTPS IngressRoute。
