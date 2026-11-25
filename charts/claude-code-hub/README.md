@@ -2,10 +2,10 @@
 
 该 Chart 参考 Claude Code Hub 官方 Kubernetes 清单维护，但只部署应用本体，复用集群中已有的
 PostgreSQL 和 Redis。当前发布固定使用 fork 的不可变提交镜像标签
-`codex-authelia-oidc-e29bcc7`，并从深圳阿里云 ACR 拉取：
+`codex-authelia-oidc-3cb252f`，并从深圳阿里云 ACR 拉取：
 
 ```text
-registry.cn-shenzhen.aliyuncs.com/gravitation/claude-code-hub:codex-authelia-oidc-e29bcc7
+registry.cn-shenzhen.aliyuncs.com/gravitation/claude-code-hub:codex-authelia-oidc-3cb252f
 ```
 
 源码工作流只构建 GHCR 镜像。CCH 的同步关系声明在 `images/claude-code-hub/images.yaml`；该文件在
